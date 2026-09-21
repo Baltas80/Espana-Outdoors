@@ -1,0 +1,210 @@
+import 'package:flutter/material.dart';
+
+import '../../core/gpx/gpx_import_service.dart';
+import '../../core/models/route_summary.dart';
+
+class RoutesPage extends StatefulWidget {
+  const RoutesPage({super.key});
+
+  @override
+  State<RoutesPage> createState() => _RoutesPageState();
+}
+
+class _RoutesPageState extends State<RoutesPage> {
+  final _gpx = const GpxImportService();
+  final _routes = <RouteSummary>[
+    const RouteSummary(
+      id: 'picos-demo',
+      name: 'Picos de Europa — Mirador',
+      distanceKm: 8.4,
+      elevationGainM: 510,
+      durationMinutes: 205,
+      difficulty: 'Moderada',
+      petFriendly: true,
+      waterAvailable: true,
+      offlineReady: true,
+    ),
+    const RouteSummary(
+      id: 'sierra-demo',
+      name: 'Sierra de la Demanda — Circular',
+      distanceKm: 11.8,
+      elevationGainM: 730,
+      durationMinutes: 300,
+      difficulty: 'Media-alta',
+      petFriendly: false,
+      waterAvailable: false,
+      offlineReady: false,
+    ),
+  ];
+
+  ImportedTrack? _imported;
+  String? _error;
+
+  Future<void> _importGpx() async {
+    setState(() => _error = null);
+    try {
+      final imported = await _gpx.pickAndImport();
+      if (!mounted || imported == null) return;
+      setState(() => _imported = imported);
+    } on Object catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.toString());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Rutas'),
+        actions: [
+          IconButton(
+            tooltip: 'Importar GPX',
+            onPressed: _importGpx,
+            icon: const Icon(Icons.file_upload_outlined),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'Planifica tu próxima salida',
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Rutas con contexto: distancia, desnivel, mascotas, agua y preparación offline.',
+          ),
+          const SizedBox(height: 20),
+          if (_error != null)
+            Card(
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_error!),
+              ),
+            ),
+          if (_imported != null) ...[
+            _ImportedTrackCard(track: _imported!),
+            const SizedBox(height: 12),
+          ],
+          FilledButton.icon(
+            onPressed: _importGpx,
+            icon: const Icon(Icons.upload_file_outlined),
+            label: const Text('Importar GPX'),
+          ),
+          const SizedBox(height: 20),
+          for (final route in _routes) ...[
+            _RouteCard(route: route),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportedTrackCard extends StatelessWidget {
+  const _ImportedTrackCard({required this.track});
+
+  final ImportedTrack track;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.check_circle_outline),
+                SizedBox(width: 8),
+                Text(
+                  'GPX importado',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              track.name,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 18,
+              runSpacing: 8,
+              children: [
+                Text('${(track.distanceMeters / 1000).toStringAsFixed(1)} km'),
+                Text('+${track.ascentMeters.toStringAsFixed(0)} m'),
+                Text('-${track.descentMeters.toStringAsFixed(0)} m'),
+                Text('${track.points.length} puntos'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RouteCard extends StatelessWidget {
+  const _RouteCard({required this.route});
+
+  final RouteSummary route;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              route.name,
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '${route.distanceKm.toStringAsFixed(1)} km  •  +${route.elevationGainM.toStringAsFixed(0)} m  •  ${route.durationMinutes} min',
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                Chip(label: Text(route.difficulty)),
+                if (route.petFriendly)
+                  const Chip(
+                    avatar: Icon(Icons.pets_outlined, size: 16),
+                    label: Text('Mascotas'),
+                  ),
+                if (route.waterAvailable)
+                  const Chip(
+                    avatar: Icon(Icons.water_drop_outlined, size: 16),
+                    label: Text('Agua'),
+                  ),
+                if (route.offlineReady)
+                  const Chip(
+                    avatar: Icon(Icons.download_for_offline_outlined, size: 16),
+                    label: Text('Offline'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
