@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
+import 'map_provider_config.dart';
 
 class MapPage extends ConsumerWidget {
   const MapPage({super.key});
@@ -28,8 +29,8 @@ class MapPage extends ConsumerWidget {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.espanaoutdoors.app',
+                urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
+                userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
               ),
               if (recording.points.length > 1)
                 PolylineLayer(
