@@ -1,9 +1,9 @@
-# Arquitectura inicial
+# España Outdoor — Architecture
 
-## Capas
+## Layers
 
 ```text
-UI / Design System
+Presentation / Design System
         |
 Feature controllers (Riverpod)
         |
@@ -16,27 +16,26 @@ Adapters: GIS, GPS, weather, alerts, storage, notifications
 External providers
 ```
 
-## Regla clave
+## Boundaries
 
-Las funcionalidades de producto no deben depender directamente de un proveedor externo. Cada integración importante debe estar detrás de una interfaz propia para permitir sustitución, fallback y pruebas.
+External providers must sit behind interfaces. Domain and UI code must not depend directly on a map, weather, routing or alert vendor. This permits replacement, fallback, licensing review and deterministic tests.
 
 ## Offline-first
 
-Las capacidades críticas deben seguir funcionando sin red:
+Critical capabilities must remain useful without network access:
 
-- mapa previamente descargado;
-- GPS;
-- posición;
-- rutas guardadas;
-- datos de seguridad almacenados;
-- contactos de confianza;
-- registro de actividad local.
+- previously downloaded maps;
+- GPS and position;
+- saved routes;
+- safety data;
+- trusted contacts;
+- local activity recording.
 
-La sincronización será eventual y deberá resolver conflictos explícitamente.
+Synchronization is eventual and conflicts must be resolved explicitly.
 
-## Datos dinámicos
+## Data provenance
 
-Cada entidad dinámica debe transportar, cuando proceda:
+Dynamic records should carry, when applicable:
 
 - `source`;
 - `sourceUrl`;
@@ -45,25 +44,35 @@ Cada entidad dinámica debe transportar, cuando proceda:
 - `confidence`;
 - `license`.
 
-## Seguridad
+Stale data must be distinguishable from current data.
 
-Los secretos y credenciales se almacenan mediante almacenamiento seguro del sistema. Nunca se incorporan al código fuente ni a builds públicos.
+## Security
+
+Secrets and credentials belong in secure platform storage or trusted backend infrastructure. Never commit secrets or embed privileged credentials in public builds. Emergency location must remain outside ordinary analytics unless explicitly required and legally justified.
 
 ## GIS
 
-`flutter_map` se usa como cliente cartográfico inicial. El proveedor de tiles/routing debe ser configurable. La aplicación debe respetar siempre atribución, licencia y política de uso del proveedor elegido.
+`flutter_map` is the initial map client. Tile and routing providers remain configurable. Attribution, license and provider usage policies are mandatory release criteria.
 
-## Emergencias
+## Emergencies
 
-SOS, 112, contactos y Rescue Link son módulos independientes. Ningún módulo comunitario debe impedir o retrasar el acceso a los servicios oficiales.
+SOS, 112, trusted contacts and Rescue Link are isolated modules. Community assistance is supplementary and must never block or delay official emergency services. Rescue Link access must be temporary, revocable and abuse-resistant.
 
-## Evolución prevista
+## Wildlife and conservation
 
-1. Persistencia local robusta y descargas offline.
-2. GPX y motor de rutas.
-3. AEMET y fuentes oficiales de alertas.
-4. Incendios y desastres.
-5. Mascotas/fauna/conservación.
-6. Backend y sincronización.
-7. Rescue Link seguro.
-8. IA asistiva con trazabilidad.
+Sensitive wildlife locations must be protected. Public map layers should use generalized locations where exact coordinates could cause disturbance or exploitation.
+
+## Scalability
+
+Backend and synchronization services are introduced behind stable ports. The client must not assume a particular cloud vendor.
+
+## Evolution
+
+1. Robust local persistence and offline packages.
+2. GPX and route recording/statistics.
+3. AEMET and official alert adapters.
+4. Wildfire/disaster data.
+5. Pets, wildlife and conservation.
+6. Backend and synchronization.
+7. Secure Rescue Link.
+8. Assistive AI with source traceability.
