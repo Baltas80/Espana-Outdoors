@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
+import '../../core/storage/local_route_store.dart';
 
 class RoutesPage extends StatefulWidget {
   const RoutesPage({super.key});
@@ -12,6 +13,8 @@ class RoutesPage extends StatefulWidget {
 
 class _RoutesPageState extends State<RoutesPage> {
   final _gpx = const GpxImportService();
+  final _store = LocalRouteStore();
+
   final _routes = <RouteSummary>[
     const RouteSummary(
       id: 'picos-demo',
@@ -40,11 +43,21 @@ class _RoutesPageState extends State<RoutesPage> {
   ImportedTrack? _imported;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    _imported = _store.loadLatestImportedTrack();
+  }
+
   Future<void> _importGpx() async {
     setState(() => _error = null);
     try {
       final imported = await _gpx.pickAndImport();
       if (!mounted || imported == null) return;
+
+      await _store.saveImportedTrack(imported);
+      if (!mounted) return;
+
       setState(() => _imported = imported);
     } on Object catch (error) {
       if (!mounted) return;
@@ -126,7 +139,7 @@ class _ImportedTrackCard extends StatelessWidget {
                 Icon(Icons.check_circle_outline),
                 SizedBox(width: 8),
                 Text(
-                  'GPX importado',
+                  'GPX importado y guardado',
                   style: TextStyle(fontWeight: FontWeight.w800),
                 ),
               ],
