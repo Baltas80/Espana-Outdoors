@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/explore/explore_page.dart';
 import '../features/home/home_page.dart';
 import '../features/map/map_page.dart';
-import '../features/safety/safety_page.dart';
+import '../features/offline/offline_page.dart';
 import '../features/profile/profile_page.dart';
+import '../features/safety/safety_page.dart';
 import 'theme.dart';
 
 class EspanaOutdoorApp extends StatelessWidget {
@@ -14,8 +16,10 @@ class EspanaOutdoorApp extends StatelessWidget {
     initialLocation: '/',
     routes: [
       GoRoute(path: '/', builder: (_, __) => const HomePage()),
+      GoRoute(path: '/explore', builder: (_, __) => const ExplorePage()),
       GoRoute(path: '/map', builder: (_, __) => const MapPage()),
       GoRoute(path: '/safety', builder: (_, __) => const SafetyPage()),
+      GoRoute(path: '/offline', builder: (_, __) => const OfflinePage()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
     ],
   );
