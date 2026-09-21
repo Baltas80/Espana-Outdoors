@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:gpx/gpx.dart';
@@ -36,11 +37,14 @@ class GpxImportService {
     if (file == null) return null;
 
     final bytes = await file.readAsBytes();
-    final xml = utf8.decode(bytes, allowMalformed: false);
+    final xml = utf8.decode(bytes);
     return importString(xml, fallbackName: file.name);
   }
 
-  ImportedTrack importString(String xml, {String fallbackName = 'Ruta importada'}) {
+  ImportedTrack importString(
+    String xml, {
+    String fallbackName = 'Ruta importada',
+  }) {
     final gpx = GpxReader().fromString(xml);
     final points = <GeoPoint>[];
     final elevations = <double?>[];
@@ -53,6 +57,7 @@ class GpxImportService {
           final lon = point.lon;
           if (lat == null || lon == null) continue;
           if (lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
+
           points.add(GeoPoint(latitude: lat, longitude: lon));
           elevations.add(point.ele);
           times.add(point.time);
@@ -61,16 +66,18 @@ class GpxImportService {
     }
 
     if (points.isEmpty) {
-      throw const FormatException('El GPX no contiene puntos de track utilizables.');
+      throw const FormatException(
+        'El GPX no contiene puntos de track utilizables.',
+      );
     }
 
-    final distanceMeters = _distance(points);
     var ascentMeters = 0.0;
     var descentMeters = 0.0;
     for (var i = 1; i < elevations.length; i++) {
       final previous = elevations[i - 1];
       final current = elevations[i];
       if (previous == null || current == null) continue;
+
       final delta = current - previous;
       if (delta > 0) {
         ascentMeters += delta;
@@ -88,15 +95,18 @@ class GpxImportService {
     }
 
     final trackName = gpx.trks
-            .map((track) => track.name)
-            .whereType<String>()
-            .map((name) => name.trim())
-            .firstWhere((name) => name.isNotEmpty, orElse: () => fallbackName);
+        .map((track) => track.name)
+        .whereType<String>()
+        .map((name) => name.trim())
+        .firstWhere(
+          (name) => name.isNotEmpty,
+          orElse: () => fallbackName,
+        );
 
     return ImportedTrack(
       name: trackName,
       points: List.unmodifiable(points),
-      distanceMeters: distanceMeters,
+      distanceMeters: _distanceMeters(points),
       ascentMeters: ascentMeters,
       descentMeters: descentMeters,
       startedAt: startedAt,
@@ -104,11 +114,11 @@ class GpxImportService {
     );
   }
 
-  double _distance(List<GeoPoint> points) {
+  double _distanceMeters(List<GeoPoint> points) {
     const earthRadiusMeters = 6371008.8;
     var total = 0.0;
 
-    double radians(double degrees) => degrees * 3.141592653589793 / 180;
+    double radians(double degrees) => degrees * math.pi / 180;
 
     for (var i = 1; i < points.length; i++) {
       final previous = points[i - 1];
@@ -118,29 +128,13 @@ class GpxImportService {
       final lat1 = radians(previous.latitude);
       final lat2 = radians(current.latitude);
 
-      final a = (Math.sin(dLat / 2) * Math.sin(dLat / 2)) +
-          Math.cos(lat1) * Math.cos(lat2) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      final c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      final a = math.pow(math.sin(dLat / 2), 2) +
+          math.cos(lat1) *
+              math.cos(lat2) *
+              math.pow(math.sin(dLon / 2), 2);
+      final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
       total += earthRadiusMeters * c;
     }
     return total;
   }
 }
-
-class Math {
-  static double sin(double value) => _sin(value);
-  static double cos(double value) => _cos(value);
-  static double sqrt(double value) => value.sqrt;
-  static double atan2(double y, double x) => y.atan2(x);
-}
-
-extension on double {
-  double get sqrt => this < 0 ? double.nan : _sqrt(this);
-  double atan2(double x) => _atan2(this, x);
-}
-
-external double _sin(double value);
-external double _cos(double value);
-external double _sqrt(double value);
-external double _atan2(double y, double x);
