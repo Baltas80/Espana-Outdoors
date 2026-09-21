@@ -4,7 +4,7 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 
 ## Estado
 
-**Bootstrap técnico / MVP 0.1**. El repositorio parte vacío y esta primera base establece la arquitectura, diseño, navegación, mapa, GPS, modo offline básico, privacidad y CI.
+**MVP 0.1 en construcción activa**. La base actual incluye arquitectura por capas, navegación, mapa, GPS, grabación de rutas, importación GPX, persistencia local de rutas, modo offline básico, privacidad y CI.
 
 ## Objetivos
 
@@ -13,6 +13,8 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 - Mapas y GIS desacoplados del proveedor.
 - Datos con procedencia, fecha de actualización y nivel de confianza.
 - Seguridad y privacidad desde el diseño.
+- Importación y análisis GPX con persistencia local multiplataforma.
+- Grabación GPS de rutas directamente sobre el mapa.
 - SOS, contactos de confianza y Rescue Link como módulos aislados y auditables.
 - Reutilización de SDKs, APIs y software maduro en lugar de reinventar componentes.
 
