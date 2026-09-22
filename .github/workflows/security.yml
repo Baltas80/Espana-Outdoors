@@ -28,7 +28,12 @@ jobs:
   secret-scan:
     runs-on: ubuntu-latest
     steps:
+      # Gitleaks needs repository history for PR range scanning. A shallow
+      # checkout can leave the base/parent SHA unavailable and make the scan
+      # fail before it actually inspects any content.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

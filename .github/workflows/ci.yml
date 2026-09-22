@@ -28,6 +28,9 @@ jobs:
       - name: Dependencies
         run: flutter pub get
 
+      - name: Map provider guard
+        run: dart run tool/check_map_provider_usage.dart
+
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
