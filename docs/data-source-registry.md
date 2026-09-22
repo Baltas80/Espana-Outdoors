@@ -1,11 +1,11 @@
-# España Outdoor — Data Source Registry v0.1
+# España Outdoor — Data Source Registry v0.2
 
 This registry is the contract for every live or static external dataset used by the product. A source is not production-approved until provenance, licence, freshness, availability, attribution and failure behaviour are documented.
 
 | Domain | Candidate source | Role | Status |
 |---|---|---|---|
 | Base map | OpenStreetMap | Roads, paths, POI and geographic context | MVP/dev only for public tiles; production tile service pending |
-| Weather | AEMET OpenData | Forecasts and meteorological observations | Candidate; connector pending |
+| Weather | AEMET OpenData | Municipal forecasts, mountain forecasts, observations and official warnings | Adapter implemented; production credentials/quotas/failover pending |
 | National cartography | IGN/CNIG | Official geographic/cartographic layers | Candidate; connector and licence review pending |
 | Protected areas / nature | MITECO and official regional sources | Conservation, protected areas and restrictions | Candidate; source-by-source review pending |
 | Civil protection | Protección Civil / official regional services | Official alerts and emergency information | Candidate; source-by-source review pending |
@@ -33,11 +33,25 @@ An external warning may be displayed as **ALERTA OFICIAL** only when the source 
 
 The UI must never merge the two into a single confidence signal.
 
-## AEMET operational note
+## AEMET operational contract
 
-AEMET OpenData provides a REST API for reusable meteorological data. The connector must keep API credentials outside Git, support expiration/rotation, and surface source freshness. AEMET published a current notice that API keys without an expiration date will cease to be valid from **15 October 2026**.
+AEMET OpenData is a REST API for reusable meteorological information. The current adapter uses the official two-step response pattern: an authenticated API request returns a `datos` URL, followed by a data request to that URL. The adapter keeps the API key injected at runtime and does not persist it.
 
-Source: https://opendata.aemet.es/centrodedescargas/novedades
+Relevant current endpoints include:
+
+- `GET /api/prediccion/especifica/municipio/diaria/{municipio}`
+- `GET /api/prediccion/especifica/municipio/horaria/{municipio}`
+- `GET /api/prediccion/especifica/montaña/pasada/area/{area}`
+- `GET /api/avisos_cap/ultimoelaborado/area/{area}`
+
+AEMET documents HTTP 401/403/404/429 responses, so the production connector must classify authentication, access, missing-data and throttling failures separately and apply backoff for 429 responses.
+
+AEMET currently states that API keys without an expiration date will cease to be valid from **15 October 2026**, and newly requested keys have a three-month validity. Secret rotation must therefore be part of operations from the first production integration.
+
+Sources:
+- https://opendata.aemet.es/centrodedescargas/novedades
+- https://opendata.aemet.es/centrodedescargas/info
+- https://opendata.aemet.es/dist/
 
 ## OSM operational note
 
