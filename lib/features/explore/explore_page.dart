@@ -34,7 +34,20 @@ class ExplorePage extends StatelessWidget {
               return Card(
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
-                  onTap: () => item.$1 == 'Offline' ? context.go('/offline') : null,
+                  onTap: () {
+                    switch (item.$1) {
+                      case 'Rutas':
+                        context.go('/routes');
+                      case 'Mascotas':
+                        context.go('/pets');
+                      case 'Fauna':
+                        context.go('/wildlife');
+                      case 'Offline':
+                        context.go('/offline');
+                      default:
+                        break;
+                    }
+                  },
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
