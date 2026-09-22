@@ -1,7 +1,7 @@
 /// Provider-neutral live risk alert contracts.
 ///
 /// An alert is never treated as current merely because it exists locally.
-/// Consumers must evaluate [issuedAt], [updatedAt] and [validUntil] before
+/// Consumers must evaluate issuance, update and validity timestamps before
 /// using it for route readiness or safety decisions.
 library;
 
@@ -60,10 +60,14 @@ class OutdoorAlert {
   final String? sourceId;
   final String? regionId;
 
-  bool isValidAt(DateTime now) => validUntil.isAfter(now);
+  bool isValidAt(DateTime now) =>
+      !issuedAt.isAfter(now) &&
+      !updatedAt.isAfter(now) &&
+      validUntil.isAfter(now);
 
   bool get hasTraceableSource =>
-      sourceName.trim().isNotEmpty && sourceUrl.trim().isNotEmpty;
+      sourceName.trim().isNotEmpty &&
+      Uri.tryParse(sourceUrl)?.hasScheme == true;
 
   bool get isOfficial => authority == AlertAuthority.official;
 }
