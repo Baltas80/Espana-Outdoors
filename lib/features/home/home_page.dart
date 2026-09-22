@@ -166,8 +166,6 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-        ),
-      ),
     );
   }
 }
@@ -208,16 +206,19 @@ class _QuickAction extends StatelessWidget {
 }
 
 class _ReadinessCard extends StatelessWidget {
-  const _ReadinessCard({required this.onOffline, required this.onContacts});
+  const _ReadinessCard({
+    required this.onOffline,
+    required this.onContacts,
+  });
 
   final VoidCallback onOffline;
   final VoidCallback onContacts;
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    return Card(
       child: Padding(
-        padding: EdgeInsets.all(18),
+        padding: const EdgeInsets.all(18),
         child: Column(
           children: [
             _ReadinessRow(
@@ -226,13 +227,13 @@ class _ReadinessCard extends StatelessWidget {
               value: 'Preparar',
               onTap: onOffline,
             ),
-            Divider(height: 24),
-            _ReadinessRow(
+            const Divider(height: 24),
+            const _ReadinessRow(
               icon: Icons.location_on_outlined,
               label: 'Ubicación',
               value: 'Al iniciar',
             ),
-            Divider(height: 24),
+            const Divider(height: 24),
             _ReadinessRow(
               icon: Icons.contact_emergency_outlined,
               label: 'Contacto de confianza',
@@ -263,18 +264,21 @@ class _ReadinessRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(
-      children: [
-        Icon(icon),
-        const SizedBox(width: 12),
-        Expanded(child: Text(label)),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.labelLarge,
+          children: [
+            Icon(icon),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label)),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
