@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/brand.dart';
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
@@ -25,6 +29,30 @@ class HomePage extends StatelessWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
                   [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        OutdoorBrandMark(size: 56, dark: dark),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ESPAÑA OUTDOOR',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Text('Explora España. Hazlo preparado.'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
                     Text(
                       'Hola, explorador',
                       style: Theme.of(context)
@@ -33,7 +61,7 @@ class HomePage extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
-                    const Text('Explora España. Hazlo preparado.'),
+                    const Text('Naturaleza, aventura y seguridad en un solo lugar.'),
                     const SizedBox(height: 20),
                     Row(
                       children: [
@@ -77,20 +105,27 @@ class HomePage extends StatelessWidget {
                     const SizedBox(height: 24),
                     Card(
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(20),
                         onTap: () => context.go('/safety'),
                         child: Padding(
                           padding: const EdgeInsets.all(20),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .errorContainer,
-                                foregroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .onErrorContainer,
-                                child: const Icon(Icons.shield_outlined),
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .errorContainer,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  Icons.shield_outlined,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onErrorContainer,
+                                ),
                               ),
                               const SizedBox(width: 14),
                               const Expanded(
@@ -99,14 +134,10 @@ class HomePage extends StatelessWidget {
                                   children: [
                                     Text(
                                       'Centro de seguridad',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.w800),
                                     ),
                                     SizedBox(height: 4),
-                                    Text(
-                                      'SOS, alertas, contactos y preparación',
-                                    ),
+                                    Text('SOS, alertas, contactos y preparación'),
                                   ],
                                 ),
                               ),
@@ -193,10 +224,7 @@ class _QuickAction extends StatelessWidget {
             children: [
               Icon(icon, size: 28),
               const SizedBox(height: 8),
-              Text(
-                label,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -206,10 +234,7 @@ class _QuickAction extends StatelessWidget {
 }
 
 class _ReadinessCard extends StatelessWidget {
-  const _ReadinessCard({
-    required this.onOffline,
-    required this.onContacts,
-  });
+  const _ReadinessCard({required this.onOffline, required this.onContacts});
 
   final VoidCallback onOffline;
   final VoidCallback onContacts;
@@ -272,10 +297,7 @@ class _ReadinessRow extends StatelessWidget {
             Icon(icon),
             const SizedBox(width: 12),
             Expanded(child: Text(label)),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
+            Text(value, style: Theme.of(context).textTheme.labelLarge),
           ],
         ),
       ),
