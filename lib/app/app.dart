@@ -6,6 +6,9 @@ import '../features/home/home_page.dart';
 import '../features/map/map_page.dart';
 import '../features/offline/offline_page.dart';
 import '../features/profile/profile_page.dart';
+import '../features/routes/route_detail_page.dart';
+import '../../core/gpx/gpx_import_service.dart';
+import '../../core/models/route_summary.dart';
 import '../features/routes/routes_page.dart';
 import '../features/safety/safety_page.dart';
 import '../features/safety/trusted_contacts_page.dart';
@@ -20,9 +23,22 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/', builder: (_, __) => const HomePage()),
       GoRoute(path: '/explore', builder: (_, __) => const ExplorePage()),
       GoRoute(path: '/routes', builder: (_, __) => const RoutesPage()),
+      GoRoute(
+        path: '/routes/detail',
+        builder: (_, state) {
+          final extra = state.extra;
+          return RouteDetailPage(
+            route: extra is RouteSummary ? extra : null,
+            track: extra is ImportedTrack ? extra : null,
+          );
+        },
+      ),
       GoRoute(path: '/map', builder: (_, __) => const MapPage()),
       GoRoute(path: '/safety', builder: (_, __) => const SafetyPage()),
-      GoRoute(path: '/safety/contacts', builder: (_, __) => const TrustedContactsPage()),
+      GoRoute(
+        path: '/safety/contacts',
+        builder: (_, __) => const TrustedContactsPage(),
+      ),
       GoRoute(path: '/offline', builder: (_, __) => const OfflinePage()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
     ],
