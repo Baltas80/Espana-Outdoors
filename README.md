@@ -4,7 +4,16 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 
 ## Estado
 
-**MVP 0.1 en construcción activa**. La base actual incluye arquitectura por capas, navegación, mapa, GPS, grabación de rutas, importación GPX, persistencia local de rutas, modo offline básico, privacidad y CI.
+**MVP 0.1 en construcción activa.** La base actual incluye arquitectura por capas, navegación, mapa, GPS, grabación de rutas, importación GPX, persistencia local de rutas, modo offline básico, privacidad y CI. El sistema visual premium de España Outdoor ya está incorporado en la app y documentado en `docs/brand_system.md`.
+
+## Trabajo reciente
+
+- Design System premium: tokens de marca, estados semánticos, light/dark/high-contrast y componentes base.
+- Marca vectorial reutilizable en `assets/brand/espana_outdoor_mark.svg`.
+- Integración del símbolo de marca en la experiencia principal.
+- Atribución visible de OpenStreetMap en el mapa.
+- ADR de cartografía/offline con decisión de no usar los servidores públicos de teselas OSM para descargas offline.
+- Arquitectura preparada para sustituir proveedor cartográfico sin acoplar la UI al proveedor.
 
 ## Objetivos
 
@@ -23,11 +32,13 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 - Flutter / Dart
 - Riverpod para estado
 - go_router para navegación
-- flutter_map para cartografía multiplataforma
+- flutter_map para cartografía multiplataforma en el MVP
 - geolocator para ubicación
 - connectivity_plus para estado de conectividad
 - shared_preferences para preferencias no críticas
 - flutter_secure_storage para secretos y credenciales locales
+- Hive CE para persistencia local de rutas
+- GPX para importación/exportación
 
 Las versiones se mantienen deliberadamente en rangos compatibles y deben revisarse periódicamente antes de releases.
 
@@ -35,12 +46,14 @@ Las versiones se mantienen deliberadamente en rangos compatibles y deben revisar
 
 ```text
 lib/
-  app/          aplicación, tema y routing
+  app/          aplicación, tema, marca y routing
   core/         modelos y servicios transversales
+  domain/       entidades y reglas de dominio
   features/     funcionalidades de producto
   main.dart
 
-docs/           arquitectura, privacidad, datos y seguridad
+docs/           arquitectura, privacidad, datos, seguridad y Design System
+assets/         identidad visual y recursos reutilizables
 .github/        CI y automatización
 scripts/        bootstrap local
 ```
@@ -69,6 +82,13 @@ flutter run -d chrome
 6. Rescue Link nunca sustituye a los servicios profesionales de emergencia.
 7. Toda fuente dinámica debe tener frescura y procedencia.
 8. Ningún secreto entra en Git.
+9. No usar `tile.openstreetmap.org` para descargas offline o prefetched bulk.
+10. Las decisiones de proveedor deben considerar licencia, capacidad, coste, lock-in y rendimiento.
+
+## Documentación clave
+
+- `docs/brand_system.md` — identidad visual y Design System.
+- `docs/architecture/ADR-0001-maps-and-offline.md` — estrategia de cartografía, proveedores y offline.
 
 ## Licencia
 
