@@ -8,5 +8,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox<Map<dynamic, dynamic>>('route_records');
+  await Hive.openBox<Map<dynamic, dynamic>>('offline_regions');
   runApp(const ProviderScope(child: EspanaOutdoorApp()));
 }
