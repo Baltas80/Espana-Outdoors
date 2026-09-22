@@ -1,0 +1,102 @@
+# España Outdoor — Technology Stack & Anti-Reinvention Policy
+
+## Purpose
+
+Before writing custom infrastructure, the project must first check whether Flutter, a maintained package, or an external provider already solves the problem. Custom code should stay concentrated in the domain and safety policy layers.
+
+## Current foundation
+
+- Flutter/Dart for the cross-platform application.
+- Riverpod for feature state.
+- go_router for navigation.
+- flutter_map + latlong2 for GIS presentation.
+- geolocator for location and distance calculations.
+- file_picker for file import/export.
+- path_provider for platform paths.
+- Hive CE for current lightweight local persistence.
+- flutter_secure_storage for sensitive local values.
+- connectivity_plus for connectivity state.
+- url_launcher for call/SMS hand-off.
+- gpx for GPX parsing and generation.
+
+## Preferred existing software by problem
+
+### Offline maps
+
+Preferred architecture:
+
+1. Native: MBTiles through flutter_map_vector_tiles_mbtiles.
+2. Web: PMTiles through flutter_map_vector_tiles.
+3. Keep the application map-provider interface independent of both.
+
+Do not build a custom tile renderer or custom SQLite tile reader.
+Do not use tile.openstreetmap.org for bulk offline downloading. Production offline packages must use a provider or infrastructure whose terms explicitly permit prefetch/offline use.
+
+### Routing
+
+Keep a RoutingEngine application port.
+Evaluate maintained OSRM/Valhalla adapters before writing a custom routing client. Candidate packages can change quickly, so adoption requires a maintenance, license and API review.
+Never bind domain logic directly to one routing vendor.
+
+### Marker and POI clustering
+
+When POI or community markers become numerous, prefer an existing maintained clustering implementation such as flutter_map_marker_cluster instead of writing a custom spatial clustering system.
+
+### Structured persistence
+
+Hive CE remains suitable for the prototype and simple key/value data.
+Before the model expands into routes, waypoints, hazards, sources, reports, pets, downloads and sync metadata, evaluate Drift/SQLite. Do not build a large relational model as nested Hive maps.
+
+### Background work
+
+Use platform background-task infrastructure for periodic maintenance and synchronization.
+workmanager can be evaluated for periodic jobs, but it is not a replacement for continuous GPS tracking.
+Continuous route/location recording needs an explicit location capability, platform permissions and a battery policy.
+
+### Notifications
+
+Use a maintained notification library for local reminders and operational events.
+Add push notification infrastructure only after the backend, authentication and device-token lifecycle are defined.
+
+### Permissions
+
+Do not add another generic permission plugin merely to duplicate geolocation permissions already handled by the selected location stack. Introduce a unified permission layer only when multiple permission domains justify it.
+
+## Official data
+
+AEMET OpenData is the preferred first-party weather source.
+AEMET uses authenticated API access. API keys are credentials and must never be embedded as privileged secrets in public client code.
+Production access should sit behind controlled infrastructure where key rotation, rate limiting, caching and provenance can be managed.
+
+## Dependency admission rule
+
+Before adding a package, verify:
+
+1. It replaces substantial custom code or difficult native integration.
+2. It is compatible with the supported Dart/Flutter floor.
+3. It is actively maintained.
+4. Its license is acceptable for the product.
+5. It supports the platforms required by the feature.
+6. It can be hidden behind an application port where vendor lock-in would matter.
+7. It can be tested deterministically.
+
+## Current decision
+
+Use existing libraries aggressively where they remove infrastructure work, but do not add packages simply because they exist.
+
+Priority evaluations:
+
+- flutter_map_vector_tiles + native MBTiles companion for true offline maps.
+- Drift for structured local data as the domain expands.
+- Marker clustering when POI density requires it.
+- Routing adapter after the route domain is stable.
+- Local notifications for operational and safety state.
+- Background task scheduling once backend synchronization exists.
+
+## Definition of not coding blindly
+
+For each capability, follow this order:
+
+Existing Flutter capability -> maintained package -> provider/service -> custom domain logic.
+
+Custom implementation is the last layer, not the first choice.
