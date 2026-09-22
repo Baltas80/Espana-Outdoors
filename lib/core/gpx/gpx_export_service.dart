@@ -35,9 +35,7 @@ class GpxExportService {
   }
 
   Future<Uri?> saveTrack(ImportedTrack track) {
-    final bytes = Uint8List.fromList(
-      utf8.encode(toGpxString(track)),
-    );
+    final bytes = Uint8List.fromList(utf8.encode(toGpxString(track)));
     return FilePicker.saveFile(
       fileName: _safeFileName(track.name),
       bytes: bytes,
@@ -49,6 +47,7 @@ class GpxExportService {
 
   String _safeFileName(String name) {
     final normalized = name.trim().isEmpty ? 'ruta' : name.trim();
-    final safe = normalized.replaceAll(RegExp(r'[<>:"/\\\\|?*]'), '_');
+    final safe = normalized.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
     return safe.toLowerCase().endsWith('.gpx') ? safe : '$safe.gpx';
   }
+}
