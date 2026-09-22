@@ -47,8 +47,8 @@ void main() {
     expect(forecast.days.single.condition.name, 'storm');
     expect(forecast.days.single.maxTemperatureC, 27);
     expect(forecast.days.single.precipitationProbabilityPercent, 80);
-    expect(client.requests.single.headers['api_key'], 'test-key-never-persisted');
-    expect(client.requests.last.url.toString(), contains('/28079'));
+    expect(client.requests[0].headers['api_key'], 'test-key-never-persisted');
+    expect(client.requests[0].url.toString(), contains('/28079'));
     expect(client.requests[1].headers.containsKey('api_key'), isFalse);
   });
 
