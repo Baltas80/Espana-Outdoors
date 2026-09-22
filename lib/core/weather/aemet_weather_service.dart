@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -42,10 +41,14 @@ class AemetWeatherService implements WeatherService {
       throw const WeatherProviderException('Código de municipio inválido.');
     }
 
-    final envelope = await _getJson('$baseUri/prediccion/especifica/municipio/diaria/$code');
+    final envelope = await _getJson(
+      '$baseUri/prediccion/especifica/municipio/diaria/$code',
+    );
     final dataUrl = envelope['datos'];
     if (dataUrl is! String || dataUrl.isEmpty) {
-      throw const WeatherProviderException('AEMET no devolvió una URL de datos.');
+      throw const WeatherProviderException(
+        'AEMET no devolvió una URL de datos.',
+      );
     }
 
     final payload = await _getJson(dataUrl, includeApiKey: false);
@@ -72,7 +75,9 @@ class AemetWeatherService implements WeatherService {
 
     final decoded = jsonDecode(response.body);
     if (decoded is! Map<String, dynamic>) {
-      throw const WeatherProviderException('Respuesta meteorológica inválida.');
+      throw const WeatherProviderException(
+        'Respuesta meteorológica inválida.',
+      );
     }
     return decoded;
   }
@@ -81,7 +86,9 @@ class AemetWeatherService implements WeatherService {
     final municipio = payload['prediccion'];
     final days = municipio is Map<String, dynamic> ? municipio['dia'] : null;
     if (days is! List) {
-      throw const WeatherProviderException('Formato de predicción AEMET no reconocido.');
+      throw const WeatherProviderException(
+        'Formato de predicción AEMET no reconocido.',
+      );
     }
 
     final parsed = <WeatherDay>[];
@@ -117,10 +124,7 @@ class AemetWeatherService implements WeatherService {
     return double.tryParse('${parent[key] ?? ''}'.replaceAll(',', '.'));
   }
 
-  int? _firstInt(dynamic value) {
-    final number = _firstNumber(value);
-    return number?.round();
-  }
+  int? _firstInt(dynamic value) => _firstNumber(value)?.round();
 
   double? _firstNumber(dynamic value) {
     if (value is num) return value.toDouble();
@@ -129,7 +133,9 @@ class AemetWeatherService implements WeatherService {
       final first = value.first;
       if (first is Map) {
         for (final key in const ['value', 'valor']) {
-          final parsed = double.tryParse('${first[key] ?? ''}'.replaceAll(',', '.'));
+          final parsed = double.tryParse(
+            '${first[key] ?? ''}'.replaceAll(',', '.'),
+          );
           if (parsed != null) return parsed;
         }
       }
@@ -147,15 +153,17 @@ class AemetWeatherService implements WeatherService {
   String? _windDirection(dynamic value) {
     if (value is! List || value.isEmpty || value.first is! Map) return null;
     final first = value.first as Map;
-    final direction = first['direccion'];
-    return direction?.toString().trim().isEmpty == true ? null : direction?.toString();
+    final direction = first['direccion']?.toString();
+    return direction?.trim().isEmpty == true ? null : direction;
   }
 
   WeatherCondition _condition(dynamic value) {
-    final text = value is List && value.isNotEmpty
-        ? '${(value.first as Map?)?['descripcion'] ?? ''}'
-        : '';
+    final first = value is List && value.isNotEmpty && value.first is Map
+        ? value.first as Map
+        : null;
+    final text = '${first?['descripcion'] ?? ''}';
     final normalized = text.toLowerCase();
+
     if (normalized.contains('torment')) return WeatherCondition.storm;
     if (normalized.contains('nieve')) return WeatherCondition.snow;
     if (normalized.contains('lluv') || normalized.contains('precipit')) {
