@@ -33,7 +33,7 @@ class AemetGatewayClient {
 
     final envelope = await _getJson(
       Uri.parse(
-        '\$baseUri/prediccion/especifica/municipio/diaria/\$code',
+        '$baseUri/prediccion/especifica/municipio/diaria/$code',
       ),
       includeApiKey: true,
     );
@@ -79,10 +79,10 @@ class AemetGatewayClient {
         }
 
         if (response.statusCode != 429 && response.statusCode < 500) {
-          throw StateError('AEMET HTTP \${response.statusCode}.');
+          throw StateError('AEMET HTTP ${response.statusCode}.');
         }
 
-        lastError = StateError('AEMET HTTP \${response.statusCode}.');
+        lastError = StateError('AEMET HTTP ${response.statusCode}.');
       } catch (error) {
         lastError = error;
       }
@@ -92,7 +92,7 @@ class AemetGatewayClient {
       );
     }
 
-    throw StateError('AEMET no disponible: \$lastError');
+    throw StateError('AEMET no disponible: $lastError');
   }
 }
 
