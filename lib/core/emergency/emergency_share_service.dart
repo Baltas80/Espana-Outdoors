@@ -42,12 +42,12 @@ class EmergencyShareService {
 
   String _message(EmergencySharePayload payload) {
     final p = payload.snapshot.position;
-    return 'ALERTA España Outdoor. Posición: \${p.latitude.toStringAsFixed(6)}, '
-        '\${p.longitude.toStringAsFixed(6)}. Precisión aproximada: '
-        '\${payload.snapshot.accuracyMeters.toStringAsFixed(0)} m. '
-        'Tipo: \${payload.snapshot.type.name}. '
-        'Válida hasta \${payload.expiresAt.toLocal().toIso8601String()}. '
-        'Código: \${payload.shareToken}';
+    return 'ALERTA España Outdoor. Posición: ${p.latitude.toStringAsFixed(6)}, '
+        '${p.longitude.toStringAsFixed(6)}. Precisión aproximada: '
+        '${payload.snapshot.accuracyMeters.toStringAsFixed(0)} m. '
+        'Tipo: ${payload.snapshot.type.name}. '
+        'Válida hasta ${payload.expiresAt.toLocal().toIso8601String()}. '
+        'Código: ${payload.shareToken}';
   }
 
   String _token() {
