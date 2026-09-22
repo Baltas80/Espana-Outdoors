@@ -6,7 +6,7 @@
 
 España Outdoor needs a provider-independent mapping layer, online and offline operation, vector/raster support, attribution, Spanish official data and the ability to change suppliers without rewriting product features.
 
-The current Flutter client uses `flutter_map` behind `MapProviderConfig`. This is intentionally retained for the MVP because it is already integrated and keeps the map implementation portable across the project's target Flutter platforms.
+The current Flutter client uses `flutter_map` behind `MapProviderConfig`. This is intentionally retained for the MVP because it is already integrated, BSD-3-Clause licensed, and supports Android, iOS, Linux, macOS, Web and Windows.
 
 ## Research snapshot — 2026-09-22
 
@@ -20,18 +20,19 @@ Source: https://operations.osmfoundation.org/policies/tiles/
 
 ### MapLibre
 
-MapLibre provides an open mapping stack with control over sources and styling. Current Flutter documentation covers vector/raster/GeoJSON sources, data-driven layers, user location, PMTiles and offline regions; the ecosystem also supports native Android, iOS, desktop and web components. Offline capabilities and platform parity still need to be validated against the exact package/version selected for production.
+MapLibre is the leading open-source candidate for the vector-map production path. Its Flutter ecosystem supports vector/raster/GeoJSON/PMTiles sources, data-driven layers and user location. Current `maplibre_gl` releases provide Android/iOS/Web support and offline regions on Android/iOS, but do not support Windows/macOS/Linux targets. A separate newer `maplibre` package targets broader Flutter platform coverage but requires validation of API maturity and offline parity before adoption.
+
+Decision: **do not replace `flutter_map` yet.** Evaluate MapLibre as a platform-specific production renderer while preserving the provider-neutral map abstraction and a full Flutter fallback for desktop.
 
 Sources:
 - https://maplibre.org/
 - https://maplibre.org/flutter-maplibre-gl/advanced/
-- https://maplibre.org/flutter-maplibre-gl/layers/
+- https://pub.dev/packages/maplibre_gl
+- https://pub.dev/packages/maplibre
 
 ### Commercial providers
 
-MapTiler currently offers hosted and on-prem products, including MBTiles/GeoPackage processing and offline/self-hosted options. Pricing and license restrictions depend on product and deployment model, so a commercial production choice must be made only after traffic, MAU, offline distribution and B2C licensing are modelled.
-
-Source: https://www.maptiler.com/cloud/pricing/
+Commercial providers can simplify hosted tiles, routing and offline distribution but introduce recurring cost, quotas and contractual lock-in. Pricing and licensing must be modelled against traffic, MAU, offline distribution and B2C use before selection.
 
 ## Target architecture
 
@@ -53,12 +54,13 @@ The product layer must never depend directly on a provider SDK or tile URL.
 
 ## Production recommendation
 
-1. Keep `flutter_map` for the immediate MVP while its current feature set is sufficient.
-2. Build a provider-neutral `MapService` interface before adding offline downloads.
-3. Evaluate a MapLibre-based renderer as the preferred production candidate if the exact Flutter package provides the required Android/iOS/Web/desktop parity at release time.
-4. For offline maps, use self-hosted or explicitly licensed offline-capable tiles. Do not use public OSM raster tiles for prefetching.
-5. Use OSM data with correct attribution, but treat data licensing and tile-service licensing as separate concerns.
-6. Add official Spanish layers through independent data adapters rather than modifying the base map provider.
+1. Keep `flutter_map` for the immediate MVP.
+2. Build and enforce a provider-neutral `MapService` before adding offline downloads.
+3. Benchmark MapLibre on Android/iOS/Web for vector rendering, overlays, GPS-following and offline regions.
+4. Retain a desktop-capable renderer until a MapLibre desktop path is production-ready for the selected package.
+5. For offline maps, use self-hosted or explicitly licensed offline-capable tiles. Do not use public OSM raster tiles for prefetching.
+6. Use OSM data with correct attribution, but treat data licensing and tile-service licensing as separate concerns.
+7. Add official Spanish layers through independent data adapters rather than modifying the base map provider.
 
 ## Offline download contract
 
@@ -96,7 +98,7 @@ Official and open layers must preserve provenance:
 
 ## Weather source
 
-AEMET OpenData exposes a REST API for reusable meteorological/climatological data. Current AEMET notices also document API-key expiry requirements for keys without an expiration date from 15 October 2026. The production connector must therefore support secret rotation and explicit key expiry metadata.
+AEMET OpenData exposes a REST API for reusable meteorological/climatological data. Current AEMET notices also document API-key expiry requirements for keys without an expiration date from 15 October 2026. The production connector now exists behind `WeatherService`; it must still be wired to secure runtime configuration, caching, retry/backoff and a provider failover strategy.
 
 Sources:
 - https://www.aemet.es/es/datos_abiertos/AEMET_OpenData
