@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title desc">
+  <title id="title">España Outdoor mark</title>
+  <desc id="desc">Abstract mountain relief and exploration path with a solar accent.</desc>
+  <path fill="#145A43" d="M12 80 43 19c3.7-7.3 9.3-7.3 13 0l32 61c2.5 4.8.2 5-5 5H17c-6.4 0-7.3-1.7-5-5Z"/>
+  <path fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" d="M25 67c9-10 15-12 23-9 8 3 9 12 18 13 6 1 10-3 14-8"/>
+  <circle cx="78" cy="18" r="9" fill="#F2A11A"/>
+</svg>
