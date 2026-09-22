@@ -63,13 +63,12 @@ class OutdoorAlert {
   bool get hasProvenance =>
       source.trim().isNotEmpty &&
       id.trim().isNotEmpty &&
-      sourceUrl == null || sourceUrl!.trim().isNotEmpty;
+      (sourceUrl == null || sourceUrl!.trim().isNotEmpty);
 
   bool get isUsable {
     final now = DateTime.now().toUtc();
-    return id.trim().isNotEmpty &&
+    return hasProvenance &&
         title.trim().isNotEmpty &&
-        source.trim().isNotEmpty &&
         !updatedAt.toUtc().isAfter(now.add(const Duration(minutes: 5))) &&
         !isExpired;
   }
