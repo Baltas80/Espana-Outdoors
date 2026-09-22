@@ -1,0 +1,12 @@
+name: espana_outdoors_gateway
+description: España Outdoor Live Data Gateway
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+
+dependencies:
+  http: ^1.6.0
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
