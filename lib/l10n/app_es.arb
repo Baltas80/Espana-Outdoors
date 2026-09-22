@@ -1,0 +1,18 @@
+{
+  "@@locale": "es",
+  "appName": "España Outdoor",
+  "explore": "Explorar",
+  "routes": "Rutas",
+  "map": "Mapa",
+  "safety": "Seguridad",
+  "pets": "Mascotas",
+  "wildlife": "Fauna",
+  "offline": "Offline",
+  "profile": "Perfil",
+  "storm": "Tormenta",
+  "rain": "Lluvia",
+  "suitable": "Apto",
+  "caution": "Precaución",
+  "notRecommended": "No recomendado",
+  "insufficientData": "Datos insuficientes"
+}
