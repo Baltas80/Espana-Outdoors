@@ -20,8 +20,8 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter create . --platforms=android,ios,web,windows,macos,linux --org com.espanaoutdoors
-      - run: flutter pub get
+      - name: Resolve dependencies
+        run: flutter pub get
       - name: Outdated dependency report
         run: flutter pub outdated
 
@@ -30,7 +30,7 @@ jobs:
     steps:
       # Gitleaks needs repository history for PR range scanning. A shallow
       # checkout can leave the base/parent SHA unavailable and make the scan
-      # fail before it actually inspects any content.
+      # fail before it actually inspects content.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
