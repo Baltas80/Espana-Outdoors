@@ -5,7 +5,10 @@ void main() {
   final issued = DateTime.utc(2026, 9, 22, 12);
   final updated = DateTime.utc(2026, 9, 22, 12, 30);
 
-  OutdoorAlert buildAlert({DateTime? validUntil}) => OutdoorAlert(
+  OutdoorAlert buildAlert({
+    DateTime? issuedAt,
+    DateTime? validUntil,
+  }) => OutdoorAlert(
         id: 'a-1',
         authority: AlertAuthority.official,
         type: AlertType.storm,
@@ -14,7 +17,7 @@ void main() {
         title: 'Aviso meteorológico',
         sourceName: 'AEMET',
         sourceUrl: 'https://www.aemet.es/',
-        issuedAt: issued,
+        issuedAt: issuedAt ?? issued,
         updatedAt: updated,
         validUntil: validUntil ?? DateTime.utc(2026, 9, 22, 15),
       );
@@ -28,5 +31,12 @@ void main() {
   test('expired alert is not valid for current safety decisions', () {
     final alert = buildAlert(validUntil: DateTime.utc(2026, 9, 22, 13));
     expect(alert.isValidAt(DateTime.utc(2026, 9, 22, 13, 1)), isFalse);
+  });
+
+  test('future-issued alert is not valid before issuance', () {
+    final alert = buildAlert(
+      issuedAt: DateTime.utc(2026, 9, 22, 14),
+    );
+    expect(alert.isValidAt(DateTime.utc(2026, 9, 22, 13)), isFalse);
   });
 }
