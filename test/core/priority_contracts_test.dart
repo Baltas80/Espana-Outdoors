@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:espana_outdoors/core/alerts/alert_models.dart';
+import 'package:espana_outdoors/core/domain/outdoor_models.dart';
 import 'package:espana_outdoors/core/map/map_service.dart';
 import 'package:espana_outdoors/core/map/offline_map_download.dart';
 import 'package:espana_outdoors/core/routing/elevation_models.dart';
+import 'package:espana_outdoors/core/routing/offline_navigation_engine.dart';
 import 'package:espana_outdoors/core/routing/routing_models.dart';
 import 'package:espana_outdoors/core/safety/sos_models.dart';
 
@@ -77,5 +79,30 @@ void main() {
       sourceTimestamp: DateTime.utc(2026, 9, 23),
     );
     expect(profile.isUsable, isTrue);
+  });
+
+  test('offline navigation detects off-route positions', () {
+    final now = DateTime.utc(2026, 9, 23);
+    final route = RoutingResult(
+      legs: const [
+        RouteLeg(
+          distanceMeters: 111,
+          durationSeconds: 120,
+          geometry: [
+            RouteWaypoint(latitude: 40, longitude: -3),
+            RouteWaypoint(latitude: 40.001, longitude: -3),
+          ],
+        ),
+      ],
+      providerId: 'offline-route',
+      sourceTimestamp: now,
+    );
+    const engine = OfflineNavigationEngine(offRouteThresholdMeters: 20);
+    final state = engine.update(
+      route: route,
+      position: const RouteWaypoint(latitude: 40.01, longitude: -3),
+    );
+    expect(state.offRoute, isTrue);
+    expect(state.instruction.type, NavigationInstructionType.offRoute);
   });
 }
