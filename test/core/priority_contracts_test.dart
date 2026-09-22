@@ -1,0 +1,81 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:espana_outdoors/core/alerts/alert_models.dart';
+import 'package:espana_outdoors/core/map/map_service.dart';
+import 'package:espana_outdoors/core/map/offline_map_download.dart';
+import 'package:espana_outdoors/core/routing/elevation_models.dart';
+import 'package:espana_outdoors/core/routing/routing_models.dart';
+import 'package:espana_outdoors/core/safety/sos_models.dart';
+
+void main() {
+  test('routing rejects invalid waypoints', () {
+    const request = RoutingRequest(waypoints: [
+      RouteWaypoint(latitude: 91, longitude: 0),
+      RouteWaypoint(latitude: 40, longitude: -3),
+    ]);
+    expect(request.isValid, isFalse);
+  });
+
+  test('offline map region validates its bounds and zooms', () {
+    const region = OfflineMapRegion(
+      id: 'spain-test',
+      name: 'Test',
+      bounds: MapBounds(west: -4, south: 39, east: -3, north: 40),
+      minZoom: 8,
+      maxZoom: 14,
+      providerId: 'licensed-offline-provider',
+      styleVersion: '1',
+    );
+    expect(region.isValid, isTrue);
+  });
+
+  test('alerts require traceable source URLs', () {
+    final now = DateTime.utc(2026, 9, 23);
+    final alert = OutdoorAlert(
+      id: 'a1',
+      authority: AlertAuthority.official,
+      type: AlertType.storm,
+      severity: AlertSeverity.caution,
+      confidence: AlertConfidence.confirmed,
+      title: 'Storm',
+      sourceName: 'Official source',
+      sourceUrl: 'https://example.invalid/source',
+      issuedAt: now.subtract(const Duration(minutes: 1)),
+      updatedAt: now,
+      validUntil: now.add(const Duration(hours: 1)),
+    );
+    expect(alert.hasTraceableSource, isTrue);
+    expect(alert.isValidAt(now), isTrue);
+  });
+
+  test('SOS expires and never remains valid past expiry', () {
+    final captured = DateTime.utc(2026, 9, 23, 0, 0);
+    final expires = captured.add(const Duration(minutes: 15));
+    const emergency = EmergencySnapshot(
+      type: EmergencyType.accident,
+      position: GeoPoint(latitude: 40, longitude: -3),
+      accuracyMeters: 8,
+      capturedAt: DateTime.utc(2026, 9, 23),
+      batteryPercent: 60,
+    );
+    final sos = SosSnapshot(
+      state: SosState.active,
+      mode: SosMode.unableToSpeak,
+      emergency: emergency,
+      precision: LocationPrecision.approximate,
+      capturedAt: captured,
+      expiresAt: expires,
+    );
+    expect(sos.isExpiredAt(expires), isTrue);
+    expect(sos.isExpiredAt(captured), isFalse);
+  });
+
+  test('elevation profile reports usability from available samples', () {
+    final profile = ElevationProfile(
+      samples: const [ElevationSample(meters: null), ElevationSample(meters: 842)],
+      quality: ElevationQuality.estimated,
+      providerId: 'offline-dem',
+      sourceTimestamp: DateTime.utc(2026, 9, 23),
+    );
+    expect(profile.isUsable, isTrue);
+  });
+}
