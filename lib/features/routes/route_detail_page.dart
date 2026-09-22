@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/gpx/gpx_export_service.dart';
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
+import '../map/map_provider_config.dart';
 
 class RouteDetailPage extends StatefulWidget {
   const RouteDetailPage({
@@ -83,9 +84,15 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'EspanaOutdoor/0.1',
+                    urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
+                    userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
+                  ),
+                  RichAttributionWidget(
+                    attributions: [
+                      TextSourceAttribution(
+                        MapProviderConfig.openStreetMap.attribution,
+                      ),
+                    ],
                   ),
                   if (points.length > 1)
                     PolylineLayer(
