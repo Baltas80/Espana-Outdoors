@@ -27,7 +27,10 @@ Future<void> main() async {
     if (auth != 'Bearer $bearerToken') {
       return Response.forbidden(jsonEncode({'error': 'unauthorized'}), headers: _jsonHeaders());
     }
-    final ip = request.context['shelf.io.connection_info']?.toString() ?? 'unknown';
+    final connectionInfo = request.context['shelf.io.connection_info'];
+    final ip = connectionInfo is HttpConnectionInfo
+        ? connectionInfo.remoteAddress.address
+        : 'unknown';
     final now = DateTime.now().toUtc();
     final window = rate[ip] ?? _RateWindow(start: now, count: 0);
     if (now.difference(window.start) >= const Duration(minutes: 1)) {
