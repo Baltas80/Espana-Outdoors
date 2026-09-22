@@ -37,7 +37,7 @@ class AemetWeatherService implements WeatherService {
     String municipalityCode,
   ) async {
     final code = municipalityCode.trim();
-    if (!RegExp(r'^\d{5}\$').hasMatch(code)) {
+    if (!RegExp(r'^\d{5}$').hasMatch(code)) {
       throw const WeatherProviderException('Código de municipio inválido.');
     }
 
