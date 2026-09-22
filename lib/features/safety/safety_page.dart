@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/domain/outdoor_models.dart';
 import '../../core/emergency/emergency_service.dart';
+import '../../core/emergency/emergency_share_service.dart';
+import '../../core/emergency/trusted_contact.dart';
+import '../../core/emergency/trusted_contact_store.dart';
 
 class SafetyPage extends StatefulWidget {
   const SafetyPage({super.key});
@@ -12,6 +15,8 @@ class SafetyPage extends StatefulWidget {
 
 class _SafetyPageState extends State<SafetyPage> {
   final _emergency = const EmergencyService();
+  final _share = const EmergencyShareService();
+  final _contacts = TrustedContactStore();
   bool _capturing = false;
 
   Future<void> _prepareEmergencyCall() async {
@@ -21,9 +26,7 @@ class _SafetyPageState extends State<SafetyPage> {
     setState(() => _capturing = false);
 
     if (snapshot == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se ha podido obtener una ubicación precisa.')),
-      );
+      _show('No se ha podido obtener una ubicación precisa.');
       return;
     }
 
@@ -32,7 +35,7 @@ class _SafetyPageState extends State<SafetyPage> {
       builder: (context) => AlertDialog(
         title: const Text('Llamar al 112'),
         content: Text(
-          'Ubicación preparada con una precisión aproximada de ${snapshot.accuracyMeters.toStringAsFixed(0)} m. La llamada abrirá el marcador del dispositivo; comprueba los datos antes de comunicar tu situación.',
+          'Ubicación preparada con una precisión aproximada de ${snapshot.accuracyMeters.toStringAsFixed(0)} m.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
@@ -41,9 +44,35 @@ class _SafetyPageState extends State<SafetyPage> {
       ),
     );
 
-    if (confirmed == true) {
-      await _emergency.callEmergencyServices();
+    if (confirmed == true) await _emergency.callEmergencyServices();
+  }
+
+  Future<void> _shareEmergency() async {
+    setState(() => _capturing = true);
+    final snapshot = await _emergency.captureSnapshot(type: EmergencyType.other);
+    if (!mounted) return;
+    setState(() => _capturing = false);
+
+    if (snapshot == null) {
+      _show('No se ha podido obtener la ubicación.');
+      return;
     }
+
+    final payload = _share.createPayload(snapshot: snapshot);
+    final contacts = _contacts.load().where((contact) => contact.enabled).toList();
+    if (contacts.isEmpty) {
+      await _share.copyShareText(payload);
+      if (mounted) _show('Alerta copiada. Configura un contacto de confianza para enviarla directamente.');
+      return;
+    }
+
+    final contact = contacts.first;
+    final opened = await _share.openSms(payload, contact.phone);
+    if (mounted) _show(opened ? 'Mensaje de alerta preparado.' : 'No se pudo abrir el SMS.');
+  }
+
+  void _show(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -61,23 +90,29 @@ class _SafetyPageState extends State<SafetyPage> {
                 children: [
                   Text('SOS', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
-                  const Text('Prepara tu ubicación y abre el marcador de emergencias. España Outdoor no sustituye a los servicios profesionales.'),
-                  const SizedBox(height: 20),
+                  const Text('Prepara tu ubicación para emergencias. España Outdoor no sustituye a los servicios profesionales.'),
+                  const SizedBox(height: 16),
                   SizedBox(
                     height: 58,
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
                       onPressed: _capturing ? null : _prepareEmergencyCall,
-                      icon: _capturing ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.emergency),
+                      icon: const Icon(Icons.emergency),
                       label: Text(_capturing ? 'OBTENIENDO UBICACIÓN…' : 'PREPARAR SOS / 112'),
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: _capturing ? null : _shareEmergency,
+                    icon: const Icon(Icons.share_location_outlined),
+                    label: const Text('ENVIAR ALERTA A CONTACTO'),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          const _SafetyTile(icon: Icons.contact_emergency_outlined, title: 'Contactos de confianza', subtitle: 'Prepara quién debe recibir tu alerta.'),
+          const _SafetyTile(icon: Icons.contact_emergency_outlined, title: 'Contactos de confianza', subtitle: 'Destinatarios para alertas temporales de emergencia.'),
           const SizedBox(height: 10),
           const _SafetyTile(icon: Icons.campaign_outlined, title: 'Alertas y desastres', subtitle: 'Incendios, inundaciones, tormentas y otros riesgos.'),
           const SizedBox(height: 10),
