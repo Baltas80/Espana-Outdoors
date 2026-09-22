@@ -9,5 +9,6 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox<Map<dynamic, dynamic>>('route_records');
   await Hive.openBox<Map<dynamic, dynamic>>('offline_regions');
+  await Hive.openBox<String>('weather_cache');
   runApp(const ProviderScope(child: EspanaOutdoorApp()));
 }
