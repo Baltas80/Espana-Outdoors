@@ -7,7 +7,7 @@ ThemeData buildOutdoorTheme(Brightness brightness, {bool highContrast = false}) 
 
   final scheme = isDark
       ? ColorScheme.dark(
-          primary: highContrast ? OutdoorBrand.forestLight : OutdoorBrand.forestLight,
+          primary: OutdoorBrand.forestLight,
           onPrimary: OutdoorBrand.darkBackground,
           primaryContainer: const Color(0xFF1E4F3D),
           onPrimaryContainer: OutdoorBrand.textDark,
@@ -68,7 +68,7 @@ ThemeData buildOutdoorTheme(Brightness brightness, {bool highContrast = false}) 
         fontWeight: FontWeight.w800,
         letterSpacing: -0.5,
       ),
-      titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w750),
+      titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w700),
       titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w700),
       labelLarge: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
     ),
