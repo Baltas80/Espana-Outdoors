@@ -19,6 +19,8 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] OSM-compatible attribution
 - [x] GPX import/export foundation
 - [x] offline capability contract
+- [x] offline region model validation
+- [x] persistent offline region state store
 - [ ] `MapService` interface enforcement across features
 - [ ] production vector-tile provider selection
 - [ ] offline region downloader with pause/resume/update/delete
@@ -94,8 +96,8 @@ The project is developed in parallel tracks so no major capability waits for ano
 
 1. Wire `WeatherService` to secure runtime configuration and cache the AEMET result with freshness metadata.
 2. Build the normalized official-alert model and AEMET CAP adapter.
-3. Introduce the provider-neutral `MapService` boundary without changing the current renderer.
-4. Implement the offline-region model and downloader contract before any bulk tile operation.
+3. Enforce the provider-neutral `MapService` boundary across map-dependent features.
+4. Connect the persistent offline-region state to a real licensed vector-tile/offline provider; do not fake downloads.
 5. Evaluate MapLibre Android/iOS/Web against `flutter_map` using measured rendering, offline and GPS-following tests.
 6. Add routing/elevation providers only after licence/cost/coverage validation.
 7. Harden SOS and Rescue Link with expiry, device-state capture and end-to-end tests.
