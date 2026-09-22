@@ -25,7 +25,7 @@ Future<void> main() async {
   router.get('/v1/weather', (Request request) async {
     final auth = request.headers['authorization'];
     if (auth != 'Bearer $bearerToken') {
-      return Response.forbidden(jsonEncode({'error': 'unauthorized'}), headers: _jsonHeaders());
+      return Response(401, body: jsonEncode({'error': 'unauthorized'}), headers: _jsonHeaders());
     }
     final connectionInfo = request.context['shelf.io.connection_info'];
     final ip = connectionInfo is HttpConnectionInfo
@@ -59,6 +59,7 @@ Future<void> main() async {
             'freshnessState': 'fresh',
             'confidence': 1.0,
             'adapterVersion': '0.1.0',
+            'sourceUpdatedAt': retrievedAt.toIso8601String(),
           },
         }),
         headers: _jsonHeaders(),
