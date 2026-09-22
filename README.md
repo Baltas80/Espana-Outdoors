@@ -6,6 +6,22 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 
 **MVP 0.1 en construcción activa.** La base actual incluye arquitectura por capas, navegación, mapa, GPS, grabación de rutas, importación GPX, persistencia local de rutas, modo offline básico, privacidad y CI. El sistema visual premium de España Outdoor ya está incorporado en la app y documentado en `docs/brand_system.md`.
 
+## Estrategia de ingeniería: reuse-first
+
+España Outdoor **no debe reimplementar infraestructura madura**. Antes de escribir código nuevo se evalúa una librería, SDK, motor, estándar o servicio existente. Solo se desarrolla código propio cuando aporta diferenciación, seguridad, privacidad, integración o una política de producto que no existe en la solución reutilizada.
+
+La regla es: **software maduro para infraestructura; código España Outdoor para el producto**.
+
+La decisión detallada está en `docs/architecture/ADR-0002-reuse-first-stack.md`.
+
+Prioridades actuales:
+
+1. Contratos de routing/elevación y adaptador Valhalla.
+2. Contratos de alertas y gateway normalizado de datos oficiales.
+3. Offline con formatos estándar MBTiles/PMTiles y proveedor de mapas desacoplado.
+4. Navegación y navegación básica offline sobre el motor de routing.
+5. Seguridad/SOS y Rescue Link con mínima exposición de ubicación.
+
 ## Trabajo reciente
 
 - Design System premium: tokens de marca, estados semánticos, light/dark/high-contrast y componentes base.
@@ -14,6 +30,7 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 - Atribución visible de OpenStreetMap en el mapa.
 - ADR de cartografía/offline con decisión de no usar los servidores públicos de teselas OSM para descargas offline.
 - Arquitectura preparada para sustituir proveedor cartográfico sin acoplar la UI al proveedor.
+- Política reuse-first para minimizar código propio y lock-in.
 
 ## Objetivos
 
@@ -84,11 +101,14 @@ flutter run -d chrome
 8. Ningún secreto entra en Git.
 9. No usar `tile.openstreetmap.org` para descargas offline o prefetched bulk.
 10. Las decisiones de proveedor deben considerar licencia, capacidad, coste, lock-in y rendimiento.
+11. Preferir dependencias con licencias permisivas cuando resuelvan el mismo problema; GPL requiere decisión legal específica antes de incorporarse.
+12. No duplicar en Dart funcionalidades maduras que puedan ejecutarse de forma fiable en infraestructura especializada.
 
 ## Documentación clave
 
 - `docs/brand_system.md` — identidad visual y Design System.
 - `docs/architecture/ADR-0001-maps-and-offline.md` — estrategia de cartografía, proveedores y offline.
+- `docs/architecture/ADR-0002-reuse-first-stack.md` — política de reutilización, licencias y componentes candidatos.
 
 ## Licencia
 
