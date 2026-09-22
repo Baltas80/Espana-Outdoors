@@ -19,6 +19,7 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] OSM-compatible attribution
 - [x] GPX import/export foundation
 - [x] offline capability contract
+- [x] provider-neutral `MapService` contract
 - [ ] `MapService` interface enforcement across features
 - [ ] production vector-tile provider selection
 - [ ] offline region downloader with pause/resume/update/delete
@@ -30,6 +31,7 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] AEMET provider-neutral contract
 - [x] AEMET OpenData adapter foundation
 - [x] provenance/freshness model
+- [x] normalized official/Spain Outdoor alert domain model
 - [ ] secure runtime API-key injection
 - [ ] cache + retry/backoff + 429 handling policy
 - [ ] official warning/CAP adapter
@@ -43,6 +45,7 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] temporary location-sharing policy
 - [x] SOS domain foundation
 - [x] Rescue Link anti-abuse policy foundation
+- [x] deterministic route-readiness evaluator
 - [ ] 112 platform handoff hardening
 - [ ] battery/connectivity telemetry in emergency snapshot
 - [ ] emergency-session expiry enforcement
@@ -83,6 +86,7 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] unit tests for core GPX/safety/pet logic
 - [x] CI static analysis/test workflow
 - [x] dependency scanning baseline
+- [x] unit tests for alert freshness and route readiness
 - [ ] integration tests
 - [ ] E2E tests
 - [ ] offline/GPS/map test matrix
