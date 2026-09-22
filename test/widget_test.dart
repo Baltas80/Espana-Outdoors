@@ -14,6 +14,7 @@ void main() {
     expect(find.text('Centro de seguridad'), findsOneWidget);
     expect(find.text('Antes de salir'), findsOneWidget);
     expect(find.text('Rutas'), findsOneWidget);
+    expect(find.text('Seguridad'), findsOneWidget);
     expect(find.bySemanticsLabel('España Outdoor'), findsOneWidget);
   });
 }
