@@ -61,7 +61,7 @@ class HomePage extends StatelessWidget {
                           child: _QuickAction(
                             icon: Icons.pets_outlined,
                             label: 'Mascotas',
-                            onTap: () => context.go('/explore'),
+                            onTap: () => context.go('/pets'),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -69,7 +69,7 @@ class HomePage extends StatelessWidget {
                           child: _QuickAction(
                             icon: Icons.forest_outlined,
                             label: 'Fauna',
-                            onTap: () => context.go('/explore'),
+                            onTap: () => context.go('/wildlife'),
                           ),
                         ),
                       ],
