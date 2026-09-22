@@ -1,3 +1,5 @@
+import '../domain/outdoor_models.dart';
+
 class TrustedContact {
   const TrustedContact({
     required this.id,
