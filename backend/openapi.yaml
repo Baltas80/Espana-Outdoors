@@ -37,6 +37,11 @@ paths:
         '200':
           description: Provider health summary
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     DataEnvelope:
       type: object
