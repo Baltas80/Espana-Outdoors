@@ -32,6 +32,12 @@ class MapPage extends ConsumerWidget {
                 urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
                 userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
               ),
+              RichAttributionWidget(
+                alignment: AttributionAlignment.bottomLeft,
+                attributions: [
+                  TextSourceAttribution(MapProviderConfig.openStreetMap.attribution),
+                ],
+              ),
               if (recording.points.length > 1)
                 PolylineLayer(
                   polylines: [
