@@ -125,7 +125,10 @@ class HomePage extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 12),
-                    const _ReadinessCard(),
+                    _ReadinessCard(
+                      onOffline: () => context.go('/offline'),
+                      onContacts: () => context.go('/safety/contacts'),
+                    ),
                   ],
                 ),
               ),
@@ -162,6 +165,8 @@ class HomePage extends StatelessWidget {
             label: 'Perfil',
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -203,7 +208,10 @@ class _QuickAction extends StatelessWidget {
 }
 
 class _ReadinessCard extends StatelessWidget {
-  const _ReadinessCard();
+  const _ReadinessCard({required this.onOffline, required this.onContacts});
+
+  final VoidCallback onOffline;
+  final VoidCallback onContacts;
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +224,7 @@ class _ReadinessCard extends StatelessWidget {
               icon: Icons.map_outlined,
               label: 'Mapa offline',
               value: 'Preparar',
+              onTap: onOffline,
             ),
             Divider(height: 24),
             _ReadinessRow(
@@ -228,6 +237,7 @@ class _ReadinessCard extends StatelessWidget {
               icon: Icons.contact_emergency_outlined,
               label: 'Contacto de confianza',
               value: 'Configurar',
+              onTap: onContacts,
             ),
           ],
         ),
@@ -241,15 +251,21 @@ class _ReadinessRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
       children: [
         Icon(icon),
         const SizedBox(width: 12),
