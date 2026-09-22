@@ -20,15 +20,13 @@ Source: https://operations.osmfoundation.org/policies/tiles/
 
 ### MapLibre
 
-MapLibre is the leading open-source candidate for the vector-map production path. Its Flutter ecosystem supports vector/raster/GeoJSON/PMTiles sources, data-driven layers and user location. Current `maplibre_gl` releases provide Android/iOS/Web support and offline regions on Android/iOS, but do not support Windows/macOS/Linux targets. A separate newer `maplibre` package targets broader Flutter platform coverage but requires validation of API maturity and offline parity before adoption.
+MapLibre remains the leading open-source candidate for the vector-map production path. The official MapLibre project reported in 2026 that its Flutter plugin had reached a healthier maintenance baseline, with offline-region work including pause/resume, progress and cache-eviction capabilities, plus improved Flutter Web/WASM support. This materially strengthens the candidate for Android/iOS/Web but does not by itself establish production parity for Windows/macOS/Linux.
 
-Decision: **do not replace `flutter_map` yet.** Evaluate MapLibre as a platform-specific production renderer while preserving the provider-neutral map abstraction and a full Flutter fallback for desktop.
+Decision: **do not replace `flutter_map` yet.** Run a measured MapLibre evaluation on Android/iOS/Web for vector rendering, overlays, GPS-following and offline regions. Keep a desktop-capable renderer until the selected MapLibre package and offline path pass the same production test matrix.
 
 Sources:
 - https://maplibre.org/
-- https://maplibre.org/flutter-maplibre-gl/advanced/
-- https://pub.dev/packages/maplibre_gl
-- https://pub.dev/packages/maplibre
+- https://maplibre.org/news/2026-05-02-maplibre-newsletter-april-2026/
 
 ### Commercial providers
 
@@ -98,7 +96,7 @@ Official and open layers must preserve provenance:
 
 ## Weather source
 
-AEMET OpenData exposes a REST API for reusable meteorological/climatological data. Current AEMET notices also document API-key expiry requirements for keys without an expiration date from 15 October 2026. The production connector now exists behind `WeatherService`; it must still be wired to secure runtime configuration, caching, retry/backoff and a provider failover strategy.
+AEMET OpenData exposes a REST API for reusable meteorological/climatological data. Current AEMET notices also document API-key expiry requirements from 15 October 2026 for keys without an expiration date; newly requested keys have a three-month validity. Production infrastructure must therefore own key rotation and must not embed a privileged key in the public Flutter client.
 
 Sources:
 - https://www.aemet.es/es/datos_abiertos/AEMET_OpenData
