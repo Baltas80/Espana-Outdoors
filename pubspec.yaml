@@ -27,6 +27,13 @@ dependencies:
   hive_ce_flutter: ^2.3.4
   url_launcher: ^6.3.2
   http: ^1.6.0
+  dio: ^5.11.1
+  battery_plus: ^7.1.1
+  crypto: ^3.0.7
+  mbtiles: ^0.5.1
+  flutter_map_mbtiles: ^1.0.4
+  flutter_map_location_marker: ^10.2.0
+  flutter_map_compass: ^1.1.1
 
 dev_dependencies:
   flutter_test:
