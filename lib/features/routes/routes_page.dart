@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
@@ -102,7 +103,10 @@ class _RoutesPageState extends State<RoutesPage> {
               ),
             ),
           if (_imported != null) ...[
-            _ImportedTrackCard(track: _imported!),
+            _ImportedTrackCard(
+              track: _imported!,
+              onOpen: () => context.push('/routes/detail', extra: _imported),
+            ),
             const SizedBox(height: 12),
           ],
           FilledButton.icon(
@@ -112,7 +116,10 @@ class _RoutesPageState extends State<RoutesPage> {
           ),
           const SizedBox(height: 20),
           for (final route in _routes) ...[
-            _RouteCard(route: route),
+            _RouteCard(
+              route: route,
+              onOpen: () => context.push('/routes/detail', extra: route),
+            ),
             const SizedBox(height: 12),
           ],
         ],
@@ -122,9 +129,10 @@ class _RoutesPageState extends State<RoutesPage> {
 }
 
 class _ImportedTrackCard extends StatelessWidget {
-  const _ImportedTrackCard({required this.track});
+  const _ImportedTrackCard({required this.track, required this.onOpen});
 
   final ImportedTrack track;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +158,12 @@ class _ImportedTrackCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: onOpen,
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Ver ruta'),
+            ),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 18,
               runSpacing: 8,
@@ -168,9 +182,10 @@ class _ImportedTrackCard extends StatelessWidget {
 }
 
 class _RouteCard extends StatelessWidget {
-  const _RouteCard({required this.route});
+  const _RouteCard({required this.route, required this.onOpen});
 
   final RouteSummary route;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +206,12 @@ class _RouteCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               '${route.distanceKm.toStringAsFixed(1)} km  •  +${route.elevationGainM.toStringAsFixed(0)} m  •  ${route.durationMinutes} min',
+            ),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: onOpen,
+              icon: const Icon(Icons.open_in_new),
+              label: const Text('Abrir detalle'),
             ),
             const SizedBox(height: 12),
             Wrap(
