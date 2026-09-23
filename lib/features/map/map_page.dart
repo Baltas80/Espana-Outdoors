@@ -41,7 +41,14 @@ class MapPage extends ConsumerWidget {
         children: [
           Positioned.fill(
             child: _mapLibreSupported
-                ? _MapLibreSurface(location: location.position)
+                ? _MapLibreSurface(
+                    location: location.position == null
+                        ? null
+                        : LatLng(
+                            location.position!.latitude,
+                            location.position!.longitude,
+                          ),
+                  )
                 : _DesktopFlutterMap(
                     provider: provider,
                     location: location,
@@ -127,7 +134,7 @@ class MapPage extends ConsumerWidget {
 class _MapLibreSurface extends StatefulWidget {
   const _MapLibreSurface({this.location});
 
-  final Position? location;
+  final LatLng? location;
 
   @override
   State<_MapLibreSurface> createState() => _MapLibreSurfaceState();
@@ -150,11 +157,7 @@ class _MapLibreSurfaceState extends State<_MapLibreSurface>
 
   Future<void> _loadStyle() async {
     try {
-      final local = await _styles.findLatestLocalRegion(
-        location: widget.location == null
-            ? null
-            : LatLng(widget.location!.latitude, widget.location!.longitude),
-      );
+      final local = await _styles.findLatestLocalRegion(location: widget.location);
       final style = await _styles.load(localPmtilesPath: local);
       if (!mounted) return;
       setState(() {
