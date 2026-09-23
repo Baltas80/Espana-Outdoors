@@ -1,11 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class ProfilePage extends StatelessWidget {
+import '../../core/auth/oidc_config.dart';
+import '../../infrastructure/auth/openidconnect_auth_service.dart';
+
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late final OpenIdConnectAuthService _auth =
+      OpenIdConnectAuthService(OidcConfig.fromEnvironment());
+  bool? _signedIn;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshAuth();
+  }
+
+  @override
+  void dispose() {
+    _auth.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshAuth() async {
+    if (!_auth.config.isConfigured) {
+      if (mounted) setState(() => _signedIn = false);
+      return;
+    }
+    try {
+      final value = await _auth.isSignedIn();
+      if (mounted) setState(() => _signedIn = value);
+    } on Object {
+      if (mounted) setState(() => _signedIn = false);
+    }
+  }
+
+  Future<void> _signIn() async {
+    if (!_auth.config.isConfigured) {
+      _show('Identidad OIDC no configurada para este entorno.');
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await _auth.signIn(context);
+      await _refreshAuth();
+    } on Object catch (error) {
+      if (mounted) _show('No se pudo iniciar sesión: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    setState(() => _busy = true);
+    try {
+      await _auth.signOut();
+      await _refreshAuth();
+    } on Object catch (error) {
+      if (mounted) _show('No se pudo cerrar sesión: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _show(String message) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+
+  @override
   Widget build(BuildContext context) {
+    final signedIn = _signedIn == true;
     return Scaffold(
       appBar: AppBar(title: const Text('Perfil')),
       body: ListView(
@@ -14,8 +85,17 @@ class ProfilePage extends StatelessWidget {
           Card(
             child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-              title: const Text('Aventura'),
-              subtitle: const Text('Perfil local · identidad opcional'),
+              title: Text(signedIn ? 'Cuenta conectada' : 'Aventura'),
+              subtitle: Text(
+                signedIn
+                    ? 'Identidad protegida mediante OpenID Connect.'
+                    : 'Perfil local · identidad opcional',
+              ),
+              trailing: IconButton(
+                tooltip: signedIn ? 'Cerrar sesión' : 'Iniciar sesión',
+                onPressed: _busy ? null : (signedIn ? _signOut : _signIn),
+                icon: Icon(signedIn ? Icons.logout : Icons.login),
+              ),
             ),
           ),
           const SizedBox(height: 12),
