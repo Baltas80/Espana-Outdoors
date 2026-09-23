@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/gpx/gpx_export_service.dart';
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
+import '../../core/map/offline_mbtiles_layer.dart';
 import '../map/map_provider_config.dart';
 
 class RouteDetailPage extends StatefulWidget {
@@ -86,6 +87,11 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
                   TileLayer(
                     urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
                     userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
+                  ),
+                  OfflineMbtilesLayer(
+                    anchor: points.isNotEmpty
+                        ? points[points.length ~/ 2]
+                        : const LatLng(40.4168, -3.7038),
                   ),
                   RichAttributionWidget(
                     attributions: [
