@@ -41,7 +41,7 @@ The compose file binds Valhalla to loopback on port 8002. Put the HTTPS reverse 
 With the service reachable at the configured URL:
 
 ```bash
-VALHALLA_BASE_URL="http://127.0.0.1:8002" ./ops/valhalla/smoke-test.sh
+VALHALLA_BASE_URL="http://127.0.0.1:8002" bash ./ops/valhalla/smoke-test.sh
 ```
 
 The smoke test validates service health and a real pedestrian route response. It does not fabricate a fallback route.
