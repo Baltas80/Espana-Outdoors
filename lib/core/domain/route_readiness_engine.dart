@@ -26,14 +26,19 @@ class RouteReadinessEngine {
       reasons.add('Existe una alerta oficial de emergencia aplicable.');
     }
 
+    if (input.weatherRiskLevel >= 1) {
+      factors.add(RouteReadinessFactor.weatherRisk);
+      reasons.add('La información meteorológica indica un nivel de riesgo relevante.');
+    }
+
     if (input.severeWeather) {
       factors.add(RouteReadinessFactor.severeWeather);
       reasons.add('Se han identificado condiciones meteorológicas adversas.');
     }
 
-    if (input.hazardRiskLevel >= 2) {
+    if (input.hazardRiskLevel >= 1) {
       factors.add(RouteReadinessFactor.activeHazard);
-      reasons.add('Hay peligros activos con riesgo relevante.');
+      reasons.add('Hay información de peligros que requiere precaución.');
     }
 
     if (input.poorVisibility) {
@@ -46,9 +51,9 @@ class RouteReadinessEngine {
       reasons.add('Se han detectado temperaturas extremas o condiciones térmicas relevantes.');
     }
 
-    if (input.routeRiskLevel >= 2) {
+    if (input.routeRiskLevel >= 1) {
       factors.add(RouteReadinessFactor.routeRisk);
-      reasons.add('La propia ruta presenta un nivel de riesgo elevado.');
+      reasons.add('La propia ruta presenta factores de dificultad o riesgo que requieren atención.');
     }
 
     if (input.petRestriction || !input.petCompatible) {
