@@ -10,4 +10,10 @@ class PlatformOfflineArchiveDownloader implements OfflineArchiveDownloader {
 
   @override
   Future<bool> verify(OfflineArchiveSource source) async => false;
+
+  @override
+  Future<void> cancel(String regionId) async {}
+
+  @override
+  Future<void> delete(OfflineArchiveSource source) async {}
 }
