@@ -25,4 +25,19 @@ void main() {
       throwsA(isA<FormatException>()),
     );
   });
+  test('offline region metadata rejects non-HTTPS downloads', () {
+    expect(
+      () => OfflineRegion.fromJson({
+        'id': 'dev',
+        'name': 'Dev',
+        'description': 'Dev',
+        'downloadUrl': 'http://maps.example.com/dev.pmtiles',
+        'sizeBytes': 1,
+        'updatedAt': '2026-09-23T10:00:00Z',
+        'sha256': List.filled(64, 'a').join(),
+      }),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
 }
