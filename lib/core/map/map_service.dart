@@ -59,14 +59,41 @@ class OfflineMapRegion {
       maxZoom >= minZoom;
 }
 
+/// Immutable result produced only after an offline archive has been
+/// materialized by the concrete map provider.
+///
+/// [localPath] is intentionally a local filesystem path, never a public URL.
+/// [sha256] allows the caller to verify archive integrity before marking the
+/// region ready. Providers that cannot calculate a checksum must leave it
+/// null and the product layer must not claim cryptographic verification.
+class OfflineMapArtifact {
+  const OfflineMapArtifact({
+    required this.localPath,
+    required this.bytes,
+    required this.version,
+    this.sha256,
+  });
+
+  final String localPath;
+  final int bytes;
+  final String version;
+  final String? sha256;
+
+  bool get isValid =>
+      localPath.trim().isNotEmpty &&
+      bytes >= 0 &&
+      version.trim().isNotEmpty &&
+      (sha256 == null || RegExp(r'^[a-fA-F0-9]{64}$').hasMatch(sha256!));
+}
+
 abstract interface class MapService {
   String get providerId;
 
-  Future<void> prepareOfflineRegion(OfflineMapRegion region);
+  Future<OfflineMapArtifact> prepareOfflineRegion(OfflineMapRegion region);
+
+  Future<OfflineMapArtifact> resumeOfflineRegion(String regionId);
 
   Future<void> pauseOfflineRegion(String regionId);
-
-  Future<void> resumeOfflineRegion(String regionId);
 
   Future<void> deleteOfflineRegion(String regionId);
 }
