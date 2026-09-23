@@ -20,12 +20,10 @@ class NavigationPage extends ConsumerStatefulWidget {
 
 class _NavigationPageState extends ConsumerState<NavigationPage> {
   Timer? _ticker;
-  DateTime? _openedAt;
 
   @override
   void initState() {
     super.initState();
-    _openedAt = DateTime.now();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -169,7 +167,9 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                 recording.isRecording ? Icons.stop : Icons.play_arrow,
               ),
               label: Text(
-                recording.isRecording ? 'Detener navegación' : 'Iniciar navegación GPS',
+                recording.isRecording
+                    ? 'Detener navegación'
+                    : 'Iniciar navegación GPS',
               ),
             ),
             const SizedBox(height: 8),
