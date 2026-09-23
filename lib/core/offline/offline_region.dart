@@ -6,7 +6,7 @@ class OfflineRegion {
     required this.downloadUrl,
     required this.sizeBytes,
     required this.updatedAt,
-    this.sha256,
+    required this.sha256,
   });
 
   final String id;
@@ -15,7 +15,7 @@ class OfflineRegion {
   final Uri downloadUrl;
   final int sizeBytes;
   final DateTime updatedAt;
-  final String? sha256;
+  final String sha256;
 
   factory OfflineRegion.fromJson(Map<String, Object?> json) {
     final id = json['id'];
@@ -31,8 +31,11 @@ class OfflineRegion {
         description is! String ||
         url is! String ||
         size is! num ||
-        updated is! String) {
-      throw const FormatException('Invalid offline region metadata.');
+        updated is! String ||
+        checksum is! String) {
+      throw const FormatException(
+        'Invalid offline region metadata: SHA-256 is mandatory.',
+      );
     }
 
     final downloadUrl = Uri.tryParse(url);
@@ -43,19 +46,21 @@ class OfflineRegion {
       throw const FormatException('Invalid offline region URL or timestamp.');
     }
 
-    String? normalizedChecksum;
-    if (checksum != null) {
-      if (checksum is! String ||
-          !RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(checksum.trim())) {
-        throw const FormatException('Invalid offline region SHA-256 checksum.');
-      }
-      normalizedChecksum = checksum.trim().toLowerCase();
+    final normalizedChecksum = checksum.trim().toLowerCase();
+    if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(normalizedChecksum)) {
+      throw const FormatException('Invalid offline region SHA-256 checksum.');
+    }
+
+    final normalizedId = id.trim();
+    final normalizedName = name.trim();
+    if (normalizedId.isEmpty || normalizedName.isEmpty || size.toInt() <= 0) {
+      throw const FormatException('Invalid offline region identity or size.');
     }
 
     return OfflineRegion(
-      id: id,
-      name: name,
-      description: description,
+      id: normalizedId,
+      name: normalizedName,
+      description: description.trim(),
       downloadUrl: downloadUrl,
       sizeBytes: size.toInt(),
       updatedAt: updatedAt.toUtc(),
