@@ -11,6 +11,9 @@ class OfflineRegionRecord {
     this.progress = 0,
     this.bytesDownloaded = 0,
     this.bytesTotal = 0,
+    this.localPath,
+    this.sha256,
+    this.artifactVersion,
     this.updatedAt,
     this.error,
   });
@@ -20,14 +23,28 @@ class OfflineRegionRecord {
   final double progress;
   final int bytesDownloaded;
   final int bytesTotal;
+  final String? localPath;
+  final String? sha256;
+  final String? artifactVersion;
   final DateTime? updatedAt;
   final String? error;
+
+  bool get hasValidArtifact =>
+      status == OfflineRegionStatus.ready &&
+      localPath != null &&
+      localPath!.trim().isNotEmpty &&
+      artifactVersion != null &&
+      artifactVersion!.trim().isNotEmpty &&
+      (sha256 == null || RegExp(r'^[a-fA-F0-9]{64}$').hasMatch(sha256!));
 
   OfflineRegionRecord copyWith({
     OfflineRegionStatus? status,
     double? progress,
     int? bytesDownloaded,
     int? bytesTotal,
+    String? localPath,
+    String? sha256,
+    String? artifactVersion,
     DateTime? updatedAt,
     String? error,
   }) {
@@ -37,6 +54,9 @@ class OfflineRegionRecord {
       progress: progress ?? this.progress,
       bytesDownloaded: bytesDownloaded ?? this.bytesDownloaded,
       bytesTotal: bytesTotal ?? this.bytesTotal,
+      localPath: localPath ?? this.localPath,
+      sha256: sha256 ?? this.sha256,
+      artifactVersion: artifactVersion ?? this.artifactVersion,
       updatedAt: updatedAt ?? this.updatedAt,
       error: error,
     );
@@ -57,6 +77,9 @@ class OfflineRegionRecord {
         'progress': progress,
         'bytesDownloaded': bytesDownloaded,
         'bytesTotal': bytesTotal,
+        'localPath': localPath,
+        'sha256': sha256,
+        'artifactVersion': artifactVersion,
         'updatedAt': updatedAt?.toIso8601String(),
         'error': error,
       };
@@ -90,6 +113,9 @@ class OfflineRegionRecord {
       progress: _double(value['progress']),
       bytesDownloaded: _int(value['bytesDownloaded']),
       bytesTotal: _int(value['bytesTotal']),
+      localPath: value['localPath']?.toString(),
+      sha256: value['sha256']?.toString(),
+      artifactVersion: value['artifactVersion']?.toString(),
       updatedAt: DateTime.tryParse('${value['updatedAt'] ?? ''}'),
       error: value['error']?.toString(),
     );
