@@ -15,7 +15,6 @@ import '../features/routes/routes_page.dart';
 import '../features/safety/safety_page.dart';
 import '../features/safety/route_plan_page.dart';
 import '../features/safety/alerts_page.dart';
-import '../features/routes/navigation_page.dart';
 import '../features/routes/routes_page.dart';
 import '../features/safety/trusted_contacts_page.dart';
 import 'theme.dart';
@@ -29,20 +28,6 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/', builder: (_, __) => const HomePage()),
       GoRoute(path: '/explore', builder: (_, __) => const ExplorePage()),
       GoRoute(path: '/routes', builder: (_, __) => const RoutesPage()),
-      GoRoute(
-        path: '/navigation',
-        builder: (_, state) => NavigationPage(
-          track: state.extra is ImportedTrack
-              ? state.extra as ImportedTrack
-              : const ImportedTrack(
-                  name: 'Ruta',
-                  points: [],
-                  distanceMeters: 0,
-                  ascentMeters: 0,
-                  descentMeters: 0,
-                ),
-        ),
-      ),
       GoRoute(
         path: '/routes/detail',
         builder: (_, state) {
