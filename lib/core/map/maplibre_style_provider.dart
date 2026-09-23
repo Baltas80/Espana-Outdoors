@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 
 import 'maplibre_style_provider_web.dart'
     if (dart.library.io) 'maplibre_style_provider_io.dart';
@@ -59,5 +60,6 @@ class MapLibreStyleProvider {
     }
   }
 
-  Future<String?> findLatestLocalRegion() => findLatestLocalPmtiles();
+  Future<String?> findLatestLocalRegion({LatLng? location}) =>
+      findLatestLocalPmtiles(location: location);
 }
