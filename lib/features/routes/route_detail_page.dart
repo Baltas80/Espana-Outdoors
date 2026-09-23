@@ -6,6 +6,7 @@ import '../../core/gpx/gpx_export_service.dart';
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
 import '../../core/map/offline_mbtiles_layer.dart';
+import 'navigation_page.dart';
 import '../map/map_provider_config.dart';
 
 class RouteDetailPage extends StatefulWidget {
@@ -61,6 +62,16 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
       appBar: AppBar(
         title: Text(title),
         actions: [
+          if (track != null)
+            IconButton(
+              tooltip: 'Navegar',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => NavigationPage(track: track),
+                ),
+              ),
+              icon: const Icon(Icons.navigation_outlined),
+            ),
           if (track != null)
             IconButton(
               tooltip: 'Exportar GPX',
