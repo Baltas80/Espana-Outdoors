@@ -1,5 +1,6 @@
 import '../live_data/live_data_gateway_client.dart';
 import '../live_data/live_data_models.dart';
+import 'alert_service.dart';
 import 'alert_models.dart';
 
 class GatewayAlertService implements AlertService {
@@ -85,19 +86,19 @@ class GatewayAlertService implements AlertService {
   }
 
   OutdoorAlert? _parseAlert(Map<String, dynamic> json) {
-    final issuedAt = DateTime.tryParse('\${json['issuedAt'] ?? ''}');
-    final updatedAt = DateTime.tryParse('\${json['updatedAt'] ?? ''}');
-    final validUntil = DateTime.tryParse('\${json['validUntil'] ?? ''}');
+    final issuedAt = DateTime.tryParse('${json['issuedAt'] ?? ''}');
+    final updatedAt = DateTime.tryParse('${json['updatedAt'] ?? ''}');
+    final validUntil = DateTime.tryParse('${json['validUntil'] ?? ''}');
     if (issuedAt == null || updatedAt == null || validUntil == null) {
       return null;
     }
 
-    final sourceUrl = '\${json['sourceUrl'] ?? ''}';
+    final sourceUrl = '${json['sourceUrl'] ?? ''}';
     if (Uri.tryParse(sourceUrl)?.hasScheme != true) return null;
 
-    final id = '\${json['id'] ?? ''}'.trim();
-    final title = '\${json['title'] ?? ''}'.trim();
-    final sourceName = '\${json['sourceName'] ?? ''}'.trim();
+    final id = '${json['id'] ?? ''}'.trim();
+    final title = '${json['title'] ?? ''}'.trim();
+    final sourceName = '${json['sourceName'] ?? ''}'.trim();
     if (id.isEmpty || title.isEmpty || sourceName.isEmpty) return null;
 
     return OutdoorAlert(
