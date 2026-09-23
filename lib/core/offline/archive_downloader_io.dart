@@ -39,7 +39,7 @@ class PlatformOfflineArchiveDownloader implements OfflineArchiveDownloader {
     final contentLength = int.tryParse(
       response.headers.value(Headers.contentLengthHeader) ?? '',
     );
-    final contentRange = response.headers.value(Headers.contentRangeHeader);
+    final contentRange = response.headers.value('content-range');
     final totalFromRange = contentRange == null
         ? null
         : int.tryParse(contentRange.split('/').last.trim());
