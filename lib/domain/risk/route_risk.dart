@@ -22,7 +22,8 @@ class RiskSignal {
   final String? explanation;
   final DateTime? expiresAt;
 
-  bool get isActive => expiresAt == null || expiresAt!.isAfter(DateTime.now().toUtc());
+  bool get isActive =>
+      expiresAt == null || expiresAt!.isAfter(DateTime.now().toUtc());
 }
 
 class RouteRiskInput {
@@ -38,6 +39,7 @@ class RouteRiskInput {
     this.fireSeverity = 0,
     this.petRiskSeverity = 0,
     this.signals = const <RiskSignal>[],
+    this.dataCompleteness = 0,
   });
 
   final double distanceKm;
@@ -52,6 +54,11 @@ class RouteRiskInput {
   final int fireSeverity;
   final int petRiskSeverity;
   final List<RiskSignal> signals;
+
+  /// Completeness of the verified inputs available for this assessment.
+  /// 0 means unknown/incomplete; 1 means all required inputs were evaluated.
+  /// This is deliberately separate from the risk score.
+  final double dataCompleteness;
 }
 
 class RouteRiskAssessment {
@@ -117,11 +124,16 @@ class RouteRiskEngine {
       }
     }
 
+    if (input.dataCompleteness < 1) {
+      reasons.add('Información incompleta: revisa las fuentes antes de salir');
+    }
+
     // A confirmed closure or severe official/fire signal always wins.
     final hardStop = input.closureSeverity >= 2 ||
         input.officialAlertSeverity >= 2 ||
         input.fireSeverity >= 2 ||
-        active.any((signal) => signal.severity >= 2 && signal.sourceKind == RiskSourceKind.official);
+        active.any((signal) =>
+            signal.severity >= 2 && signal.sourceKind == RiskSourceKind.official);
 
     final readiness = hardStop || score >= 12
         ? RouteReadiness.noRecomendado
@@ -129,26 +141,12 @@ class RouteRiskEngine {
             ? RouteReadiness.precaucion
             : RouteReadiness.apto;
 
-    final dataPoints = <int>[
-      input.weatherSeverity,
-      input.officialAlertSeverity,
-      input.closureSeverity,
-      input.fireSeverity,
-      input.exposureScore,
-      input.isolationScore,
-      input.petRiskSeverity,
-      ...active.map((signal) => signal.severity),
-    ];
-    final confidence = dataPoints.isEmpty
-        ? 0.0
-        : (dataPoints.where((value) => value >= 0).length / dataPoints.length).clamp(0.0, 1.0);
-
     return RouteRiskAssessment(
       readiness: readiness,
       score: score,
       reasons: List.unmodifiable(reasons),
       activeSignals: active,
-      confidence: confidence,
+      confidence: input.dataCompleteness.clamp(0.0, 1.0),
     );
   }
 
