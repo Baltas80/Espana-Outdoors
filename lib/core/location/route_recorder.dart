@@ -139,7 +139,7 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
 
   LocationSettings _locationSettings() {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return const AndroidSettings(
+      return AndroidSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 5,
         intervalDuration: Duration(seconds: 5),
@@ -152,7 +152,7 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
       );
     }
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return const AppleSettings(
+      return AppleSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 5,
         activityType: ActivityType.fitness,
