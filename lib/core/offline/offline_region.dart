@@ -37,7 +37,9 @@ class OfflineRegion {
 
     final downloadUrl = Uri.tryParse(url);
     final updatedAt = DateTime.tryParse(updated);
-    if (downloadUrl == null || !downloadUrl.hasScheme || updatedAt == null) {
+    if (downloadUrl == null ||
+        downloadUrl.scheme != 'https' ||
+        updatedAt == null) {
       throw const FormatException('Invalid offline region URL or timestamp.');
     }
 
