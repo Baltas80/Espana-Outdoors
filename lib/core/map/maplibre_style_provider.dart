@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
+
+import 'maplibre_style_provider_web.dart'
+    if (dart.library.io) 'maplibre_style_provider_io.dart';
 
 class MapLibreStyleProvider {
   const MapLibreStyleProvider();
@@ -12,10 +12,7 @@ class MapLibreStyleProvider {
   Future<String> load({String? localPmtilesPath}) async {
     const rawJson = String.fromEnvironment('MAP_STYLE_JSON');
     const styleUrl = String.fromEnvironment('MAP_STYLE_URL');
-    const pmtilesUrl = String.fromEnvironment(
-      'MAP_PMTILES_URL',
-      defaultValue: 'https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles',
-    );
+    const pmtilesUrl = String.fromEnvironment('MAP_PMTILES_URL');
 
     String json;
     if (rawJson.isNotEmpty) {
@@ -30,10 +27,16 @@ class MapLibreStyleProvider {
       json = await rootBundle.loadString('assets/map/default_style.json');
     }
 
+    if (pmtilesUrl.isEmpty && localPmtilesPath == null) {
+      throw StateError(
+        'MAP_PMTILES_URL is not configured. Configure an España Outdoor-owned or approved PMTiles endpoint before starting the map.',
+      );
+    }
+
     final decoded = jsonDecode(json);
     final pmtilesValue = localPmtilesPath == null
         ? 'pmtiles://$pmtilesUrl'
-        : 'pmtiles://${Uri.file(localPmtilesPath)}';
+        : 'pmtiles://file://${Uri.file(localPmtilesPath).path}';
     _replacePmtilesUrls(decoded, pmtilesValue);
     return jsonEncode(decoded);
   }
@@ -56,22 +59,5 @@ class MapLibreStyleProvider {
     }
   }
 
-  Future<String?> findLatestLocalRegion() async {
-    if (kIsWeb) return null;
-    final directory = await getApplicationSupportDirectory();
-    final regions = Directory('${directory.path}/offline_regions');
-    if (!regions.existsSync()) return null;
-
-    final files = regions
-        .listSync()
-        .whereType<File>()
-        .where((file) => file.path.toLowerCase().endsWith('.pmtiles'))
-        .toList();
-    if (files.isEmpty) return null;
-
-    files.sort(
-      (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
-    );
-    return files.first.path;
-  }
+  Future<String?> findLatestLocalRegion() => findLatestLocalPmtiles();
 }
