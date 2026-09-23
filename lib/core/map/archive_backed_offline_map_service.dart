@@ -128,7 +128,7 @@ class ArchiveBackedOfflineMapService implements OfflineMapDownloadService {
   Stream<OfflineDownloadProgress> watch(String regionId) {
     final controller = _controllers.putIfAbsent(
       regionId,
-      () => StreamController<OfflineDownloadProgress>.broadcast(),
+      () => StreamController<OfflineDownloadProgress>.broadcast(sync: true),
     );
     final current = _progress[regionId];
     if (current != null) {
@@ -169,7 +169,7 @@ class ArchiveBackedOfflineMapService implements OfflineMapDownloadService {
     _progress[next.region.id] = next;
     final controller = _controllers.putIfAbsent(
       next.region.id,
-      () => StreamController<OfflineDownloadProgress>.broadcast(),
+      () => StreamController<OfflineDownloadProgress>.broadcast(sync: true),
     );
     if (!controller.isClosed) controller.add(next);
   }
