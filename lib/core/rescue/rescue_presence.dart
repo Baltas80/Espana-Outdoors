@@ -17,7 +17,7 @@ class RescuePresence {
   final bool accepted;
 
   bool isVisibleToRequester(RescueLinkAlert alert) {
-    if (alert.expired) return false;
-    return alert.policy.visibility != RescueVisibility.anonymous;
+    if (alert.expiredAt(DateTime.now())) return false;
+    return alert.policy.initialVisibility != LocationPrivacy.private;
   }
 }
