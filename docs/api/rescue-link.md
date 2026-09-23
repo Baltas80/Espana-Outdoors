@@ -6,9 +6,11 @@ Rescue Link es un canal de coordinación de emergencia. No sustituye al 112 ni a
 
 El cliente puede capturar la posición exacta localmente, pero la autorización, la caducidad y la revocación son responsabilidad del backend de primera parte.
 
-La vista de descubrimiento debe exponer únicamente ubicación aproximada. La ubicación exacta o temporal solo se devuelve después de una aceptación autorizada y conforme al rol.
+La vista pública solo confirma que el enlace está activo. Nunca devuelve coordenadas.
 
-El token compartido es una capacidad opaca emitida por servidor. No debe contener coordenadas, identidad del usuario ni otros datos sensibles.
+La ubicación exacta o temporal solo se devuelve después de una aceptación autenticada y conforme al rol.
+
+El token compartido y la capacidad de sesión son valores opacos. El servidor almacena únicamente hashes de esos valores.
 
 ## POST /v1/rescue-links
 
@@ -35,33 +37,54 @@ Response:
 
 ## POST /v1/rescue-links/{id}/accept
 
+Requiere autenticación y una capacidad de enlace válida. El rol se obtiene del access token OIDC; no lo elige el cliente.
+
 Request:
 
 {
-  "role": "trustedContact"
+  "shareToken": "opaque-server-token"
 }
 
-El backend aplica la política del rol y devuelve una capacidad temporal limitada.
+Response:
+
+{
+  "id": "rl_01J...",
+  "capabilityToken": "temporary-capability",
+  "expiresAt": "2026-09-23T15:35:00Z",
+  "role": "trustedContact",
+  "location": {
+    "latitude": 40.4,
+    "longitude": -3.7,
+    "accuracyMeters": 8,
+    "capturedAt": "2026-09-23T15:20:00Z",
+    "type": "lost",
+    "exact": true
+  }
+}
+
+Los voluntarios reciben ubicación aproximada. Los roles autorizados reciben la precisión definida por política.
 
 ## POST /v1/rescue-links/{id}/revoke
 
-Revoca la sesión inmediatamente, incluso antes de su TTL.
+Solo el propietario autenticado puede revocar el enlace. La revocación es inmediata y también invalida las capacidades emitidas.
 
-## Controles obligatorios del backend
+## GET /v1/rescue-links/{id}/location
 
-- Keycloak/OIDC para autenticación.
-- HTTPS y HSTS.
-- Tokens opacos de corta duración con lookup server-side.
+Requiere autenticación del responder y el header `X-Rescue-Capability` emitido durante la aceptación. El servidor vuelve a comprobar expiración y revocación antes de revelar ubicación.
+
+## GET /r/{token}
+
+Endpoint público para abrir un enlace compartido. Solo devuelve estado activo/caducado y una instrucción para autenticarse; no expone coordenadas.
+
+## Controles obligatorios
+
+- Keycloak/OIDC.
+- HTTPS en producción y HSTS en el edge.
+- Tokens opacos, almacenados como hash.
+- Ubicación exacta cifrada con AES-256-GCM.
 - Revocación inmediata.
-- Límite de respondedores por enlace.
-- Rate limiting por enlace y actor.
-- Auditoría sin coordenadas exactas en logs normales.
-- Cifrado en reposo de coordenadas exactas.
+- Límite de respondedores.
+- Rate limiting por actor y por IP para el endpoint público.
+- Auditoría sin coordenadas exactas ni tokens.
 - Retención y borrado automáticos.
 - Sin dependencia de billing ni analytics.
-- Nunca publicar ubicación exacta a clientes de descubrimiento anónimo.
-
-## Estado actual
-
-La app ya contiene el contrato RescueLinkGateway y el adaptador HTTPS.
-La producción queda bloqueada hasta desplegar y probar el servicio backend real; no se simula una revocación local como si fuera una revocación remota.
