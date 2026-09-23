@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/safety/route_plan.dart';
 import '../../core/safety/route_plan_store.dart';
 import '../../core/models/route_summary.dart';
+import '../../core/emergency/trusted_contact.dart';
+import '../../core/emergency/trusted_contact_store.dart';
 
 class RoutePlanPage extends StatefulWidget {
   const RoutePlanPage({super.key, this.route});
@@ -15,12 +17,15 @@ class RoutePlanPage extends StatefulWidget {
 
 class _RoutePlanPageState extends State<RoutePlanPage> {
   final _store = RoutePlanStore();
+  final _contactsStore = TrustedContactStore();
   final _participants = TextEditingController(text: '1');
 
   DateTime _departure = DateTime.now().add(const Duration(hours: 1));
   DateTime _returnAt = DateTime.now().add(const Duration(hours: 5));
   RoutePlan? _saved;
   late RouteSummary? _route;
+  List<TrustedContact> _contacts = const [];
+  String? _trustedContactId;
   bool _loading = true;
   bool _saving = false;
 
@@ -39,9 +44,16 @@ class _RoutePlanPageState extends State<RoutePlanPage> {
 
   Future<void> _load() async {
     final plan = await _store.load();
+    final contacts = _contactsStore.load().where((contact) => contact.enabled).toList(growable: false);
     if (!mounted) return;
     setState(() {
+      _contacts = contacts;
       _saved = plan;
+      _trustedContactId = plan?.trustedContactId;
+      if (_trustedContactId != null &&
+          !_contacts.any((contact) => contact.id == _trustedContactId)) {
+        _trustedContactId = null;
+      }
       if (plan != null) {
         _departure = plan.departureAt.toLocal();
         _returnAt = plan.expectedReturnAt.toLocal();
@@ -107,6 +119,7 @@ class _RoutePlanPageState extends State<RoutePlanPage> {
       departureAt: _departure.toUtc(),
       expectedReturnAt: _returnAt.toUtc(),
       participants: participants,
+      trustedContactId: _trustedContactId,
     );
     if (!plan.isValid) {
       _show(
@@ -210,6 +223,34 @@ class _RoutePlanPageState extends State<RoutePlanPage> {
                     ),
                   ),
                 ),
+                if (_contacts.isNotEmpty) ...[
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: DropdownButtonFormField<String>(
+                      value: _trustedContactId,
+                      decoration: const InputDecoration(
+                        labelText: 'Contacto de confianza',
+                        prefixIcon: Icon(Icons.contact_emergency_outlined),
+                      ),
+                      items: [
+                        for (final contact in _contacts)
+                          DropdownMenuItem<String>(
+                            value: contact.id,
+                            child: Text(contact.displayName),
+                          ),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => _trustedContactId = value),
+                    ),
+                  ),
+                ] else
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Text(
+                      'No hay contactos activos. Configura uno desde Seguridad.',
+                    ),
+                  ),
               ],
             ),
           ),
