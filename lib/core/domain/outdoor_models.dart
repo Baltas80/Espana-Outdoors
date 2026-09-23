@@ -82,6 +82,12 @@ enum EmergencyType {
   other,
 }
 
+enum EmergencyConnectivity {
+  online,
+  offline,
+  unknown,
+}
+
 class EmergencySnapshot {
   const EmergencySnapshot({
     required this.type,
@@ -90,6 +96,7 @@ class EmergencySnapshot {
     required this.capturedAt,
     required this.batteryPercent,
     this.altitudeMeters,
+    this.connectivity = EmergencyConnectivity.unknown,
   });
 
   final EmergencyType type;
@@ -98,6 +105,7 @@ class EmergencySnapshot {
   final DateTime capturedAt;
   final int batteryPercent;
   final double? altitudeMeters;
+  final EmergencyConnectivity connectivity;
 }
 
 class PetProfile {
