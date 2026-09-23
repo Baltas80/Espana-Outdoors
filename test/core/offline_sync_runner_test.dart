@@ -41,6 +41,60 @@ void main() {
       expect(await store.pending(), isEmpty);
     });
 
+    test('retains permanent failures instead of dropping work', () async {
+      await store.enqueue(
+        SyncOperation(
+          id: 'permanent',
+          type: 'route.update',
+          payload: const {},
+          createdAt: DateTime.utc(2026, 9, 23),
+          priority: SyncPriority.normal,
+        ),
+      );
+
+      final runner = OfflineSyncRunner(
+        store: store,
+        execute: (_) async => const SyncExecutionResult.permanentFailure(),
+      );
+
+      expect(await runner.runOnce(), 0);
+
+      final raw = await box.get('permanent');
+      expect(raw, isA<Map>());
+      expect(
+        (raw!['state'] ?? '').toString(),
+        SyncOperationState.failed.name,
+      );
+      expect(await store.pending(), isEmpty);
+    });
+
+    test('moves exceptions to failed state after max attempts', () async {
+      await store.enqueue(
+        SyncOperation(
+          id: 'exception',
+          type: 'route.update',
+          payload: const {},
+          createdAt: DateTime.utc(2026, 9, 23),
+          priority: SyncPriority.normal,
+          attempts: 7,
+        ),
+      );
+
+      final runner = OfflineSyncRunner(
+        store: store,
+        execute: (_) async => throw StateError('boom'),
+      );
+
+      expect(await runner.runOnce(maxAttempts: 8), 0);
+
+      final raw = await box.get('exception');
+      expect(raw, isA<Map>());
+      expect(
+        (raw!['state'] ?? '').toString(),
+        SyncOperationState.failed.name,
+      );
+    });
+
     test('defers retryable failures', () async {
       await store.enqueue(
         SyncOperation(
