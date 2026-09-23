@@ -191,6 +191,14 @@ class _SafetyPageState extends State<SafetyPage> {
           ),
           const SizedBox(height: 16),
           _SafetyTile(
+            icon: Icons.route_outlined,
+            title: 'Plan de ruta',
+            subtitle:
+                'Salida, regreso previsto y participantes.',
+            onTap: () => context.go('/safety/plan'),
+          ),
+          const SizedBox(height: 10),
+          _SafetyTile(
             icon: Icons.contact_emergency_outlined,
             title: 'Contactos de confianza',
             subtitle:
