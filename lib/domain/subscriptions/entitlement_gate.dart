@@ -1,4 +1,4 @@
-import 'subscriptions/entitlements.dart';
+import 'entitlements.dart';
 
 /// Single capability gate for product code. Billing providers only resolve
 /// entitlements; they do not get to decide product behaviour directly.
