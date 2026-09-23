@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:espana_outdoors/core/domain/outdoor_models.dart';
@@ -5,11 +7,16 @@ import 'package:espana_outdoors/core/storage/route_recording_store.dart';
 
 void main() {
   group('RouteRecordingStore', () {
+    late Directory hiveDir;
     late Box<dynamic> box;
     late RouteRecordingStore store;
 
+    setUpAll(() async {
+      hiveDir = await Directory.systemTemp.createTemp('espana-outdoors-hive-');
+      Hive.init(hiveDir.path);
+    });
+
     setUp(() async {
-      await Hive.initFlutter();
       box = await Hive.openBox<dynamic>('route_tracking_test');
       await box.clear();
       store = RouteRecordingStore(box: box);
@@ -18,6 +25,11 @@ void main() {
     tearDown(() async {
       await box.close();
       await Hive.deleteBoxFromDisk('route_tracking_test');
+    });
+
+    tearDownAll(() async {
+      await Hive.close();
+      if (await hiveDir.exists()) await hiveDir.delete(recursive: true);
     });
 
     test('persists and recovers long active sessions in segments', () async {
