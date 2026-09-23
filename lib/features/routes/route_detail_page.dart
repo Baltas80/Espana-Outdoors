@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart' as ml;
 
@@ -147,7 +149,7 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
         zoom: points.length > 1 ? 12 : 6,
       ),
       compassEnabled: true,
-      attributionButtonMargins: const Point(12, 12),
+      attributionButtonMargins: const math.Point(12, 12),
       onMapCreated: (controller) => _mapController = controller,
       onStyleLoadedCallback: _drawTrack,
     );
