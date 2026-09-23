@@ -16,14 +16,14 @@ void main() {
   });
 
   test('routing config rejects HTTP endpoints by default', () {
-    const config = RoutingConfig(
+    final config = RoutingConfig(
       baseUri: Uri.parse('http://routing.example.com/'),
     );
     expect(config.isConfigured, isFalse);
   });
 
   test('routing config can explicitly allow HTTP for development', () {
-    const config = RoutingConfig(
+    final config = RoutingConfig(
       baseUri: Uri.parse('http://routing.example.com/'),
       allowHttpForDevelopment: true,
     );
