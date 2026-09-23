@@ -169,8 +169,8 @@ final class NavigationGuidanceEngine {
     int fromIndex,
     int toIndex,
   ) {
-    final start = fromIndex.clamp(0, points.length - 1);
-    final end = toIndex.clamp(0, points.length - 1);
+    final start = fromIndex.clamp(0, points.length - 1).toInt();
+    final end = toIndex.clamp(0, points.length - 1).toInt();
     if (start == end) return 0;
 
     final low = math.min(start, end);
