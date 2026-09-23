@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../core/contracts/routing_service.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/alerts/alerts_page.dart';
@@ -14,6 +16,7 @@ import '../features/rescue/rescue_link_page.dart';
 import '../features/wildlife/wildlife_page.dart';
 import '../features/natura/natura_protect_page.dart';
 import '../features/routes/route_detail_page.dart';
+import '../features/routes/route_planner_page.dart';
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
 import '../features/routes/routes_page.dart';
@@ -30,6 +33,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/', builder: (_, __) => const HomePage()),
       GoRoute(path: '/explore', builder: (_, __) => const ExplorePage()),
       GoRoute(path: '/routes', builder: (_, __) => const RoutesPage()),
+      GoRoute(path: '/routes/planner', builder: (_, __) => const RoutePlannerPage()),
       GoRoute(
         path: '/routes/detail',
         builder: (_, state) {
@@ -41,7 +45,10 @@ class EspanaOutdoorApp extends StatelessWidget {
         },
       ),
       GoRoute(path: '/map', builder: (_, __) => const MapPage()),
-      GoRoute(path: '/navigation', builder: (_, __) => const NavigationPage()),
+      GoRoute(path: '/navigation', builder: (_, state) {
+        final route = state.extra is RouteResult ? state.extra as RouteResult : null;
+        return NavigationPage(route: route);
+      }),
       GoRoute(path: '/pets', builder: (_, __) => const PetsPage()),
       GoRoute(path: '/wildlife', builder: (_, __) => const WildlifePage()),
       GoRoute(path: '/natura', builder: (_, __) => const NaturaProtectPage()),
