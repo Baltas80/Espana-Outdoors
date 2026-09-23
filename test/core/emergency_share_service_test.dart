@@ -12,11 +12,11 @@ void main() {
       batteryPercent: 42,
     );
 
-    final payload = const EmergencyShareService().createPayload(
+    final payload = EmergencyShareService().createPayload(
       snapshot: snapshot,
     );
     final message =
-        const EmergencyShareService().buildShareText(payload);
+        EmergencyShareService().buildShareText(payload);
 
     expect(message, isNot(contains('40.412345')));
     expect(message, isNot(contains('-3.712345')));
