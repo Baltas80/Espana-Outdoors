@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'weather_models.dart';
+import 'weather_runtime_config.dart';
 import 'weather_service.dart';
 
 class WeatherProviderException implements Exception {
@@ -17,18 +18,18 @@ class WeatherProviderException implements Exception {
 
 /// AEMET OpenData adapter.
 ///
-/// The API key is injected at runtime and is never persisted by this class.
+/// Credentials are injected at runtime and are never persisted by this class.
 /// AEMET returns a metadata envelope first; the actual forecast is then
 /// obtained from the URL contained in `datos`.
 class AemetWeatherService implements WeatherService {
   AemetWeatherService({
-    required String apiKey,
+    required WeatherRuntimeConfig config,
     http.Client? client,
     this.baseUri = 'https://opendata.aemet.es/opendata/api',
-  })  : _apiKey = apiKey,
+  })  : _config = config,
         _client = client ?? http.Client();
 
-  final String _apiKey;
+  final WeatherRuntimeConfig _config;
   final http.Client _client;
   final String baseUri;
 
@@ -39,6 +40,12 @@ class AemetWeatherService implements WeatherService {
     final code = municipalityCode.trim();
     if (!RegExp(r'^\d{5}$').hasMatch(code)) {
       throw const WeatherProviderException('Código de municipio inválido.');
+    }
+
+    try {
+      _config.validate(DateTime.now().toUtc());
+    } on WeatherConfigurationException catch (error) {
+      throw WeatherProviderException(error.message);
     }
 
     final envelope = await _getJson(
@@ -62,7 +69,7 @@ class AemetWeatherService implements WeatherService {
     final response = await _client
         .get(
           Uri.parse(url),
-          headers: includeApiKey ? {'api_key': _apiKey} : null,
+          headers: includeApiKey ? {'api_key': _config.apiKey} : null,
         )
         .timeout(const Duration(seconds: 15));
 
