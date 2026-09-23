@@ -6,6 +6,7 @@ import 'package:espana_outdoors/core/map/offline_map_download.dart';
 import 'package:espana_outdoors/core/routing/elevation_models.dart';
 import 'package:espana_outdoors/core/routing/offline_navigation_engine.dart';
 import 'package:espana_outdoors/core/routing/routing_models.dart';
+import 'package:espana_outdoors/core/navigation/navigation_models.dart';
 import 'package:espana_outdoors/core/safety/sos_models.dart' as sos;
 
 void main() {
