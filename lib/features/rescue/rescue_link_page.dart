@@ -27,6 +27,7 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
   late final RescueLinkConfig _config = RescueLinkConfig.fromEnvironment();
   final http.Client _httpClient = http.Client();
   RescueLinkRemoteSession? _session;
+  Timer? _expiryTimer;
   bool _busy = false;
 
   late final RescueLinkGateway _gateway = HttpRescueLinkGateway(
@@ -38,9 +39,36 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
 
   @override
   void dispose() {
+    _expiryTimer?.cancel();
     _httpClient.close();
     unawaited(_auth.dispose());
     super.dispose();
+  }
+
+  void _scheduleExpiry(DateTime expiresAt) {
+    _expiryTimer?.cancel();
+    final remaining = expiresAt.difference(DateTime.now().toUtc());
+    if (remaining <= Duration.zero) {
+      _session = null;
+      return;
+    }
+    _expiryTimer = Timer(remaining, () {
+      if (!mounted) return;
+      _expiryTimer?.cancel();
+      setState(() => _session = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Rescue Link ha caducado.')),
+      );
+    });
+  }
+
+  bool _sessionIsActive(RescueLinkRemoteSession session) {
+    if (!DateTime.now().toUtc().isBefore(session.expiresAt)) {
+      _expiryTimer?.cancel();
+      _session = null;
+      return false;
+    }
+    return true;
   }
 
   Future<void> _prepare() async {
@@ -75,6 +103,7 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
 
       if (!mounted) return;
       setState(() => _session = session);
+      _scheduleExpiry(session.expiresAt);
     } on Object catch (error) {
       if (mounted) _showError(error.toString());
     } finally {
@@ -84,7 +113,7 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
 
   Future<void> _revoke() async {
     final session = _session;
-    if (session == null) return;
+    if (session == null || !_sessionIsActive(session)) return;
     setState(() => _busy = true);
     try {
       await _gateway.revoke(session.id);
@@ -102,7 +131,7 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
 
   Future<void> _copyLink() async {
     final session = _session;
-    if (session == null) return;
+    if (session == null || !_sessionIsActive(session)) return;
     await Clipboard.setData(
       ClipboardData(text: session.shareUrl.toString()),
     );
