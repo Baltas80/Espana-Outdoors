@@ -4,9 +4,9 @@ const allowedFiles = <String>{
   'lib/core/weather/aemet_weather_service.dart',
 };
 
-final directAemetPattern = RegExp(r'\\bAemetWeatherService\\s*\\(');
+final directAemetPattern = RegExp(r'\bAemetWeatherService\s*\(');
 final directRuntimeCredentialPattern = RegExp(
-  r'WeatherRuntimeConfig\\s*\\([^)]*apiKey\\s*:',
+  r'WeatherRuntimeConfig\s*\([^)]*apiKey\s*:',
   dotAll: true,
 );
 
