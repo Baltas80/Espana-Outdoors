@@ -1,10 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 import 'maplibre_style_provider_io.dart';
+import '../../features/map/map_provider_config.dart';
 
 class MapLibreStyleProvider {
   const MapLibreStyleProvider();
@@ -28,6 +31,26 @@ class MapLibreStyleProvider {
     }
 
     if (pmtilesUrl.isEmpty && localPmtilesPath == null) {
+      if (kDebugMode && const String.fromEnvironment('APP_ENV') != 'production') {
+        return jsonEncode({
+          'version': 8,
+          'sources': {
+            'osm-dev': {
+              'type': 'raster',
+              'tiles': [MapProviderConfig.openStreetMapDevelopment.tileUrlTemplate],
+              'tileSize': 256,
+              'attribution': MapProviderConfig.openStreetMapDevelopment.attribution,
+            },
+          },
+          'layers': [
+            {
+              'id': 'osm-dev',
+              'type': 'raster',
+              'source': 'osm-dev',
+            },
+          ],
+        });
+      }
       throw StateError(
         'MAP_PMTILES_URL is not configured. Configure an España Outdoor-owned or approved PMTiles endpoint before starting the map.',
       );
