@@ -6,11 +6,13 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
 import '../lib/aemet_client.dart';
+import '../lib/alert_catalog.dart';
 
 Future<void> main() async {
   final aemetKey = Platform.environment['AEMET_API_KEY'];
   final bearerToken = Platform.environment['GATEWAY_BEARER_TOKEN']?.trim();
   final catalogPath = Platform.environment['OFFLINE_CATALOG_FILE']?.trim();
+  final alertsPath = Platform.environment['OFFICIAL_ALERTS_FILE']?.trim();
   final port = int.tryParse(Platform.environment['PORT'] ?? '8080') ?? 8080;
 
   if (aemetKey == null || aemetKey.isEmpty) {
@@ -67,6 +69,93 @@ Future<void> main() async {
       return Response(
         503,
         body: jsonEncode({'error': 'provider_unavailable'}),
+        headers: _jsonHeaders(),
+      );
+    }
+  });
+
+  router.get('/v1/alerts', (Request request) async {
+    if (_rateLimited(request, rate)) {
+      return _rateLimitedResponse();
+    }
+
+    final lat = double.tryParse(request.url.queryParameters['lat'] ?? '');
+    final lon = double.tryParse(request.url.queryParameters['lon'] ?? '');
+    final radiusKm =
+        double.tryParse(request.url.queryParameters['radiusKm'] ?? '25') ??
+            25;
+
+    if (lat == null ||
+        lon == null ||
+        lat < -90 ||
+        lat > 90 ||
+        lon < -180 ||
+        lon > 180 ||
+        radiusKm < 0 ||
+        radiusKm > 500) {
+      return Response(
+        400,
+        body: jsonEncode({'error': 'invalid_alert_query'}),
+        headers: _jsonHeaders(),
+      );
+    }
+
+    if (alertsPath == null || alertsPath.isEmpty) {
+      return Response.ok(
+        jsonEncode({
+          'data': {
+            'alerts': const [],
+            'generatedAt': DateTime.now().toUtc().toIso8601String(),
+          },
+          'provenance': {
+            'sourceId': 'espana-outdoor-alert-gateway',
+            'sourceName': 'España Outdoor Alert Gateway',
+            'retrievedAt': DateTime.now().toUtc().toIso8601String(),
+            'freshnessState': 'unavailable',
+            'confidence': 0.0,
+            'adapterVersion': '0.1.0',
+          },
+        }),
+        headers: _jsonHeaders(),
+      );
+    }
+
+    try {
+      final catalog = AlertCatalog(path: alertsPath);
+      final now = DateTime.now().toUtc();
+      final alerts = await catalog.nearby(
+        latitude: lat,
+        longitude: lon,
+        radiusKm: radiusKm,
+        now: now,
+      );
+      return Response.ok(
+        jsonEncode({
+          'data': {
+            'alerts': alerts.map((alert) => alert.toJson()).toList(growable: false),
+            'generatedAt': now.toIso8601String(),
+          },
+          'provenance': {
+            'sourceId': 'espana-outdoor-alert-catalog',
+            'sourceName': 'España Outdoor Alert Catalog',
+            'retrievedAt': now.toIso8601String(),
+            'freshnessState': 'fresh',
+            'confidence': 1.0,
+            'adapterVersion': '0.1.0',
+          },
+        }),
+        headers: _jsonHeaders(),
+      );
+    } on FormatException catch (_) {
+      return Response(
+        503,
+        body: jsonEncode({'error': 'invalid_alert_catalog'}),
+        headers: _jsonHeaders(),
+      );
+    } catch (_) {
+      return Response(
+        503,
+        body: jsonEncode({'error': 'alert_catalog_unavailable'}),
         headers: _jsonHeaders(),
       );
     }
@@ -133,7 +222,7 @@ Future<void> main() async {
   });
 
   final handler =
-      const Pipeline().addMiddleware(logRequests()).addHandler(router.call);
+      const Pipeline().addMiddleware(_safeRequestLogger()).addHandler(router.call);
   await shelf_io.serve(
     handler,
     InternetAddress.anyIPv4,
@@ -177,6 +266,13 @@ Response _rateLimitedResponse() => Response(
         'retry-after': '60',
       },
     );
+
+Middleware _safeRequestLogger() {
+  return (innerHandler) => (request) async {
+    stdout.writeln('${request.method} ${request.requestedUri.path}');
+    return innerHandler(request);
+  };
+}
 
 Map<String, String> _jsonHeaders() => const {
       'content-type': 'application/json; charset=utf-8',
