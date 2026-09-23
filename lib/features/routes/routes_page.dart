@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/gpx/gpx_import_service.dart';
-import '../../core/models/route_summary.dart';
 import '../../core/storage/local_route_store.dart';
 
 class RoutesPage extends StatefulWidget {
