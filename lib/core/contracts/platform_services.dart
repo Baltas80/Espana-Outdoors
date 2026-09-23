@@ -3,6 +3,7 @@
 /// Product code depends on these contracts rather than directly depending on
 /// Valhalla, Keycloak, AEMET, RevenueCat, MapLibre or a particular backend.
 /// Provider adapters live outside the domain layer.
+library;
 
 enum DataConfidence { official, confirmed, community, stale, unknown }
 
@@ -27,12 +28,7 @@ class RouteResult {
 }
 
 class WeatherSnapshot {
-  const WeatherSnapshot({
-    required this.observedAt,
-    required this.expiresAt,
-    required this.confidence,
-    this.summary,
-  });
+  const WeatherSnapshot({required this.observedAt, required this.expiresAt, required this.confidence, this.summary});
   final DateTime observedAt;
   final DateTime expiresAt;
   final DataConfidence confidence;
