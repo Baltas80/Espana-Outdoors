@@ -27,8 +27,8 @@ void main() {
     );
     await file.writeAsString('abc');
 
-    expect(
-      () => const OfflinePackageVerifier().verifyFile(
+    await expectLater(
+      const OfflinePackageVerifier().verifyFile(
         file,
         expectedSha256: List.filled(64, '0').join(),
       ),
