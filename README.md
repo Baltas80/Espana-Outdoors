@@ -16,6 +16,10 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 - Arquitectura preparada para sustituir proveedor cartográfico sin acoplar la UI al proveedor.
 - Licencia propietaria incorporada para el código y activos propios; las dependencias de terceros conservan sus licencias.
 - Registro inicial de dependencias y alternativas maduras en `docs/THIRD_PARTY_LICENSES.md`.
+- Valhalla integrado mediante una interfaz `RoutingService`, con endpoint de producción externo al código.
+- Infraestructura reproducible para generar y servir tiles de Valhalla para España.
+- Descargas offline regionales preparadas con `background_downloader`, incluyendo pausa/reanudación y persistencia de transferencias.
+- El catálogo offline ya no contiene zonas ficticias: solo se muestran paquetes publicados por el backend configurado.
 
 ## Objetivos
 
@@ -41,8 +45,44 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 - flutter_secure_storage para secretos y credenciales locales
 - Hive CE para persistencia local de rutas
 - GPX para importación/exportación
+- Valhalla 3.9.0 para routing/map matching
+- PMTiles para paquetes cartográficos regionales
+- background_downloader para transferencias offline multiplataforma
 
 Las versiones se mantienen deliberadamente en rangos compatibles y deben revisarse periódicamente antes de releases.
+
+## Configuración de routing
+
+El cliente no contiene una URL de routing fija. En desarrollo o release se inyecta:
+
+```bash
+flutter run --dart-define=VALHALLA_BASE_URL=https://routing.example.com/
+```
+
+Si no se configura, el routing permanece deshabilitado de forma explícita en lugar de utilizar un proveedor no verificado.
+
+## Configuración del catálogo offline
+
+El catálogo se inyecta con:
+
+```bash
+flutter run --dart-define=OFFLINE_CATALOG_URL=https://api.example.com/v1/offline/regions
+```
+
+El endpoint debe devolver un array JSON con `id`, `name`, `description`, `downloadUrl`, `sizeBytes`, `updatedAt` y opcionalmente `sha256`. No se deben publicar URLs ni paquetes ficticios.
+
+## Infraestructura Valhalla
+
+`ops/valhalla/` contiene la infraestructura reproducible. Los datos PBF, tiles, extracts y el JSON generado de configuración quedan fuera de Git.
+
+```bash
+cd ops/valhalla
+./build-config.sh
+./build-spain.sh
+./docker compose up -d
+```
+
+El extracto de España procede de Geofabrik/OSM y debe gestionarse con las obligaciones de licencia y atribución correspondientes. La versión de Valhalla está fijada a `3.9.0` para reproducibilidad.
 
 ## Estructura
 
@@ -52,10 +92,12 @@ lib/
   core/         modelos y servicios transversales
   domain/       entidades y reglas de dominio
   features/     funcionalidades de producto
+  infrastructure/ adaptadores externos: routing y fuentes
   main.dart
 
 docs/           arquitectura, privacidad, datos, seguridad y Design System
 assets/         identidad visual y recursos reutilizables
+ops/            infraestructura local/producción no sensible
 .github/        CI y automatización
 scripts/        bootstrap local
 ```
@@ -93,6 +135,7 @@ flutter run -d chrome
 
 - `docs/brand_system.md` — identidad visual y Design System.
 - `docs/architecture/ADR-0001-maps-and-offline.md` — estrategia de cartografía, proveedores y offline.
+- `docs/architecture/ADR-0003-valhalla-routing.md` — decisión y despliegue de routing.
 - `docs/THIRD_PARTY_LICENSES.md` — registro de software de terceros y alternativas maduras.
 - `LICENSE.md` — licencia propietaria de España Outdoor.
 
