@@ -13,15 +13,33 @@ España Outdoor uses mature third-party infrastructure for commodity layers and 
 - Hive CE: local route/offline metadata and crash-recoverable active-route segments during MVP.
 - background_downloader: resumable native downloads.
 - RevenueCat: subscription/billing entitlements.
-- OpenID Connect: standards-based identity; production provider target is Keycloak.
+- OpenID Connect / Keycloak: standards-based identity.
 - Sentry: crash/error telemetry.
 - GitHub Actions + Dependabot + Trivy + Gitleaks: CI and supply-chain baseline.
-- Rescue Link gateway: first-party HTTPS API boundary for server-authoritative expiry, revocation and role-based visibility.
-- SHA-256 verification for offline packages when the catalog provides a checksum.
+- Rescue Link first-party Go service: server-authoritative expiry, revocation and role-scoped location access.
+- SHA-256 verification for offline packages when the catalogue supplies a checksum.
 
-Valhalla 3.9.0 is the current pinned routing release in the repository. The application must use an internally operated or contracted Valhalla deployment for production traffic.
+## Rescue Link backend
+
+The service lives under `services/rescue-link`. It uses PostgreSQL/pgx, OIDC verification and a small standard-library HTTP surface.
+
+Security controls implemented in the service:
+
+- opaque random share tokens; only SHA-256 hashes are stored;
+- AES-256-GCM encryption for exact emergency coordinates;
+- server-side expiry and immediate revocation;
+- role-derived access from OIDC claims;
+- responder limits and rate limiting;
+- approximate public discovery;
+- capability tokens with independent expiry;
+- no exact coordinates or tokens in normal application logs;
+- automatic retention cleanup.
+
+Production deployment still requires a controlled Keycloak realm, role assignment/verification, HTTPS edge, a secret-managed AES-256 key, database backups and integration tests on real credentials. See `docs/api/rescue-link.md`.
 
 ## Runtime configuration
+
+Secrets and provider endpoints are injected at build/deployment time. They must never be committed.
 
 | Variable | Purpose | Required in production |
 |---|---|---|
@@ -51,15 +69,16 @@ A production release is blocked unless:
 1. flutter analyze passes.
 2. Unit and widget tests pass.
 3. Routing/offline focused tests pass.
-4. Gitleaks reports no secrets.
-5. Trivy has no unfixed HIGH/CRITICAL finding accepted without an explicit security decision.
-6. Dependency licences have been reviewed.
-7. Dynamic sources have documented attribution, freshness and fallback behaviour.
-8. No production endpoint or secret is hard-coded in the client.
-9. SOS/112 flows have been tested on supported mobile hardware.
-10. Offline navigation has been tested with connectivity disabled.
-11. Rescue Link backend expiry, revocation and role-based visibility have been integration-tested.
+4. Go backend tests and vet pass.
+5. Gitleaks reports no secrets.
+6. Trivy has no unfixed HIGH/CRITICAL finding accepted without an explicit security decision.
+7. Dependency licences have been reviewed.
+8. Dynamic sources have documented attribution, freshness and fallback behaviour.
+9. No production endpoint or secret is hard-coded in the client.
+10. SOS/112 flows have been tested on supported mobile hardware.
+11. Offline navigation has been tested with connectivity disabled.
+12. Rescue Link backend expiry, revocation and role-based visibility have been integration-tested.
 
 ## Known external prerequisites
 
-The repository can implement and validate client contracts without inventing infrastructure credentials. Production still requires deployment of the backend/source gateway, Valhalla regional tiles, offline catalogue, Keycloak realm/client configuration, RevenueCat store configuration, Sentry project and Rescue Link service.
+The repository can implement and validate client contracts without inventing infrastructure credentials. Production still requires deployment of the backend/source gateway, Valhalla regional tiles, offline catalogue, Keycloak realm/client configuration, RevenueCat store configuration, Sentry project and Rescue Link service. These are environment/service configuration tasks, not values that should be fabricated in Git.
