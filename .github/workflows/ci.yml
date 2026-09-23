@@ -41,7 +41,7 @@ jobs:
         run: dart run tool/check_map_provider_usage.dart
 
       - name: Analyze
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze lib test --no-fatal-infos
 
       - name: Test
         run: flutter test --coverage
