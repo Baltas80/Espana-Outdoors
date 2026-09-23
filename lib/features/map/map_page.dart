@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
+import '../../core/map/offline_mbtiles_layer.dart';
 import 'map_provider_config.dart';
 
 class MapPage extends ConsumerWidget {
@@ -33,6 +34,14 @@ class MapPage extends ConsumerWidget {
               TileLayer(
                 urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
                 userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
+              ),
+              OfflineMbtilesLayer(
+                anchor: location.position == null
+                    ? _spainCenter
+                    : LatLng(
+                        location.position!.latitude,
+                        location.position!.longitude,
+                      ),
               ),
               const MapCompass(
                 icon: Icon(Icons.explore_outlined),
