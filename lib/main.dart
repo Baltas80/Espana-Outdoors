@@ -5,6 +5,7 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:background_downloader/background_downloader.dart';
 
 import 'app/app.dart';
+import 'core/observability/sentry_observability.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,5 +20,7 @@ Future<void> main() async {
     await FileDownloader().start(autoCleanDatabase: true);
   }
 
-  runApp(const ProviderScope(child: EspanaOutdoorApp()));
+  await SentryObservability.run(() async {
+    runApp(const ProviderScope(child: EspanaOutdoorApp()));
+  });
 }
