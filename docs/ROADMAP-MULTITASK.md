@@ -32,7 +32,8 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] AEMET provider-neutral contract
 - [x] AEMET OpenData adapter foundation
 - [x] provenance/freshness model
-- [ ] secure runtime API-key injection
+- [x] expiring runtime credential contract
+- [ ] secure production gateway/runtime secret injection
 - [ ] cache + retry/backoff + 429 handling policy
 - [ ] official warning/CAP adapter
 - [ ] wildfire/disaster adapters
@@ -94,13 +95,15 @@ The project is developed in parallel tracks so no major capability waits for ano
 
 ## Immediate execution order
 
-1. Wire `WeatherService` to secure runtime configuration and cache the AEMET result with freshness metadata.
+1. Keep the AEMET credential-expiry guard and move the production key behind a trusted gateway/runtime boundary.
 2. Build the normalized official-alert model and AEMET CAP adapter.
 3. Enforce the provider-neutral `MapService` boundary across map-dependent features.
 4. Connect the persistent offline-region state to a real licensed vector-tile/offline provider; do not fake downloads.
-5. Evaluate MapLibre Android/iOS/Web against `flutter_map` using measured rendering, offline and GPS-following tests.
-6. Add routing/elevation providers only after licence/cost/coverage validation.
-7. Harden SOS and Rescue Link with expiry, device-state capture and end-to-end tests.
+5. Benchmark current `maplibre_gl` 0.27.x against `flutter_map` on Android/iOS/Web, while retaining a desktop-capable fallback.
+6. Evaluate `maplibre_flutter_gpu` separately for desktop only after release-mode validation.
+7. Add routing/elevation providers only after licence/cost/coverage validation.
+8. Harden SOS and Rescue Link with expiry, device-state capture and end-to-end tests.
 
 ## Delivery rule
+
 A track may use mock adapters or deterministic local fixtures while upstream credentials/data feeds are unavailable. Production integration must never be faked as live data.
