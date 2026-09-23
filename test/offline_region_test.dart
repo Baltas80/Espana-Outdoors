@@ -10,7 +10,7 @@ void main() {
       'downloadUrl': 'https://maps.example.com/madrid.pmtiles',
       'sizeBytes': 1024,
       'updatedAt': '2026-09-23T10:00:00Z',
-      'sha256': 'abc123',
+      'sha256': 'a' * 64,
     });
 
     expect(region.id, 'madrid-2026-09');
