@@ -236,7 +236,7 @@ func (s *server) healthz(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *server) sourceHealth(w http.ResponseWriter, r *http.Request) {
-    if !s.authenticate(w, r) { return }
+    if _, ok := s.authenticate(w, r); !ok { return }
     if r.PathValue("sourceID") != sourceID {
         s.writeError(w, http.StatusNotFound, "source not found")
         return
