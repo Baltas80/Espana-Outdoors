@@ -60,6 +60,7 @@ jobs:
           test/core/rescue_link_policy_test.dart
           test/remote_source_gateway_test.dart
           test/gateway_weather_service_test.dart
+          test/source_gateway_config_test.dart
 
       - name: Full test suite
         run: flutter test --coverage
