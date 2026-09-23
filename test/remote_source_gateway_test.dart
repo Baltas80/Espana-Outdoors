@@ -55,4 +55,39 @@ void main() {
     expect(records.single['title'], 'Aviso');
     expect(records.single['level'], 'yellow');
   });
+  test('rejects malformed freshness timestamps instead of inventing current time', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'kind': 'official',
+          'status': 'healthy',
+          'observedAt': 'not-a-timestamp',
+        }),
+        200,
+      );
+    });
+
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(
+      () => gateway.health('aemet'),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('rejects non-HTTPS source gateway endpoints', () async {
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('http://api.example.test'),
+      client: MockClient((_) async => http.Response('{}', 200)),
+    );
+
+    expect(
+      () => gateway.fetch('alerts'),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
 }
