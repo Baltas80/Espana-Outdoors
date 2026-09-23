@@ -1,4 +1,5 @@
 import 'package:espana_outdoors/core/offline/offline_region.dart';
+import 'package:espana_outdoors/core/offline/offline_region_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, Object?> _validRegion() => {
@@ -60,4 +61,12 @@ void main() {
       throwsA(isA<FormatException>()),
     );
   });
+
+  test('offline catalog requires HTTPS', () {
+    expect(
+      () => OfflineRegionCatalog(endpoint: Uri.parse('http://maps.example.com/catalog')),
+      throwsArgumentError,
+    );
+  });
+
 }
