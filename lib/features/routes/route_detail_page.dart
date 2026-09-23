@@ -85,8 +85,8 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
-                    userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
+                    urlTemplate: MapProviderConfig.onlineDefault.tileUrlTemplate,
+                    userAgentPackageName: MapProviderConfig.onlineDefault.userAgent,
                   ),
                   OfflineMbtilesLayer(
                     anchor: points.isNotEmpty
@@ -96,7 +96,7 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
                   RichAttributionWidget(
                     attributions: [
                       TextSourceAttribution(
-                        MapProviderConfig.openStreetMap.attribution,
+                        MapProviderConfig.onlineDefault.attribution,
                       ),
                     ],
                   ),
