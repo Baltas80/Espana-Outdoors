@@ -9,10 +9,12 @@ class OfflineRegionDownloader {
   const OfflineRegionDownloader();
 
   Future<Transfer> start(OfflineRegion region) async {
+    final version = region.sha256.substring(0, 12);
+    final taskId = 'offline-region-${region.id}-${version}';
     final task = DownloadTask(
-      taskId: 'offline-region-' + region.id,
+      taskId: taskId,
       url: region.downloadUrl.toString(),
-      filename: region.id + '.pmtiles',
+      filename: '${region.id}-${version}.pmtiles',
       directory: 'offline_regions',
       baseDirectory: BaseDirectory.applicationSupport,
       group: 'offline-regions',
@@ -20,7 +22,8 @@ class OfflineRegionDownloader {
       retries: 5,
       allowPause: true,
       transferHints: const {TransferHint.largeFile},
-      metaData: region.id + '|sha256=' + region.sha256,
+      metaData:
+          '${region.id}|sha256=${region.sha256}|provider=${region.providerId}',
       displayName: region.name,
     );
     return FileDownloader().transfers.getOrStart(task);
@@ -40,16 +43,17 @@ class OfflineRegionDownloader {
     return file;
   }
 
-  Future<void> verifyExisting(
+  Future<File> verifyExisting(
     OfflineRegion region,
     File file, {
     bool requireChecksum = true,
-  }) {
-    return const OfflinePackageVerifier().verifyFile(
+  }) async {
+    await const OfflinePackageVerifier().verifyFile(
       file,
       expectedSha256: region.sha256,
       requireChecksum: requireChecksum,
     );
+    return file;
   }
 
   Future<bool> pause(Transfer transfer) => transfer.pause();

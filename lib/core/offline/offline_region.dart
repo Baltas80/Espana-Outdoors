@@ -3,6 +3,9 @@ class OfflineRegion {
     required this.id,
     required this.name,
     required this.description,
+    required this.providerId,
+    required this.licenseUrl,
+    required this.attribution,
     required this.downloadUrl,
     required this.sizeBytes,
     required this.updatedAt,
@@ -12,6 +15,9 @@ class OfflineRegion {
   final String id;
   final String name;
   final String description;
+  final String providerId;
+  final Uri licenseUrl;
+  final String attribution;
   final Uri downloadUrl;
   final int sizeBytes;
   final DateTime updatedAt;
@@ -21,6 +27,9 @@ class OfflineRegion {
     final id = json['id'];
     final name = json['name'];
     final description = json['description'];
+    final providerId = json['providerId'];
+    final license = json['licenseUrl'];
+    final attribution = json['attribution'];
     final url = json['downloadUrl'];
     final size = json['sizeBytes'];
     final updated = json['updatedAt'];
@@ -29,21 +38,31 @@ class OfflineRegion {
     if (id is! String ||
         name is! String ||
         description is! String ||
+        providerId is! String ||
+        license is! String ||
+        attribution is! String ||
         url is! String ||
         size is! num ||
         updated is! String ||
         checksum is! String) {
       throw const FormatException(
-        'Invalid offline region metadata: SHA-256 is mandatory.',
+        'Invalid offline region metadata: provider licence, attribution and SHA-256 are mandatory.',
       );
     }
 
     final downloadUrl = Uri.tryParse(url);
+    final licenseUrl = Uri.tryParse(license);
     final updatedAt = DateTime.tryParse(updated);
     if (downloadUrl == null ||
         downloadUrl.scheme != 'https' ||
+        downloadUrl.host.isEmpty ||
+        licenseUrl == null ||
+        licenseUrl.scheme != 'https' ||
+        licenseUrl.host.isEmpty ||
         updatedAt == null) {
-      throw const FormatException('Invalid offline region URL or timestamp.');
+      throw const FormatException(
+        'Invalid offline region URLs or timestamp.',
+      );
     }
 
     final normalizedChecksum = checksum.trim().toLowerCase();
@@ -53,14 +72,25 @@ class OfflineRegion {
 
     final normalizedId = id.trim();
     final normalizedName = name.trim();
-    if (normalizedId.isEmpty || normalizedName.isEmpty || size.toInt() <= 0) {
-      throw const FormatException('Invalid offline region identity or size.');
+    final normalizedProviderId = providerId.trim();
+    final normalizedAttribution = attribution.trim();
+    if (normalizedId.isEmpty ||
+        normalizedName.isEmpty ||
+        normalizedProviderId.isEmpty ||
+        normalizedAttribution.isEmpty ||
+        size.toInt() <= 0) {
+      throw const FormatException(
+        'Invalid offline region identity, provider or attribution.',
+      );
     }
 
     return OfflineRegion(
       id: normalizedId,
       name: normalizedName,
       description: description.trim(),
+      providerId: normalizedProviderId,
+      licenseUrl: licenseUrl,
+      attribution: normalizedAttribution,
       downloadUrl: downloadUrl,
       sizeBytes: size.toInt(),
       updatedAt: updatedAt.toUtc(),

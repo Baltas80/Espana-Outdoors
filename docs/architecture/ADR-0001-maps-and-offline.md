@@ -58,7 +58,7 @@ The product layer must never depend directly on a provider SDK or tile URL.
 
 1. Keep the provider-neutral `MapService` boundary enforced across feature code.
 2. Validate `maplibre_gl` on Android/iOS with the production PMTiles style, GPS-following, overlays and representative offline regions.
-3. Use self-hosted or explicitly licensed PMTiles/MBTiles/offline-capable packages. Do not use public OSM raster/vector tile servers for prefetching.
+3. Use the first-party PMTiles catalog path documented above. Do not use public OSM raster/vector tile servers for bulk prefetching or offline delivery.
 4. Model storage quota, checksum, version, expiry/freshness and attribution as part of the offline-region lifecycle.
 5. A future renderer/provider change remains an explicit architecture decision rather than a feature-level rewrite.
 6. Use OSM data with correct attribution, but treat data licensing and tile-service licensing as separate concerns.
@@ -113,6 +113,17 @@ AEMET also currently exposes daily and hourly municipality prediction endpoints,
 Sources:
 - https://www.aemet.es/es/datos_abiertos/AEMET_OpenData
 - https://opendata.aemet.es/centrodedescargas/novedades
+
+## Offline provider decision — 2026-09-23
+
+For the mobile MVP, the approved implementation path is a first-party OSM-derived PMTiles catalog rather than a public tile service or a proprietary offline SDK. The reference build is Spain OSM extract → Protomaps Basemaps/Planetiler → immutable PMTiles object → HTTPS catalog entry. Production artifacts remain immutable and must pass checksum, licence and attribution validation before publication.
+
+Sources:
+- https://download.geofabrik.de/europe/spain.html
+- https://github.com/protomaps/basemaps
+- https://www.openstreetmap.org/copyright
+
+This is an implementation path, not a claim that the production artifact pipeline has already been deployed.
 
 ## Non-goals for this ADR
 

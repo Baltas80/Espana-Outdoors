@@ -157,6 +157,16 @@ class _OfflinePageState extends State<OfflinePage> {
             Text(region.name, style: const TextStyle(fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
             Text(region.description),
+            const SizedBox(height: 6),
+            Text(
+              region.attribution,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Licencia: ${region.licenseUrl.host}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 4),
             Text('${_size(region.sizeBytes)} · actualizado ${region.updatedAt.toLocal()}'),
             if (verified) ...[
