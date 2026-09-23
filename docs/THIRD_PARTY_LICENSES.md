@@ -21,46 +21,43 @@ Una dependencia solo se incorpora a producción después de revisar:
 
 ## Dependencias actuales del MVP
 
-| Componente | Uso | Origen | Estado |
+| Componente | Uso | Licencia/condición | Estado |
 |---|---|---|---|
-| Flutter / Dart | Aplicación multiplataforma | Google / ecosistema Flutter | Aceptado como base de plataforma; verificar versión y notices en release |
-| flutter_map | Renderizado cartográfico Flutter | Comunidad open source | Aceptado provisionalmente; validar licencia/versionado antes de producción |
-| flutter_map_mbtiles | Mapas MBTiles/offline | Comunidad open source | Aceptado provisionalmente; validar licencia/versionado antes de producción |
-| latlong2 | Geometría/geodesia básica | Comunidad Dart | Aceptado provisionalmente |
-| Riverpod | Estado | Comunidad Dart | Aceptado provisionalmente |
-| go_router | Navegación | Ecosistema Flutter | Aceptado provisionalmente |
-| geolocator | GPS/ubicación | Comunidad Flutter | Aceptado provisionalmente |
-| connectivity_plus | Conectividad | Comunidad Flutter | Aceptado provisionalmente |
-| shared_preferences | Preferencias no críticas | Ecosistema Flutter | Aceptado provisionalmente |
-| flutter_secure_storage | Secretos/credenciales locales | Comunidad Flutter | Aceptado provisionalmente |
-| file_picker | Selección de archivos | Comunidad Flutter | Aceptado provisionalmente |
-| path_provider | Rutas de almacenamiento | Ecosistema Flutter | Aceptado provisionalmente |
-| gpx | GPX | Comunidad Dart | Aceptado provisionalmente |
-| Hive CE | Persistencia local | Comunidad open source | Aceptado provisionalmente; revisar estado/mantenimiento |
-| url_launcher | Enlaces/acciones del SO | Ecosistema Flutter | Aceptado provisionalmente |
+| Flutter / Dart | Aplicación multiplataforma | Ecosistema Flutter | Aceptado como base de plataforma; verificar notices en release |
+| flutter_map | Renderizado cartográfico Flutter | Open source | Aceptado provisionalmente; validar licencia/versionado antes de producción |
+| flutter_map_mbtiles | Mapas MBTiles/offline | Open source | Aceptado provisionalmente |
+| maplibre_gl | Renderizado MapLibre disponible para evolución del mapa | Open source | Aceptado provisionalmente; mantener como alternativa desacoplada |
+| pmtiles | Lectura de archivos PMTiles | BSD-2-Clause | Aceptado |
+| latlong2 | Geometría/geodesia básica | Open source | Aceptado provisionalmente |
+| Riverpod | Estado | Open source | Aceptado provisionalmente |
+| go_router | Navegación | Open source | Aceptado provisionalmente |
+| geolocator | GPS/ubicación | Open source | Aceptado provisionalmente |
+| connectivity_plus | Conectividad | Open source | Aceptado provisionalmente |
+| shared_preferences | Preferencias no críticas | Open source | Aceptado provisionalmente |
+| flutter_secure_storage | Secretos/credenciales locales | Open source | Aceptado provisionalmente |
+| file_picker | Selección de archivos | Open source | Aceptado provisionalmente |
+| path_provider | Rutas de almacenamiento | Open source | Aceptado provisionalmente |
+| gpx | GPX | Open source | Aceptado provisionalmente |
+| Hive CE | Persistencia local | Open source | Revisar mantenimiento antes de producción |
+| url_launcher | Enlaces/acciones del SO | Open source | Aceptado provisionalmente |
 | http | Cliente HTTP | Dart | Aceptado provisionalmente |
+| purchases_flutter / purchases_ui_flutter | Entitlements y compras multiplataforma | SDK de RevenueCat; revisar términos comerciales | Aceptado como infraestructura de billing, pendiente de configuración de producción |
+| background_downloader | Transferencias offline con pausa/reanudación | BSD-3-Clause / MIT | Aceptado para Android, iOS, Windows, macOS y Linux; Web mantiene un camino específico |
 | flutter_lints | Calidad estática | Ecosistema Flutter | Desarrollo/CI |
 
-> Esta tabla no sustituye un SBOM ni la inspección de los ficheros LICENSE/COPYING de cada dependencia. Antes de una release se generará un inventario de dependencias transitivas y sus licencias.
+## Infraestructura aceptada/priorizada
 
-## Infraestructura recomendada para evaluar
+### Routing
+
+**Valhalla 3.9.0** es el motor seleccionado. Su código está bajo MIT. La aplicación utiliza una interfaz `RoutingService` y un adaptador fino, evitando algoritmos propios de routing. La infraestructura se fija inicialmente a 3.9.0 para reproducibilidad.
 
 ### GIS y cartografía
 
 - **PostgreSQL + PostGIS** para almacenamiento y consultas geoespaciales.
 - **GDAL** para ingestión/conversión de datos geoespaciales.
 - **PROJ** para transformaciones de coordenadas.
-- **MapLibre** como opción prioritaria a evaluar para reducir lock-in del renderizado.
+- **MapLibre** como opción prioritaria para reducir lock-in del renderizado.
 - **PMTiles / MBTiles** para distribución y almacenamiento offline cuando el flujo de datos lo permita.
-- **MapTiler / proveedor equivalente** solo donde el coste, SLA y licencia justifiquen usar un proveedor gestionado.
-
-### Routing
-
-Evaluar **Valhalla**, **GraphHopper** y **OSRM** sobre rutas y perfiles outdoor reales antes de seleccionar el motor definitivo. La decisión debe considerar senderos, restricciones, perfiles, coste de operación, datos OSM, elevación, personalización y licencia.
-
-### Elevación
-
-Evaluar datasets oficiales y abiertos de IGN/CNIG y pipelines con GDAL/PROJ/PostGIS. No depender de una API comercial para cada consulta si los datos pueden procesarse y cachearse legalmente.
 
 ### Identidad y autorización
 
@@ -73,6 +70,10 @@ Evaluar **OpenTelemetry** como capa de instrumentación y, según coste/operaci�
 ### Datos oficiales
 
 Integrar mediante adaptadores desacoplados fuentes oficiales como **AEMET OpenData**, **MITECO**, **IGN/CNIG**, Protección Civil y fuentes autonómicas/municipales cuando sus condiciones de reutilización y estabilidad sean adecuadas. Cada adaptador debe conservar procedencia, timestamp, vigencia, licencia y nivel de confianza.
+
+### Datos OSM
+
+Los extractos de OSM usados para Valhalla y cartografía deben gestionarse respetando ODbL y las obligaciones de atribución. Los extractos grandes y tiles generados no se almacenan en Git.
 
 ## Componentes que NO deben reinventarse
 
@@ -95,7 +96,8 @@ No implementar desde cero cuando exista una alternativa madura y compatible:
 - almacenamiento de objetos;
 - colas/event bus;
 - servidor de teselas;
-- routing genérico.
+- routing genérico;
+- transferencias de archivos en segundo plano.
 
 ## Código que sí debe ser propio
 
