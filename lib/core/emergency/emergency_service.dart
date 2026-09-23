@@ -1,4 +1,5 @@
 import 'package:battery_plus/battery_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -28,6 +29,7 @@ class EmergencyService {
     );
 
     final batteryPercent = await _readBatteryPercent();
+    final connectivity = await _readConnectivity();
 
     return EmergencySnapshot(
       type: type,
@@ -39,6 +41,7 @@ class EmergencyService {
       capturedAt: DateTime.now().toUtc(),
       batteryPercent: batteryPercent,
       altitudeMeters: position.altitude,
+      connectivity: connectivity,
     );
   }
 
@@ -54,6 +57,18 @@ class EmergencyService {
       return level.clamp(0, 100);
     } catch (_) {
       return -1;
+    }
+  }
+
+  Future<EmergencyConnectivity> _readConnectivity() async {
+    try {
+      final results = await Connectivity().checkConnectivity();
+      if (results.isEmpty || results.contains(ConnectivityResult.none)) {
+        return EmergencyConnectivity.offline;
+      }
+      return EmergencyConnectivity.online;
+    } catch (_) {
+      return EmergencyConnectivity.unknown;
     }
   }
 }
