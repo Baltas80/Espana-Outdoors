@@ -136,7 +136,6 @@ class _MapLibreSurfaceState extends State<_MapLibreSurface>
   Future<void> _loadStyle() async {
     try {
       final local = await _styles.findLatestLocalRegion();
-      final location = null;
       final style = await _styles.load(localPmtilesPath: local);
       if (!mounted) return;
       setState(() {
