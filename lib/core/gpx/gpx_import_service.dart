@@ -15,6 +15,8 @@ class ImportedTrack {
     required this.descentMeters,
     this.startedAt,
     this.endedAt,
+    this.elevationsMeters,
+    this.timestamps,
   });
 
   final String name;
