@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,17 +14,16 @@ class EmergencyShareService {
     if (ttl.inSeconds <= 0) {
       throw ArgumentError.value(ttl, 'ttl', 'must be positive');
     }
-
-    final expiresAt = DateTime.now().add(ttl);
+    final expiresAt = DateTime.now().toUtc().add(ttl);
     return EmergencySharePayload(
       snapshot: snapshot,
       expiresAt: expiresAt,
-      shareToken: _token(),
+      shareToken: _localCorrelationCode(snapshot, expiresAt),
     );
   }
 
   Future<void> copyShareText(EmergencySharePayload payload) async {
-    await Clipboard.setData(ClipboardData(text: _message(payload)));
+    await Clipboard.setData(ClipboardData(text: buildShareText(payload)));
   }
 
   Future<bool> openSms(EmergencySharePayload payload, String phone) async {
@@ -34,27 +31,43 @@ class EmergencyShareService {
     final uri = Uri(
       scheme: 'sms',
       path: phone,
-      queryParameters: {'body': _message(payload)},
+      queryParameters: {'body': buildShareText(payload)},
     );
     if (!await canLaunchUrl(uri)) return false;
     return launchUrl(uri);
   }
 
-  String _message(EmergencySharePayload payload) {
+  String buildShareText(EmergencySharePayload payload) {
+    if (payload.expired) {
+      return 'ALERTA España Outdoor. El aviso ha caducado.';
+    }
     final p = payload.snapshot.position;
-    return 'ALERTA España Outdoor. Posición: ${p.latitude.toStringAsFixed(6)}, '
-        '${p.longitude.toStringAsFixed(6)}. Precisión aproximada: '
-        '${payload.snapshot.accuracyMeters.toStringAsFixed(0)} m. '
-        'Tipo: ${payload.snapshot.type.name}. '
-        'Válida hasta ${payload.expiresAt.toLocal().toIso8601String()}. '
-        'Código: ${payload.shareToken}';
+    final lat = _roundHundredth(p.latitude);
+    final lon = _roundHundredth(p.longitude);
+    return 'ALERTA España Outdoor. Ubicación aproximada: ' +
+        lat.toStringAsFixed(2) + ', ' +
+        lon.toStringAsFixed(2) +
+        '. Precisión GPS aproximada: ' +
+        payload.snapshot.accuracyMeters.toStringAsFixed(0) +
+        ' m. Tipo: ' +
+        payload.snapshot.type.name +
+        '. Válida hasta ' +
+        payload.expiresAt.toLocal().toIso8601String() +
+        '. Código de aviso: ' +
+        payload.shareToken;
   }
 
-  String _token() {
-    final random = Random.secure();
-    return List.generate(
-      12,
-      (_) => random.nextInt(36).toRadixString(36),
-    ).join();
+  double _roundHundredth(double value) {
+    return (value * 100).roundToDouble() / 100;
+  }
+
+  String _localCorrelationCode(
+    EmergencySnapshot snapshot,
+    DateTime expiresAt,
+  ) {
+    final seed = snapshot.capturedAt.millisecondsSinceEpoch ^
+        snapshot.type.index ^
+        expiresAt.millisecondsSinceEpoch;
+    return seed.toRadixString(36);
   }
 }
