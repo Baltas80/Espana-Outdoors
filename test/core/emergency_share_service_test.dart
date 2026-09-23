@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:espana_outdoors/core/domain/outdoor_models.dart';
 import 'package:espana_outdoors/core/emergency/emergency_share_service.dart';
+import 'package:espana_outdoors/core/emergency/trusted_contact.dart';
 
 void main() {
   EmergencySnapshot snapshot() => EmergencySnapshot(
