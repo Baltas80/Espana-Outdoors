@@ -17,7 +17,7 @@ class LiveDataGatewayException implements Exception {
 class HttpLiveDataGateway implements LiveDataGateway {
   HttpLiveDataGateway({
     required Uri baseUri,
-    required String bearerToken,
+    String? bearerToken,
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
   })  : _baseUri = baseUri,
@@ -25,7 +25,7 @@ class HttpLiveDataGateway implements LiveDataGateway {
         _client = client ?? http.Client();
 
   final Uri _baseUri;
-  final String _bearerToken;
+  final String? _bearerToken;
   final http.Client _client;
   final Duration timeout;
 
@@ -38,7 +38,8 @@ class HttpLiveDataGateway implements LiveDataGateway {
     final response = await _client.get(
       uri,
       headers: {
-        'authorization': 'Bearer $_bearerToken',
+        if (_bearerToken != null && _bearerToken!.isNotEmpty)
+          'authorization': 'Bearer $_bearerToken',
         'accept': 'application/json',
       },
     ).timeout(timeout);
