@@ -24,7 +24,7 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   file_picker: ^13.1.0
   path_provider: ^2.1.6
-  gpx: ^2.3.0
+  gpx: ^2.5.0
   hive_ce_flutter: ^2.3.4
   url_launcher: ^6.3.2
   http: ^1.6.0
