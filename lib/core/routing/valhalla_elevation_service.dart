@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 
 import 'elevation_models.dart';
 import 'routing_models.dart';
-import 'routing_service.dart';
 
 class ValhallaElevationService implements ElevationService {
   ValhallaElevationService({required Uri baseUri, http.Client? client})
