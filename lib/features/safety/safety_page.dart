@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/domain/outdoor_models.dart';
 import '../../core/emergency/emergency_service.dart';
@@ -91,6 +92,39 @@ class _SafetyPageState extends State<SafetyPage> {
     }
   }
 
+  Future<void> _showMyPosition() async {
+    setState(() => _capturing = true);
+    final snapshot =
+        await _emergency.captureSnapshot(type: EmergencyType.other);
+    if (!mounted) return;
+    setState(() => _capturing = false);
+
+    if (snapshot == null) {
+      _show('No se ha podido obtener la ubicación.');
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mi posición'),
+        content: SelectableText(
+          'Latitud: ${snapshot.position.latitude}\n'
+          'Longitud: ${snapshot.position.longitude}\n'
+          'Precisión: ${snapshot.accuracyMeters.toStringAsFixed(0)} m\n'
+          'Altitud: ${snapshot.altitudeMeters?.toStringAsFixed(0) ?? 'no disponible'} m\n'
+          'Hora: ${snapshot.capturedAt.toLocal()}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _show(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -145,16 +179,23 @@ class _SafetyPageState extends State<SafetyPage> {
                     icon: const Icon(Icons.share_location_outlined),
                     label: const Text('ENVIAR ALERTA A CONTACTO'),
                   ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: _capturing ? null : _showMyPosition,
+                    icon: const Icon(Icons.location_on_outlined),
+                    label: const Text('MI POSICIÓN'),
+                  ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          const _SafetyTile(
+          _SafetyTile(
             icon: Icons.contact_emergency_outlined,
             title: 'Contactos de confianza',
             subtitle:
                 'Destinatarios para alertas temporales de emergencia.',
+            onTap: () => context.go('/safety/contacts'),
           ),
           const SizedBox(height: 10),
           const _SafetyTile(
@@ -164,10 +205,11 @@ class _SafetyPageState extends State<SafetyPage> {
                 'Incendios, inundaciones, tormentas y otros riesgos.',
           ),
           const SizedBox(height: 10),
-          const _SafetyTile(
+          _SafetyTile(
             icon: Icons.pets_outlined,
             title: 'Mascotas',
             subtitle: 'Riesgos de calor, agua, fauna y restricciones.',
+            onTap: () => context.go('/pets'),
           ),
           const SizedBox(height: 10),
           const _SafetyTile(
@@ -187,11 +229,13 @@ class _SafetyTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -206,6 +250,7 @@ class _SafetyTile extends StatelessWidget {
         ),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
       ),
     );
   }
