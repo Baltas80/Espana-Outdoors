@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../core/contracts/routing_service.dart';
+import '../../core/domain/outdoor_models.dart';
 import '../../core/location/location_controller.dart';
+import '../../core/navigation/navigation_guidance.dart';
 import '../../core/location/route_recorder.dart';
 
 /// Live navigation surface built around the same location/recording pipeline
@@ -45,6 +47,16 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
 
     final position = location.position;
     final accuracy = position?.accuracy;
+    final guidance = widget.route == null || position == null
+        ? null
+        : const NavigationGuidanceEngine().evaluate(
+            route: widget.route!,
+            position: GeoPoint(
+              latitude: position.latitude,
+              longitude: position.longitude,
+            ),
+            accuracyMeters: position.accuracy,
+          );
     final elapsed = recording.startedAt == null
         ? Duration.zero
         : DateTime.now().difference(recording.startedAt!);
@@ -133,6 +145,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
               ),
             ),
             const SizedBox(height: 12),
+            if (guidance != null) _GuidanceCard(guidance: guidance),
             if (widget.route != null)
               Card(
                 child: Padding(
@@ -295,6 +308,74 @@ class _Stat extends StatelessWidget {
             Text(value, style: Theme.of(context).textTheme.titleMedium),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GuidanceCard extends StatelessWidget {
+  const _GuidanceCard({required this.guidance});
+
+  final NavigationGuidance guidance;
+
+  @override
+  Widget build(BuildContext context) {
+    final String title;
+    final String message;
+    final IconData icon;
+
+    switch (guidance.status) {
+      case NavigationGuidanceStatus.noRoute:
+        title = 'Sin ruta';
+        message = 'No hay una ruta válida para ofrecer guía.';
+        icon = Icons.route_outlined;
+        break;
+      case NavigationGuidanceStatus.gpsPoor:
+        title = 'GPS con precisión insuficiente';
+        message = 'La posición actual no permite decidir con seguridad si estás fuera de ruta.';
+        icon = Icons.gps_off_outlined;
+        break;
+      case NavigationGuidanceStatus.onRoute:
+        title = 'En ruta';
+        message = 'Separación de la ruta: ' +
+            guidance.distanceFromRouteMeters.toStringAsFixed(0) +
+            ' m.';
+        icon = Icons.navigation_outlined;
+        break;
+      case NavigationGuidanceStatus.approachingTurn:
+        title = 'Próximo giro';
+        message = guidance.nextStep == null
+            ? 'Se aproxima una maniobra de la ruta.'
+            : guidance.nextStep!.instruction +
+                ' · ' +
+                (guidance.distanceToNextStepMeters?.toStringAsFixed(0) ?? '—') +
+                ' m';
+        icon = Icons.turn_right_outlined;
+        break;
+      case NavigationGuidanceStatus.offRoute:
+        title = 'Fuera de ruta';
+        message = 'La posición está a ' +
+            guidance.distanceFromRouteMeters.toStringAsFixed(0) +
+            ' m de la ruta. La aplicación no inventa una nueva ruta.';
+        icon = Icons.warning_amber_rounded;
+        break;
+      case NavigationGuidanceStatus.arrived:
+        title = 'Llegada';
+        message = 'Estás dentro de la zona de llegada de la ruta.';
+        icon = Icons.flag_outlined;
+        break;
+    }
+
+    final color = guidance.status == NavigationGuidanceStatus.offRoute ||
+            guidance.status == NavigationGuidanceStatus.gpsPoor
+        ? Theme.of(context).colorScheme.error
+        : Theme.of(context).colorScheme.primary;
+
+    return Card(
+      child: ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+        subtitle: Text(message),
       ),
     );
   }
