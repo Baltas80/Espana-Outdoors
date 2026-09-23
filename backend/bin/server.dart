@@ -22,6 +22,9 @@ Future<void> main() async {
   }
 
   final aemet = AemetGatewayClient(apiKey: aemetKey);
+  final alertCatalog = alertsPath == null || alertsPath.isEmpty
+      ? null
+      : AlertCatalog(path: alertsPath);
   final rate = <String, _RateWindow>{};
   final router = Router();
 
@@ -121,7 +124,14 @@ Future<void> main() async {
     }
 
     try {
-      final catalog = AlertCatalog(path: alertsPath);
+      final catalog = alertCatalog;
+      if (catalog == null) {
+        return Response(
+          503,
+          body: jsonEncode({'error': 'alert_catalog_unavailable'}),
+          headers: _jsonHeaders(),
+        );
+      }
       final now = DateTime.now().toUtc();
       final alerts = await catalog.nearby(
         latitude: lat,
