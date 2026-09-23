@@ -28,6 +28,7 @@ dependencies:
   hive_ce_flutter: ^2.3.4
   url_launcher: ^6.3.2
   http: ^1.6.0
+  crypto: ^3.0.7
   purchases_flutter: ^10.13.1
   purchases_ui_flutter: ^10.13.1
   background_downloader: ^9.6.2
