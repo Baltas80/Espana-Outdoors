@@ -6,7 +6,7 @@ void main() {
     final now = DateTime.utc(2026, 9, 23, 13);
 
     test('accepts configured credentials before expiry', () {
-      const config = WeatherRuntimeConfig(
+      final config = WeatherRuntimeConfig(
         apiKey: 'runtime-key',
         expiresAt: DateTime.utc(2026, 10, 15),
       );
@@ -16,7 +16,7 @@ void main() {
     });
 
     test('rejects expired credentials', () {
-      const config = WeatherRuntimeConfig(
+      final config = WeatherRuntimeConfig(
         apiKey: 'runtime-key',
         expiresAt: DateTime.utc(2026, 9, 23, 12, 59),
       );
@@ -29,7 +29,7 @@ void main() {
     });
 
     test('rejects an empty credential', () {
-      const config = WeatherRuntimeConfig(
+      final config = WeatherRuntimeConfig(
         apiKey: '',
         expiresAt: DateTime.utc(2026, 10, 15),
       );
