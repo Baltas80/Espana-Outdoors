@@ -1,10 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/auth/oidc_config.dart';
 import '../../core/domain/outdoor_models.dart';
 import '../../core/location/location_controller.dart';
+import '../../core/rescue/rescue_link_config.dart';
+import '../../core/rescue/rescue_link_gateway.dart';
 import '../../core/rescue/rescue_link_policy.dart';
-import '../../core/rescue/rescue_link_service.dart';
+import '../../infrastructure/auth/openidconnect_auth_service.dart';
+import '../../infrastructure/rescue/http_rescue_link_gateway.dart';
 
 class RescueLinkPage extends ConsumerStatefulWidget {
   const RescueLinkPage({super.key});
@@ -14,38 +21,102 @@ class RescueLinkPage extends ConsumerStatefulWidget {
 }
 
 class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
-  final _service = const RescueLinkService();
-  RescueLinkAlert? _alert;
+  late final OpenIdConnectAuthService _auth =
+      OpenIdConnectAuthService(OidcConfig.fromEnvironment());
+  late final RescueLinkConfig _config = RescueLinkConfig.fromEnvironment();
+  RescueLinkRemoteSession? _session;
   bool _busy = false;
 
-  Future<void> _prepare() async {
-    setState(() => _busy = true);
-    await ref.read(locationControllerProvider.notifier).locate();
-    final position = ref.read(locationControllerProvider).position;
-    if (!mounted) return;
-    setState(() => _busy = false);
+  RescueLinkGateway get _gateway => HttpRescueLinkGateway(
+        baseUrl: _config.baseUrl,
+        accessToken: _auth.accessToken,
+        allowHttpForDevelopment: _config.allowHttpForDevelopment,
+      );
 
-    if (position == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Necesitamos una ubicación antes de preparar Rescue Link.')),
+  @override
+  void dispose() {
+    unawaited(_auth.dispose());
+    super.dispose();
+  }
+
+  Future<void> _prepare() async {
+    if (!_config.isConfigured) {
+      _showError(
+        'Rescue Link no está configurado para este entorno. No se ha creado ningún enlace.',
       );
       return;
     }
 
-    final policy = const RescueLinkPolicy();
-    final alert = _service.createAlert(
-      position: GeoPoint(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      ),
-      policy: policy,
+    setState(() => _busy = true);
+    try {
+      await ref.read(locationControllerProvider.notifier).locate();
+      final position = ref.read(locationControllerProvider).position;
+      if (position == null) {
+        throw StateError('Necesitamos una ubicación antes de preparar Rescue Link.');
+      }
+
+      final policy = const RescueLinkPolicy();
+      final expiresAt = DateTime.now().toUtc().add(policy.ttl);
+      final session = await _gateway.create(
+        RescueLinkCreateRequest(
+          position: GeoPoint(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          ),
+          accuracyMeters: position.accuracy,
+          type: EmergencyType.lost,
+          expiresAt: expiresAt,
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() => _session = session);
+    } on Object catch (error) {
+      if (mounted) _showError(error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _revoke() async {
+    final session = _session;
+    if (session == null) return;
+    setState(() => _busy = true);
+    try {
+      await _gateway.revoke(session.id);
+      if (!mounted) return;
+      setState(() => _session = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Rescue Link revocado.')),
+      );
+    } on Object catch (error) {
+      if (mounted) _showError(error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _copyLink() async {
+    final session = _session;
+    if (session == null) return;
+    await Clipboard.setData(
+      ClipboardData(text: session.shareUrl.toString()),
     );
-    setState(() => _alert = alert);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Enlace Rescue Link copiado.')),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message.replaceFirst('Exception: ', ''))),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final alert = _alert;
+    final session = _session;
     return Scaffold(
       appBar: AppBar(title: const Text('Rescue Link')),
       body: ListView(
@@ -57,13 +128,18 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.link_outlined,
-                      size: 34, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.link_outlined,
+                    size: 34,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(height: 12),
-                  Text('Ayuda sin crear otra víctima',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          )),
+                  Text(
+                    'Ayuda sin crear otra víctima',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   const Text(
                     'La primera señal usa ubicación aproximada. La ubicación temporal más precisa solo se comparte dentro de una sesión autorizada.',
@@ -89,29 +165,38 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
             subtitle: 'Solo cuando el escenario sea apto y con controles de riesgo.',
           ),
           const SizedBox(height: 16),
-          if (alert == null)
+          if (session == null)
             FilledButton.icon(
               onPressed: _busy ? null : _prepare,
               icon: const Icon(Icons.location_searching),
-              label: Text(_busy ? 'OBTENIENDO UBICACIÓN…' : 'PREPARAR RESCUE LINK'),
+              label: Text(
+                _busy ? 'PREPARANDO RESCUE LINK…' : 'PREPARAR RESCUE LINK',
+              ),
             )
           else ...[
             Card(
               color: Theme.of(context).colorScheme.primaryContainer,
               child: ListTile(
                 leading: const Icon(Icons.verified_user_outlined),
-                title: const Text('Sesión preparada',
-                    style: TextStyle(fontWeight: FontWeight.w800)),
+                title: const Text(
+                  'Sesión activa',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
                 subtitle: Text(
-                  'Caduca ${alert.expiresAt.toLocal().hour.toString().padLeft(2, '0')}:${alert.expiresAt.toLocal().minute.toString().padLeft(2, '0')}. '
-                  'La publicación a terceros requiere una capa de backend autorizada.',
+                  'Caduca ${session.expiresAt.toLocal().hour.toString().padLeft(2, '0')}:${session.expiresAt.toLocal().minute.toString().padLeft(2, '0')}. La ubicación exacta queda protegida en el backend y no se muestra en esta pantalla.',
                 ),
               ),
             ),
             const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: _busy ? null : _copyLink,
+              icon: const Icon(Icons.copy_outlined),
+              label: const Text('COPIAR ENLACE'),
+            ),
+            const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: () => setState(() => _alert = null),
-              child: const Text('CANCELAR SESIÓN'),
+              onPressed: _busy ? null : _revoke,
+              child: Text(_busy ? 'REVOCANDO…' : 'REVOCAR RESCUE LINK'),
             ),
           ],
           const SizedBox(height: 18),
@@ -126,7 +211,11 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
 }
 
 class _RoleTile extends StatelessWidget {
-  const _RoleTile({required this.icon, required this.title, required this.subtitle});
+  const _RoleTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
   final IconData icon;
   final String title;
@@ -135,7 +224,10 @@ class _RoleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
         leading: Icon(icon),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         subtitle: Text(subtitle),
       );
 }
