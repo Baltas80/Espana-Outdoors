@@ -34,7 +34,10 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Test
+      - name: Focused routing/offline tests
+        run: flutter test test/routing_config_test.dart test/offline_region_test.dart
+
+      - name: Full test suite
         run: flutter test --coverage
 
       - name: Upload coverage
