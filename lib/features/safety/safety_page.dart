@@ -206,11 +206,12 @@ class _SafetyPageState extends State<SafetyPage> {
             onTap: () => context.go('/safety/contacts'),
           ),
           const SizedBox(height: 10),
-          const _SafetyTile(
+          _SafetyTile(
             icon: Icons.campaign_outlined,
             title: 'Alertas y desastres',
             subtitle:
                 'Incendios, inundaciones, tormentas y otros riesgos.',
+            onTap: () => context.go('/safety/alerts'),
           ),
           const SizedBox(height: 10),
           _SafetyTile(
