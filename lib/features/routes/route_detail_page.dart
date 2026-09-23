@@ -64,7 +64,6 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
         lineOpacity: 0.95,
         lineColor: '#2E7D32',
         lineJoin: 'round',
-        lineCap: 'round',
       ),
     );
     _routeDrawn = true;
