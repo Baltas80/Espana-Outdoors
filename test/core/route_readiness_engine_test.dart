@@ -57,13 +57,14 @@ void main() {
     expect(result.decision, RouteReadinessDecision.noRecomendado);
   });
 
-  test('moderate weather risk yields precaucion', () {
+  test('moderate weather risk yields precaucion with evidence', () {
     final result = engine.evaluate(
       const RouteReadinessInput(weatherRiskLevel: 1),
     );
 
     expect(result.decision, RouteReadinessDecision.precaucion);
-    expect(result.factors, isEmpty);
+    expect(result.factors, contains(RouteReadinessFactor.weatherRisk));
+    expect(result.reasons, isNotEmpty);
   });
 
   test('stale information never upgrades a route to apto', () {
