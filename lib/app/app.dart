@@ -40,7 +40,12 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/pets', builder: (_, __) => const PetsPage()),
       GoRoute(path: '/wildlife', builder: (_, __) => const WildlifePage()),
       GoRoute(path: '/safety', builder: (_, __) => const SafetyPage()),
-      GoRoute(path: '/safety/plan', builder: (_, __) => const RoutePlanPage()),
+      GoRoute(
+        path: '/safety/plan',
+        builder: (_, state) => RoutePlanPage(
+          route: state.extra is RouteSummary ? state.extra as RouteSummary : null,
+        ),
+      ),
       GoRoute(
         path: '/safety/contacts',
         builder: (_, __) => const TrustedContactsPage(),
