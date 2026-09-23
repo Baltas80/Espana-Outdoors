@@ -59,7 +59,7 @@ class OfflineMapRegion {
       maxZoom >= minZoom;
 }
 
-abstract interface class MapService {
+abstract class MapService {
   String get providerId;
 
   Future<void> prepareOfflineRegion(OfflineMapRegion region);
