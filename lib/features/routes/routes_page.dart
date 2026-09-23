@@ -16,31 +16,6 @@ class _RoutesPageState extends State<RoutesPage> {
   final _gpx = const GpxImportService();
   final _store = LocalRouteStore();
 
-  final _routes = <RouteSummary>[
-    const RouteSummary(
-      id: 'picos-demo',
-      name: 'Picos de Europa — Mirador',
-      distanceKm: 8.4,
-      elevationGainM: 510,
-      durationMinutes: 205,
-      difficulty: 'Moderada',
-      petFriendly: true,
-      waterAvailable: true,
-      offlineReady: true,
-    ),
-    const RouteSummary(
-      id: 'sierra-demo',
-      name: 'Sierra de la Demanda — Circular',
-      distanceKm: 11.8,
-      elevationGainM: 730,
-      durationMinutes: 300,
-      difficulty: 'Media-alta',
-      petFriendly: false,
-      waterAvailable: false,
-      offlineReady: false,
-    ),
-  ];
-
   ImportedTrack? _imported;
   String? _error;
 
@@ -110,18 +85,17 @@ class _RoutesPageState extends State<RoutesPage> {
             const SizedBox(height: 12),
           ],
           FilledButton.icon(
+            onPressed: () => context.push('/routes/planner'),
+            icon: const Icon(Icons.alt_route),
+            label: const Text('Planificar una ruta'),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
             onPressed: _importGpx,
             icon: const Icon(Icons.upload_file_outlined),
             label: const Text('Importar GPX'),
           ),
           const SizedBox(height: 20),
-          for (final route in _routes) ...[
-            _RouteCard(
-              route: route,
-              onOpen: () => context.push('/routes/detail', extra: route),
-            ),
-            const SizedBox(height: 12),
-          ],
         ],
       ),
     );
