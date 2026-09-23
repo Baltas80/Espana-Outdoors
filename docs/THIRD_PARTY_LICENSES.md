@@ -42,7 +42,7 @@ Una dependencia solo se incorpora a producción después de revisar licencia, ma
 | pgx/v5 5.11.0 | PostgreSQL | MIT | Adoptado |
 | x/time 0.16.0 | Rate limiting | BSD-3-Clause | Adoptado |
 | PostgreSQL + PostGIS | Persistencia geoespacial/backend | Open source; revisar notices del paquete base | Infraestructura |
-## ## Candidatos localizados, todavía no incorporados al pubspec
+## Candidatos localizados, todavía no incorporados al pubspec
 
 | Componente | Uso | Licencia/situación | Decisión |
 |---|---|---|---|
