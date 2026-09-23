@@ -33,7 +33,16 @@ Una dependencia solo se incorpora a producción después de revisar licencia, ma
 | sentry_flutter 9.30.1 | Crash/error telemetry | MIT | Aceptado |
 | battery_plus 7.1.1 | Estado de batería | Open source | Adoptado para SOS |
 
-## Candidatos localizados, todavía no incorporados al pubspec
+## Dependencias del backend Rescue Link
+
+| Componente | Uso | Licencia/condición | Estado |
+|---|---|---|---|
+| Go 1.27.1 | Runtime/backend | Licencia Go | Adoptado |
+| go-oidc/v3 3.21.0 | Verificación OIDC/Keycloak | Apache-2.0 | Adoptado |
+| pgx/v5 5.11.0 | PostgreSQL | MIT | Adoptado |
+| x/time 0.16.0 | Rate limiting | BSD-3-Clause | Adoptado |
+| PostgreSQL + PostGIS | Persistencia geoespacial/backend | Open source; revisar notices del paquete base | Infraestructura |
+## ## Candidatos localizados, todavía no incorporados al pubspec
 
 | Componente | Uso | Licencia/situación | Decisión |
 |---|---|---|---|
