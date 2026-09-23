@@ -32,9 +32,23 @@ class OfflineRegionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> prepare(String regionId) async {
+  Future<void> prepare(String regionId) => _runTransfer(
+        regionId,
+        resume: false,
+      );
+
+  Future<void> resume(String regionId) => _runTransfer(
+        regionId,
+        resume: true,
+      );
+
+  Future<void> _runTransfer(
+    String regionId, {
+    required bool resume,
+  }) async {
     final record = _store.get(regionId);
     if (record == null) return;
+
     _busy = true;
     await _store.put(record.copyWith(
       status: OfflineRegionStatus.downloading,
@@ -42,13 +56,26 @@ class OfflineRegionManager extends ChangeNotifier {
       error: null,
     ));
     notifyListeners();
+
     try {
-      await _mapService.prepareOfflineRegion(record.region);
+      final artifact = resume
+          ? await _mapService.resumeOfflineRegion(regionId)
+          : await _mapService.prepareOfflineRegion(record.region);
+
+      if (!artifact.isValid) {
+        throw StateError('Offline provider returned an invalid artifact');
+      }
+
       final current = _store.get(regionId);
       if (current != null) {
         await _store.put(current.copyWith(
           status: OfflineRegionStatus.ready,
           progress: 1,
+          bytesDownloaded: artifact.bytes,
+          bytesTotal: artifact.bytes,
+          localPath: artifact.localPath,
+          sha256: artifact.sha256,
+          artifactVersion: artifact.version,
           updatedAt: DateTime.now().toUtc(),
           error: null,
         ));
@@ -80,8 +107,6 @@ class OfflineRegionManager extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  Future<void> resume(String regionId) => prepare(regionId);
 
   Future<void> delete(String regionId) async {
     final current = _store.get(regionId);
