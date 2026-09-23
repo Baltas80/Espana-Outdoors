@@ -31,4 +31,26 @@ void main() {
     expect(valid.isValid, isTrue);
     expect(invalid.isValid, isFalse);
   });
+
+  test('accepts a cryptographically verifiable offline artifact', () {
+    const artifact = OfflineMapArtifact(
+      localPath: '/data/maps/sierra.pmtiles',
+      bytes: 1024,
+      version: '2026-09-23',
+      sha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    );
+
+    expect(artifact.isValid, isTrue);
+  });
+
+  test('rejects an invalid offline artifact', () {
+    const artifact = OfflineMapArtifact(
+      localPath: '',
+      bytes: 0,
+      version: '',
+      sha256: 'not-a-sha256',
+    );
+
+    expect(artifact.isValid, isFalse);
+  });
 }
