@@ -14,7 +14,6 @@ void main() {
     expect(config.isConfigured, isTrue);
     expect(config.baseUri!.host, 'routing.example.com');
   });
-}
 
   test('routing config rejects HTTP endpoints by default', () {
     const config = RoutingConfig(
@@ -30,3 +29,4 @@ void main() {
     );
     expect(config.isConfigured, isTrue);
   });
+}
