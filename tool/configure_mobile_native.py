@@ -37,6 +37,27 @@ def patch_android() -> None:
         manifest.write_text(text, encoding="utf-8")
 
 
+    gradle_candidates = [
+        ROOT / "android" / "app" / "build.gradle.kts",
+        ROOT / "android" / "app" / "build.gradle",
+    ]
+    gradle_path = next((path for path in gradle_candidates if path.exists()), None)
+    if gradle_path is None:
+        raise SystemExit("Missing generated Android app Gradle file.")
+
+    gradle = gradle_path.read_text(encoding="utf-8")
+    if gradle_path.suffix == ".kts":
+        gradle = gradle.replace(
+            "minSdk = flutter.minSdkVersion",
+            "minSdk = 24",
+        )
+    else:
+        gradle = gradle.replace(
+            "minSdkVersion flutter.minSdkVersion",
+            "minSdkVersion 24",
+        )
+    gradle_path.write_text(gradle, encoding="utf-8")
+
 def patch_ios() -> None:
     plist_path = ROOT / "ios" / "Runner" / "Info.plist"
     if not plist_path.exists():
