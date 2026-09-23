@@ -1,6 +1,6 @@
 # España Outdoor — Parallel Delivery Roadmap
 
-The project is developed in parallel tracks so no major capability waits for another track to finish.
+The project is developed in parallel tracks so no major capability waits for another track to finish. Checked items are implemented foundations/contracts; unchecked production integrations remain explicitly tracked.
 
 ## Track A — Product & UX
 - [x] premium responsive design system
@@ -21,7 +21,7 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] offline capability contract
 - [x] offline region model validation
 - [x] persistent offline region state store
-- [ ] `MapService` interface enforcement across features
+- [x] provider-neutral `MapService` boundary
 - [ ] production vector-tile provider selection
 - [ ] offline region downloader with pause/resume/update/delete
 - [ ] elevation/profile provider
@@ -32,6 +32,8 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] AEMET provider-neutral contract
 - [x] AEMET OpenData adapter foundation
 - [x] provenance/freshness model
+- [x] normalized official-alert contract
+- [x] provider-neutral Source Gateway contract
 - [ ] secure runtime API-key injection
 - [ ] cache + retry/backoff + 429 handling policy
 - [ ] official warning/CAP adapter
@@ -45,6 +47,8 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [x] temporary location-sharing policy
 - [x] SOS domain foundation
 - [x] Rescue Link anti-abuse policy foundation
+- [x] emergency location privacy model
+- [x] offline sync contract for safety events
 - [ ] 112 platform handoff hardening
 - [ ] battery/connectivity telemetry in emergency snapshot
 - [ ] emergency-session expiry enforcement
@@ -77,7 +81,8 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [ ] retention matrix enforcement
 - [ ] audit events
 - [ ] threat model review
-- [ ] dependency/SBOM controls
+- [x] dependency/security scanning baseline
+- [ ] SBOM release generation
 - [ ] API authentication/authorization layer
 - [ ] abuse/rate-limit controls
 
@@ -94,10 +99,10 @@ The project is developed in parallel tracks so no major capability waits for ano
 
 ## Immediate execution order
 
-1. Wire `WeatherService` to secure runtime configuration and cache the AEMET result with freshness metadata.
-2. Build the normalized official-alert model and AEMET CAP adapter.
+1. Wire `WeatherService` to secure runtime configuration and cache AEMET results with freshness metadata.
+2. Implement the normalized official-alert model and AEMET CAP adapter.
 3. Enforce the provider-neutral `MapService` boundary across map-dependent features.
-4. Connect the persistent offline-region state to a real licensed vector-tile/offline provider; do not fake downloads.
+4. Connect persistent offline-region state to a real licensed vector-tile/offline provider; never fake downloads.
 5. Evaluate MapLibre Android/iOS/Web against `flutter_map` using measured rendering, offline and GPS-following tests.
 6. Add routing/elevation providers only after licence/cost/coverage validation.
 7. Harden SOS and Rescue Link with expiry, device-state capture and end-to-end tests.
