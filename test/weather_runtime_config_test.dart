@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('accepts configured non-expired credentials', () {
-    const config = WeatherRuntimeConfig(
+    final config = WeatherRuntimeConfig(
       apiKey: 'test',
       expiresAt: DateTime.utc(2026, 10, 15),
     );
@@ -13,7 +13,7 @@ void main() {
   });
 
   test('rejects missing credentials', () {
-    const config = WeatherRuntimeConfig(
+    final config = WeatherRuntimeConfig(
       apiKey: '',
       expiresAt: DateTime.utc(2026, 10, 15),
     );
@@ -25,7 +25,7 @@ void main() {
   });
 
   test('rejects expired credentials', () {
-    const config = WeatherRuntimeConfig(
+    final config = WeatherRuntimeConfig(
       apiKey: 'expired',
       expiresAt: DateTime.utc(2026, 9, 22),
     );
