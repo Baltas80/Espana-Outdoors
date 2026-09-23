@@ -41,8 +41,10 @@ Una dependencia solo se incorpora a producción después de revisar:
 | Hive CE | Persistencia local | Open source | Revisar mantenimiento antes de producción |
 | url_launcher | Enlaces/acciones del SO | Open source | Aceptado provisionalmente |
 | http | Cliente HTTP | Dart | Aceptado provisionalmente |
-| purchases_flutter / purchases_ui_flutter | Entitlements y compras multiplataforma | SDK de RevenueCat; revisar términos comerciales | Aceptado como infraestructura de billing, pendiente de configuración de producción |
-| background_downloader | Transferencias offline con pausa/reanudación | BSD-3-Clause / MIT | Aceptado para Android, iOS, Windows, macOS y Linux; Web mantiene un camino específico |
+| purchases_flutter / purchases_ui_flutter 10.13.1 | Entitlements y compras multiplataforma | MIT / RevenueCat; revisar términos comerciales | Aceptado como infraestructura de billing, pendiente de configuración de producción |
+| background_downloader 9.6.2 | Transferencias offline con pausa/reanudación | BSD-3-Clause / MIT | Aceptado para Android, iOS, Windows, macOS y Linux; Web mantiene un camino específico |
+| openidconnect 3.0.0 | OpenID Connect / OAuth 2.0 + PKCE | Apache-2.0 | Aceptado para integración con Keycloak; validar configuración de callbacks por plataforma |
+| sentry_flutter 9.30.1 | Crash/error telemetry y performance | MIT | Aceptado; DSN solo por configuración de despliegue |
 | flutter_lints | Calidad estática | Ecosistema Flutter | Desarrollo/CI |
 
 ## Infraestructura aceptada/priorizada
@@ -61,11 +63,11 @@ Una dependencia solo se incorpora a producción después de revisar:
 
 ### Identidad y autorización
 
-Evaluar **Keycloak / OpenID Connect** como componente maduro para identidad, autenticación, MFA y autorización, evitando implementar autenticación casera. La arquitectura debe mantener una interfaz AuthService para poder sustituirlo si fuera necesario.
+**Keycloak / OpenID Connect** es el componente prioritario para identidad, autenticación, MFA y autorización, evitando implementar autenticación casera. La aplicación usa un adaptador OIDC y mantiene la configuración del proveedor fuera del código. Keycloak 26.7.4 es la referencia de infraestructura actual; debe mantenerse en la última versión de parche de la rama desplegada antes de cada release. 
 
 ### Observabilidad
 
-Evaluar **OpenTelemetry** como capa de instrumentación y, según coste/operación, **Prometheus + Grafana** y **Sentry** para métricas, trazas, dashboards y errores/crashes.
+**Sentry** es el primer nivel de crash/error telemetry del cliente. **OpenTelemetry** queda como estándar de trazas cuando se conecte el backend; **Prometheus + Grafana** quedan para métricas y operación de infraestructura. La instrumentación debe evitar PII y coordenadas de emergencia en eventos.
 
 ### Datos oficiales
 
