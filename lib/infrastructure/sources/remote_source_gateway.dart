@@ -5,19 +5,31 @@ import 'package:http/http.dart' as http;
 import '../../core/contracts/source_gateway.dart';
 
 /// Client for the first-party Source Gateway. Provider credentials remain on
-/// the server; the mobile/web client receives normalized, attributed records.
+/// the server; the mobile client receives normalized, attributed records.
 final class RemoteSourceGateway implements SourceGateway {
   RemoteSourceGateway({required this.baseUri, http.Client? client})
-      : _client = client ?? http.Client();
+      : _client = client ?? http.Client() {
+    if (baseUri.scheme != 'https' || baseUri.host.isEmpty) {
+      throw ArgumentError.value(
+        baseUri,
+        'baseUri',
+        'Production Source Gateway endpoints must use HTTPS.',
+      );
+    }
+  }
 
   final Uri baseUri;
   final http.Client _client;
 
   @override
   Future<SourceSnapshot> health(String sourceId) async {
+    _validateSourceId(sourceId);
+
     final response = await _client.get(_uri('/v1/sources/$sourceId/health'));
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('Source gateway health failed: HTTP ${response.statusCode}');
+      throw StateError(
+        'Source gateway health failed: HTTP ${response.statusCode}',
+      );
     }
 
     final json = jsonDecode(response.body);
@@ -25,10 +37,21 @@ final class RemoteSourceGateway implements SourceGateway {
       throw const FormatException('Invalid source gateway health response.');
     }
 
-    final status = SourceStatus.values.firstWhere(
-      (value) => value.name == json['status'],
-      orElse: () => SourceStatus.unavailable,
-    );
+    final observedAt = DateTime.tryParse('${json['observedAt']}')?.toUtc();
+    if (observedAt == null) {
+      throw const FormatException(
+        'Source gateway health response has invalid observedAt.',
+      );
+    }
+
+    final expiresAt = json['expiresAt'] == null
+        ? null
+        : DateTime.tryParse('${json['expiresAt']}')?.toUtc();
+    if (json['expiresAt'] != null && expiresAt == null) {
+      throw const FormatException(
+        'Source gateway health response has invalid expiresAt.',
+      );
+    }
 
     return SourceSnapshot(
       sourceId: sourceId,
@@ -36,9 +59,12 @@ final class RemoteSourceGateway implements SourceGateway {
         (value) => value.name == json['kind'],
         orElse: () => SourceKind.official,
       ),
-      status: status,
-      observedAt: DateTime.tryParse('${json['observedAt']}')?.toUtc() ?? DateTime.now().toUtc(),
-      expiresAt: DateTime.tryParse('${json['expiresAt']}')?.toUtc(),
+      status: SourceStatus.values.firstWhere(
+        (value) => value.name == json['status'],
+        orElse: () => SourceStatus.unavailable,
+      ),
+      observedAt: observedAt,
+      expiresAt: expiresAt,
       licenseUrl: json['licenseUrl'] as String?,
       attribution: json['attribution'] as String?,
     );
@@ -49,14 +75,19 @@ final class RemoteSourceGateway implements SourceGateway {
     String sourceId, {
     Map<String, Object?> parameters = const {},
   }) async {
+    _validateSourceId(sourceId);
+
     final query = <String, String>{
-      for (final entry in parameters.entries) '${entry.key}': '${entry.value}',
+      for (final entry in parameters.entries)
+        '${entry.key}': '${entry.value}',
     };
     final response = await _client.get(
       _uri('/v1/sources/$sourceId', queryParameters: query),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('Source gateway fetch failed: HTTP ${response.statusCode}');
+      throw StateError(
+        'Source gateway fetch failed: HTTP ${response.statusCode}',
+      );
     }
 
     final json = jsonDecode(response.body);
@@ -78,6 +109,22 @@ final class RemoteSourceGateway implements SourceGateway {
 
   Uri _uri(String path, {Map<String, String>? queryParameters}) {
     final normalized = baseUri.toString().replaceFirst(RegExp(r'/$'), '');
-    return Uri.parse('$normalized$path').replace(queryParameters: queryParameters);
+    return Uri.parse(Uri.encodeFull('$normalized$path')).replace(
+      queryParameters: queryParameters,
+    );
   }
+
+  static void _validateSourceId(String sourceId) {
+    final normalized = sourceId.trim();
+    if (normalized.isEmpty ||
+        !RegExp(r'^[a-zA-Z0-9._:-]+$').hasMatch(normalized)) {
+      throw ArgumentError.value(
+        sourceId,
+        'sourceId',
+        'Invalid source identifier.',
+      );
+    }
+  }
+
+  void close() => _client.close();
 }
