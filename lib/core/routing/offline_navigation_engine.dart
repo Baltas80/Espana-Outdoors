@@ -3,7 +3,7 @@ library;
 
 import 'dart:math' as math;
 
-import 'navigation_models.dart';
+import '../navigation/navigation_models.dart';
 import 'routing_models.dart';
 
 class OfflineNavigationEngine {
@@ -11,20 +11,29 @@ class OfflineNavigationEngine {
 
   final double offRouteThresholdMeters;
 
-  NavigationState update({
+  NavigationSnapshot update({
     required RoutingResult route,
     required RouteWaypoint position,
   }) {
-    final geometry = route.legs.expand((leg) => leg.geometry).toList(growable: false);
+    final recordedAt = DateTime.now().toUtc();
+    final geometry =
+        route.legs.expand((leg) => leg.geometry).toList(growable: false);
+
+    final navigationPosition = NavigationPosition(
+      latitude: position.latitude,
+      longitude: position.longitude,
+      recordedAt: recordedAt,
+    );
+
     if (geometry.length < 2) {
-      return NavigationState(
-        route: route,
-        position: position,
-        remainingDistanceMeters: 0,
-        remainingDurationSeconds: 0,
-        offRoute: true,
+      return NavigationSnapshot(
+        state: NavigationState.offRoute,
+        position: navigationPosition,
+        distanceRemainingMeters: 0,
+        distanceOffRouteMeters: double.infinity,
         instruction: const NavigationInstruction(
-          type: NavigationInstructionType.unavailable,
+          kind: NavigationInstructionKind.warning,
+          distanceMeters: 0,
           text: 'Navegación no disponible',
         ),
       );
@@ -48,28 +57,36 @@ class OfflineNavigationEngine {
     final fraction = route.distanceMeters <= 0
         ? 0.0
         : (remaining / route.distanceMeters).clamp(0.0, 1.0);
-    final instruction = nearestDistance > offRouteThresholdMeters
+    final offRoute = nearestDistance > offRouteThresholdMeters;
+
+    final instruction = offRoute
         ? const NavigationInstruction(
-            type: NavigationInstructionType.offRoute,
+            kind: NavigationInstructionKind.offRoute,
+            distanceMeters: 0,
             text: 'Fuera de ruta',
           )
         : nearestIndex >= geometry.length - 2
             ? const NavigationInstruction(
-                type: NavigationInstructionType.arrive,
+                kind: NavigationInstructionKind.arrive,
+                distanceMeters: 0,
                 text: 'Llegando al destino',
               )
             : NavigationInstruction(
-                type: NavigationInstructionType.continueStraight,
+                kind: NavigationInstructionKind.continueStraight,
+                distanceMeters:
+                    _distanceMeters(position, geometry[nearestIndex + 1]),
                 text: 'Continúa por la ruta',
-                distanceMeters: _distanceMeters(position, geometry[nearestIndex + 1]),
               );
 
-    return NavigationState(
-      route: route,
-      position: position,
-      remainingDistanceMeters: remaining,
-      remainingDurationSeconds: route.durationSeconds * fraction,
-      offRoute: nearestDistance > offRouteThresholdMeters,
+    return NavigationSnapshot(
+      state: offRoute
+          ? NavigationState.offRoute
+          : nearestIndex >= geometry.length - 2
+              ? NavigationState.completed
+              : NavigationState.navigating,
+      position: navigationPosition,
+      distanceRemainingMeters: remaining,
+      distanceOffRouteMeters: offRoute ? nearestDistance : 0,
       instruction: instruction,
     );
   }
@@ -81,7 +98,9 @@ class OfflineNavigationEngine {
     final dLat = lat2 - lat1;
     final dLon = (b.longitude - a.longitude) * math.pi / 180;
     final h = math.pow(math.sin(dLat / 2), 2) +
-        math.cos(lat1) * math.cos(lat2) * math.pow(math.sin(dLon / 2), 2);
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.pow(math.sin(dLon / 2), 2);
     return 2 * earthRadius * math.asin(math.sqrt(h));
   }
 }
