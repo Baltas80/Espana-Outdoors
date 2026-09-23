@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/safety/route_plan.dart';
 import '../../core/safety/route_plan_store.dart';
+import '../../core/models/route_summary.dart';
 
 class RoutePlanPage extends StatefulWidget {
-  const RoutePlanPage({super.key});
+  const RoutePlanPage({super.key, this.route});
+
+  final RouteSummary? route;
 
   @override
   State<RoutePlanPage> createState() => _RoutePlanPageState();
@@ -17,12 +20,14 @@ class _RoutePlanPageState extends State<RoutePlanPage> {
   DateTime _departure = DateTime.now().add(const Duration(hours: 1));
   DateTime _returnAt = DateTime.now().add(const Duration(hours: 5));
   RoutePlan? _saved;
+  late RouteSummary? _route;
   bool _loading = true;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
+    _route = widget.route;
     _load();
   }
 
@@ -41,6 +46,19 @@ class _RoutePlanPageState extends State<RoutePlanPage> {
         _departure = plan.departureAt.toLocal();
         _returnAt = plan.expectedReturnAt.toLocal();
         _participants.text = '${plan.participants}';
+        if (_route == null && plan.routeId != null) {
+          _route = RouteSummary(
+            id: plan.routeId!,
+            name: plan.routeName ?? 'Ruta seleccionada',
+            distanceKm: 0,
+            elevationGainM: 0,
+            durationMinutes: 0,
+            difficulty: 'Desconocida',
+            petFriendly: false,
+            waterAvailable: false,
+            offlineReady: false,
+          );
+        }
       }
       _loading = false;
     });
@@ -84,6 +102,8 @@ class _RoutePlanPageState extends State<RoutePlanPage> {
   Future<void> _save() async {
     final participants = int.tryParse(_participants.text.trim()) ?? 0;
     final plan = RoutePlan(
+      routeId: _route?.id,
+      routeName: _route?.name,
       departureAt: _departure.toUtc(),
       expectedReturnAt: _returnAt.toUtc(),
       participants: participants,
@@ -151,6 +171,14 @@ class _RoutePlanPageState extends State<RoutePlanPage> {
                 'España Outdoor puede usar este plan para mejorar la preparación '
                 'y las funciones de seguridad.',
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.route_outlined),
+              title: const Text('Ruta'),
+              subtitle: Text(_route?.name ?? 'Sin ruta seleccionada'),
             ),
           ),
           const SizedBox(height: 16),
