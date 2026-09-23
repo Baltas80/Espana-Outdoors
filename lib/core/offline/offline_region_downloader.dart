@@ -20,9 +20,7 @@ class OfflineRegionDownloader {
       retries: 5,
       allowPause: true,
       transferHints: const {TransferHint.largeFile},
-      metaData: region.sha256 == null
-          ? region.id
-          : region.id + '|sha256=' + region.sha256!,
+      metaData: region.id + '|sha256=' + region.sha256,
       displayName: region.name,
     );
     return FileDownloader().transfers.getOrStart(task);
