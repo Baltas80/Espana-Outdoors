@@ -13,6 +13,7 @@ import (
     "encoding/json"
     "errors"
     "fmt"
+    "io"
     "log/slog"
     "math"
     "net"
@@ -405,24 +406,18 @@ func (s *server) accept(w http.ResponseWriter, r *http.Request) {
     if err != nil { s.log.Error("rescue accept transaction failed", "error", err); writeError(w, http.StatusInternalServerError, "temporary failure"); return }
     defer func() { _ = tx.Rollback(r.Context()) }()
 
-    var owner string
     var storedHash, encrypted []byte
-    var accuracy float64
-    var emergencyType string
-    var createdAt, expiresAt time.Time
+    var expiresAt time.Time
     var revokedAt *time.Time
-    err = tx.QueryRow(r.Context(), `SELECT owner_subject, token_hash, encrypted_location, accuracy_meters, emergency_type, created_at, expires_at, revoked_at FROM rescue_links WHERE id=$1 FOR UPDATE`, id).Scan(&owner, &storedHash, &encrypted, &accuracy, &emergencyType, &createdAt, &expiresAt, &revokedAt)
+    err = tx.QueryRow(r.Context(), `SELECT token_hash, encrypted_location, expires_at, revoked_at FROM rescue_links WHERE id=$1 FOR UPDATE`, id).Scan(&storedHash, &encrypted, &expiresAt, &revokedAt)
     if errors.Is(err, pgx.ErrNoRows) { writeError(w, http.StatusNotFound, "Rescue Link not found"); return }
     if err != nil { s.log.Error("rescue accept lookup failed", "error", err); writeError(w, http.StatusInternalServerError, "temporary failure"); return }
-    _ = owner
 
     if !constantTimeTokenEqual(storedHash, tokenHash(req.ShareToken)) { writeError(w, http.StatusForbidden, "invalid Rescue Link token"); return }
     now := time.Now().UTC()
     if revokedAt != nil || !now.Before(expiresAt) { writeError(w, http.StatusGone, "Rescue Link expired or revoked"); return }
-    if !now.After(createdAt) { writeError(w, http.StatusConflict, "Rescue Link not active"); return }
 
-    var existingRole string
-    err = tx.QueryRow(r.Context(), `SELECT role FROM rescue_link_responders WHERE link_id=$1 AND subject=$2`, id, p.Subject).Scan(&existingRole)
+    err = tx.QueryRow(r.Context(), `SELECT role FROM rescue_link_responders WHERE link_id=$1 AND subject=$2`, id, p.Subject).Scan(new(int))
     existing := err == nil
     if err != nil && !errors.Is(err, pgx.ErrNoRows) { s.log.Error("rescue responder lookup failed", "error", err); writeError(w, http.StatusInternalServerError, "temporary failure"); return }
     if !existing {
@@ -446,9 +441,6 @@ func (s *server) accept(w http.ResponseWriter, r *http.Request) {
     if err = tx.Commit(r.Context()); err != nil { s.log.Error("rescue accept commit failed", "error", err); writeError(w, http.StatusInternalServerError, "temporary failure"); return }
 
     responseLoc := locationResponseForRole(loc, role)
-    _ = accuracy
-    _ = emergencyType
-    _ = existingRole
     writeJSON(w, http.StatusOK, acceptResponse{
         ID: id, CapabilityToken: capability, ExpiresAt: capabilityExpiry, Role: role, Location: responseLoc,
     })
@@ -655,9 +647,13 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dst any, maxBytes int64)
     r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
     dec := json.NewDecoder(r.Body)
     dec.DisallowUnknownFields()
-    if err := dec.Decode(dst); err != nil { return err }
+    if err := dec.Decode(dst); err != nil {
+        return err
+    }
     var extra any
-    if err := dec.Decode(&extra); err == nil { return errors.New("trailing json") }
+    if err := dec.Decode(&extra); err != io.EOF {
+        return errors.New("trailing json")
+    }
     return nil
 }
 
