@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../offline/offline_region.dart';
 import '../offline/offline_region_catalog.dart';
 import '../offline/offline_region_downloader.dart';
 import 'map_service.dart';
@@ -31,20 +32,13 @@ final class CatalogOfflineMapService implements MapService {
     _activeTransfers[region.id] = transfer;
     final file = await transfer.file;
     await _downloader.verifyExisting(entry, file);
-    return OfflineMapArtifact(
-      localPath: file.path,
-      bytes: await file.length(),
-      version: entry.updatedAt.toIso8601String(),
-      sha256: entry.sha256,
-    );
+    return _artifact(entry, file);
   }
 
   @override
   Future<void> pauseOfflineRegion(String regionId) async {
     final transfer = _activeTransfers[regionId];
-    if (transfer != null) {
-      await transfer.pause();
-    }
+    if (transfer != null) await transfer.pause();
   }
 
   @override
@@ -57,30 +51,29 @@ final class CatalogOfflineMapService implements MapService {
     _activeTransfers[regionId] = transfer;
     final file = await transfer.file;
     await _downloader.verifyExisting(entry, file);
-    return OfflineMapArtifact(
-      localPath: file.path,
-      bytes: await file.length(),
-      version: entry.updatedAt.toIso8601String(),
-      sha256: entry.sha256,
-    );
+    return _artifact(entry, file);
   }
+
+  OfflineMapArtifact _artifact(OfflineRegion entry, File file) =>
+      OfflineMapArtifact(
+        localPath: file.path,
+        bytes: file.lengthSync(),
+        version: entry.updatedAt.toIso8601String(),
+        sha256: entry.sha256,
+      );
 
   @override
   Future<void> deleteOfflineRegion(String regionId) async {
     final transfer = _activeTransfers.remove(regionId);
-    if (transfer != null) {
-      await transfer.cancel();
-    }
+    if (transfer != null) await transfer.cancel();
+
     final directory = await getApplicationSupportDirectory();
     final file = File('${directory.path}/offline_regions/$regionId.pmtiles');
-    if (await file.exists()) {
-      await file.delete();
-    }
+    if (await file.exists()) await file.delete();
   }
 
-  Future<dynamic> _find(String id) async {
-    final endpoint = OfflineRegionCatalog.fromEnvironment();
-    if (endpoint == null) {
+  Future<OfflineRegion> _find(String id) async {
+    if (OfflineRegionCatalog.fromEnvironment() == null) {
       throw StateError(
         'OFFLINE_CATALOG_URL is not configured; an approved licensed catalog is required.',
       );
