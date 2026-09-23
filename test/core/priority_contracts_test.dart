@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:espana_outdoors/core/alerts/alert_models.dart';
 import 'package:espana_outdoors/core/domain/outdoor_models.dart';
 import 'package:espana_outdoors/core/map/map_service.dart';
-import 'package:espana_outdoors/core/map/offline_map_download.dart';
 import 'package:espana_outdoors/core/routing/elevation_models.dart';
 import 'package:espana_outdoors/core/routing/offline_navigation_engine.dart';
 import 'package:espana_outdoors/core/routing/routing_models.dart';
