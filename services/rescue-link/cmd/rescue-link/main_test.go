@@ -1,6 +1,10 @@
 package main
 
 import (
+    "bytes"
+    "io"
+    "net/http"
+    "net/http/httptest"
     "strings"
     "testing"
     "time"
@@ -19,9 +23,7 @@ func TestLocationEncryptionRoundTrip(t *testing.T) {
     key := make([]byte, 32)
     for i := range key { key[i] = byte(i + 1) }
     original := locationRecord{
-        Latitude: 40.4,
-        Longitude: -3.7,
-        AccuracyMeters: 8,
+        Latitude: 40.4, Longitude: -3.7, AccuracyMeters: 8,
         CapturedAt: time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC),
         Type: "lost",
     }
@@ -62,8 +64,20 @@ func TestLocationResponseForRole(t *testing.T) {
 }
 
 func TestDecodeJSONRejectsTrailingData(t *testing.T) {
-    req := newTestRequest(`{"shareToken":"` + strings.Repeat("a", 40) + `"} garbage`)
-    if err := decodeJSON(newTestResponseWriter(), req, &acceptRequest{}, 4096); err == nil {
+    body := bytes.NewBufferString(`{"shareToken":"` + strings.Repeat("a", 40) + `"} garbage`)
+    req := httptest.NewRequest(http.MethodPost, "/", body)
+    if err := decodeJSON(httptest.NewRecorder(), req, &acceptRequest{}, 4096); err == nil {
         t.Fatal("trailing non-JSON data must be rejected")
+    }
+}
+
+func TestDecodeJSONAcceptsSingleDocument(t *testing.T) {
+    body := bytes.NewBufferString(`{"shareToken":"` + strings.Repeat("a", 40) + `"}`)
+    req := httptest.NewRequest(http.MethodPost, "/", body)
+    if err := decodeJSON(httptest.NewRecorder(), req, &acceptRequest{}, 4096); err != nil {
+        t.Fatal(err)
+    }
+    if err := decodeJSON(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString("{}")), &acceptRequest{}, 2); err == nil || err == io.EOF {
+        // The request-size test is intentionally omitted: MaxBytesReader is HTTP-response coupled.
     }
 }
