@@ -1,6 +1,8 @@
 /// Provider-neutral elevation contracts.
 library;
 
+import 'routing_models.dart';
+
 class ElevationSample {
   const ElevationSample({required this.meters});
 
