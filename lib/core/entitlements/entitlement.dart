@@ -20,6 +20,7 @@ enum OutdoorCapability {
 
 /// Central capability policy. Billing remains delegated to RevenueCat; the app
 /// consumes entitlements instead of scattering subscription checks throughout UI.
+/// Safety-critical SOS/Rescue Link access is intentionally not paywalled.
 final class EntitlementPolicy {
   const EntitlementPolicy(this.entitlement);
 
@@ -29,12 +30,12 @@ final class EntitlementPolicy {
     switch (capability) {
       case OutdoorCapability.basicMaps:
       case OutdoorCapability.gpsRecording:
-      case OutdoorCapability.routePlanning:
-        return true;
       case OutdoorCapability.gpxImportExport:
       case OutdoorCapability.basicOffline:
+      case OutdoorCapability.routePlanning:
       case OutdoorCapability.weather:
-        return entitlement.index >= Entitlement.free.index;
+      case OutdoorCapability.rescueLink:
+        return true;
       case OutdoorCapability.routeRisk:
       case OutdoorCapability.advancedOffline:
       case OutdoorCapability.liveAlerts:
@@ -42,7 +43,6 @@ final class EntitlementPolicy {
       case OutdoorCapability.fauna:
       case OutdoorCapability.naturaProtect:
         return entitlement.index >= Entitlement.premium.index;
-      case OutdoorCapability.rescueLink:
       case OutdoorCapability.advancedAnalytics:
       case OutdoorCapability.professionalTools:
         return entitlement == Entitlement.professional;
