@@ -150,7 +150,10 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
       compassEnabled: true,
       attributionButtonMargins: const math.Point(12, 12),
       onMapCreated: (controller) => _mapController = controller,
-      onStyleLoadedCallback: _drawTrack,
+      onStyleLoadedCallback: () {
+        _routeDrawn = false;
+        _drawTrack();
+      },
     );
   }
 }
