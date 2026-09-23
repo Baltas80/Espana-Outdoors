@@ -15,7 +15,6 @@ import '../features/routes/routes_page.dart';
 import '../features/safety/safety_page.dart';
 import '../features/safety/route_plan_page.dart';
 import '../features/safety/alerts_page.dart';
-import '../features/routes/routes_page.dart';
 import '../features/safety/trusted_contacts_page.dart';
 import 'theme.dart';
 
