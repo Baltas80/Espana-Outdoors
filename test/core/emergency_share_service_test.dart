@@ -4,7 +4,7 @@ import 'package:espana_outdoors/core/emergency/emergency_share_service.dart';
 
 void main() {
   test('share text never exposes exact coordinates', () {
-    const snapshot = EmergencySnapshot(
+    final snapshot = EmergencySnapshot(
       type: EmergencyType.lost,
       position: GeoPoint(latitude: 40.412345, longitude: -3.712345),
       accuracyMeters: 8,
