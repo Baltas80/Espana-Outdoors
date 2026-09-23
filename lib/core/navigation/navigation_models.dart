@@ -23,7 +23,14 @@ class NavigationPosition {
 
 enum NavigationState { idle, navigating, paused, offRoute, completed }
 
-enum NavigationInstructionKind { continueStraight, turnLeft, turnRight, arrive, offRoute, warning }
+enum NavigationInstructionKind {
+  continueStraight,
+  turnLeft,
+  turnRight,
+  arrive,
+  offRoute,
+  warning,
+}
 
 class NavigationInstruction {
   const NavigationInstruction({
@@ -51,4 +58,14 @@ class NavigationSnapshot {
   final double? distanceRemainingMeters;
   final double? distanceOffRouteMeters;
   final NavigationInstruction? instruction;
+
+  bool get offRoute => state == NavigationState.offRoute;
+
+  NavigationInstruction get effectiveInstruction =>
+      instruction ??
+      const NavigationInstruction(
+        kind: NavigationInstructionKind.warning,
+        distanceMeters: 0,
+        text: 'Navegación no disponible',
+      );
 }
