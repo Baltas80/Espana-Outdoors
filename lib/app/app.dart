@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/alerts/alerts_page.dart';
 import '../features/explore/explore_page.dart';
 import '../features/home/home_page.dart';
 import '../features/map/map_page.dart';
 import '../features/offline/offline_page.dart';
+import '../features/profile/plans_page.dart';
 import '../features/profile/profile_page.dart';
 import '../features/pets/pets_page.dart';
+import '../features/rescue/rescue_link_page.dart';
 import '../features/wildlife/wildlife_page.dart';
+import '../features/natura/natura_protect_page.dart';
 import '../features/routes/route_detail_page.dart';
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
@@ -38,6 +42,9 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/map', builder: (_, __) => const MapPage()),
       GoRoute(path: '/pets', builder: (_, __) => const PetsPage()),
       GoRoute(path: '/wildlife', builder: (_, __) => const WildlifePage()),
+      GoRoute(path: '/natura', builder: (_, __) => const NaturaProtectPage()),
+      GoRoute(path: '/alerts', builder: (_, __) => const AlertsPage()),
+      GoRoute(path: '/rescue', builder: (_, __) => const RescueLinkPage()),
       GoRoute(path: '/safety', builder: (_, __) => const SafetyPage()),
       GoRoute(
         path: '/safety/contacts',
@@ -45,6 +52,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       ),
       GoRoute(path: '/offline', builder: (_, __) => const OfflinePage()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+      GoRoute(path: '/plans', builder: (_, __) => const PlansPage()),
     ],
   );
 
