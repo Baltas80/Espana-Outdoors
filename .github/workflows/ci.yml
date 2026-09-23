@@ -49,6 +49,7 @@ jobs:
           test/core/offline_sync_runner_test.dart
           test/core/emergency_share_service_test.dart
           test/core/rescue_link_policy_test.dart
+          test/remote_source_gateway_test.dart
 
       - name: Full test suite
         run: flutter test --coverage
