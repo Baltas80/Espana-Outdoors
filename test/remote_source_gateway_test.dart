@@ -79,14 +79,12 @@ void main() {
   });
 
   test('rejects non-HTTPS source gateway endpoints', () async {
-    final gateway = RemoteSourceGateway(
-      baseUri: Uri.parse('http://api.example.test'),
-      client: MockClient((_) async => http.Response('{}', 200)),
-    );
-
     expect(
-      () => gateway.fetch('alerts'),
-      throwsA(isA<ArgumentError>()),
+      () => RemoteSourceGateway(
+        baseUri: Uri.parse('http://api.example.test'),
+        client: MockClient((_) async => http.Response('{}', 200)),
+      ),
+      throwsArgumentError,
     );
   });
 
