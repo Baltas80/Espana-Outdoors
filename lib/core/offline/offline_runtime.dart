@@ -10,8 +10,6 @@ import 'offline_region_manager.dart';
 import 'offline_region_store.dart';
 
 const _gatewayUrl = String.fromEnvironment('ESPANA_OUTDOOR_API_URL');
-const _gatewayToken = String.fromEnvironment('ESPANA_OUTDOOR_GATEWAY_TOKEN');
-
 final offlineCatalogServiceProvider = Provider<OfflineMapCatalogService?>((ref) {
   final url = _gatewayUrl.trim();
   if (url.isEmpty) return null;
@@ -22,7 +20,7 @@ final offlineCatalogServiceProvider = Provider<OfflineMapCatalogService?>((ref) 
   return GatewayOfflineMapCatalogService(
     HttpLiveDataGateway(
       baseUri: uri,
-      bearerToken: _gatewayToken.trim().isEmpty ? null : _gatewayToken.trim(),
+      bearerToken: null,
     ),
   );
 });
