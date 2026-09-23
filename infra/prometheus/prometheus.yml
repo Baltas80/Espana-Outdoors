@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: martin
+    static_configs:
+      - targets: ["martin:3000"]
+
+  - job_name: valhalla
+    metrics_path: /status
+    static_configs:
+      - targets: ["valhalla:8002"]
