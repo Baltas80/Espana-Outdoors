@@ -27,7 +27,6 @@ final class RemoteSourceGateway implements SourceGateway {
   final Uri baseUri;
   final http.Client _client;
   final AccessTokenProvider? accessTokenProvider;
-  final AccessTokenProvider? accessTokenProvider;
 
   @override
   Future<SourceSnapshot> health(String sourceId) async {
@@ -129,17 +128,6 @@ final class RemoteSourceGateway implements SourceGateway {
       if (token != null && token.isNotEmpty) {
         headers['Authorization'] = 'Bearer $token';
       }
-    }
-    return headers;
-  }
-
-  Future<Map<String, String>> _headers() async {
-    final headers = <String, String>{'Accept': 'application/json'};
-    final provider = accessTokenProvider;
-    if (provider == null) return headers;
-    final token = (await provider())?.trim();
-    if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
     }
     return headers;
   }
