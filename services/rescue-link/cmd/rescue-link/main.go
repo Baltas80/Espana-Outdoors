@@ -420,7 +420,7 @@ func (s *server) accept(w http.ResponseWriter, r *http.Request) {
     now := time.Now().UTC()
     if revokedAt != nil || !now.Before(expiresAt) { writeError(w, http.StatusGone, "Rescue Link expired or revoked"); return }
 
-    err = tx.QueryRow(r.Context(), `SELECT role FROM rescue_link_responders WHERE link_id=$1 AND subject=$2`, id, p.Subject).Scan(new(int))
+    err = tx.QueryRow(r.Context(), `SELECT 1 FROM rescue_link_responders WHERE link_id=$1 AND subject=$2`, id, p.Subject).Scan(new(int))
     existing := err == nil
     if err != nil && !errors.Is(err, pgx.ErrNoRows) { s.log.Error("rescue responder lookup failed", "error", err); writeError(w, http.StatusInternalServerError, "temporary failure"); return }
     if !existing {
