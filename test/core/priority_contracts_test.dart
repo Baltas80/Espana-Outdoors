@@ -104,6 +104,6 @@ void main() {
       position: const RouteWaypoint(latitude: 40.01, longitude: -3),
     );
     expect(state.offRoute, isTrue);
-    expect(state.instruction.type, NavigationInstructionType.offRoute);
+    expect(state.instruction.kind, NavigationInstructionKind.offRoute);
   });
 }
