@@ -26,6 +26,16 @@ RouteResult _route() => const RouteResult(
 void main() {
   const engine = NavigationGuidanceEngine();
 
+  test('can represent an unusable route explicitly', () {
+    const result = NavigationGuidance(
+      status: NavigationGuidanceStatus.noRoute,
+      distanceFromRouteMeters: double.infinity,
+      offRouteThresholdMeters: double.infinity,
+      nearestShapeIndex: 0,
+    );
+    expect(result.status, NavigationGuidanceStatus.noRoute);
+  });
+
   test('reports on-route guidance with the next real maneuver', () {
     final result = engine.evaluate(
       route: _route(),
