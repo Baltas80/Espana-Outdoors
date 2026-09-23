@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/location/location_controller.dart';
@@ -19,7 +20,16 @@ class MapPage extends ConsumerWidget {
     final recorder = ref.read(routeRecorderProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mapa')),
+      appBar: AppBar(
+        title: const Text('Mapa'),
+        actions: [
+          IconButton(
+            tooltip: 'Navegación GPS',
+            onPressed: () => context.push('/navigation'),
+            icon: const Icon(Icons.navigation_outlined),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           FlutterMap(
@@ -116,6 +126,15 @@ class MapPage extends ConsumerWidget {
                     ? Icons.stop
                     : Icons.fiber_manual_record,
               ),
+            ),
+          ),
+          Positioned(
+            right: 16,
+            bottom: 152,
+            child: FloatingActionButton.small(
+              tooltip: 'Navegación GPS',
+              onPressed: () => context.push('/navigation'),
+              child: const Icon(Icons.navigation_outlined),
             ),
           ),
           Positioned(
