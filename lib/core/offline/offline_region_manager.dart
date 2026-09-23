@@ -87,7 +87,6 @@ class OfflineRegionManager extends ChangeNotifier {
   }
 
   Future<void> pause(String regionId) async {
-    if (isBusy(regionId)) return;
     await _mapService.pauseOfflineRegion(regionId);
     final current = _store.get(regionId);
     if (current != null) {
