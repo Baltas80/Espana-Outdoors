@@ -53,7 +53,7 @@ void main() {
   test('SOS expires and never remains valid past expiry', () {
     final captured = DateTime.utc(2026, 9, 23, 0, 0);
     final expires = captured.add(const Duration(minutes: 15));
-    const emergency = EmergencySnapshot(
+    final emergency = EmergencySnapshot(
       type: EmergencyType.accident,
       position: GeoPoint(latitude: 40, longitude: -3),
       accuracyMeters: 8,
