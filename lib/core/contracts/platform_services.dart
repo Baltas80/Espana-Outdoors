@@ -12,6 +12,8 @@ enum LocationPrivacy { exact, approximate, private, temporary, shared }
 
 enum LegacyDataConfidence { official, confirmed, community, stale, unknown }
 
+typedef DataConfidence = LegacyDataConfidence;
+
 class RouteRequest {
   const RouteRequest({required this.origin, required this.destination});
   final GeoPoint origin;
