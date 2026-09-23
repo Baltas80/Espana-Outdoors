@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: read
+  security-events: write
+  actions: read
 
 jobs:
   dependency-audit:
@@ -46,3 +48,15 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           format: table
+
+  github-actions-codeql:
+    name: CodeQL - GitHub Actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: actions
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:actions
