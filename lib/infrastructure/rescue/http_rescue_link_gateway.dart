@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/rescue/rescue_link_gateway.dart';
+import '../../core/domain/outdoor_models.dart';
 
 final class HttpRescueLinkGateway implements RescueLinkGateway {
   HttpRescueLinkGateway({
@@ -64,48 +65,85 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
   @override
   Future<void> revoke(String id) async {
     final response = await _client.post(
-      _uri(
-        '/v1/rescue-links/' + Uri.encodeComponent(id) + '/revoke',
-      ),
+      _uri('/v1/rescue-links/' + Uri.encodeComponent(id) + '/revoke'),
       headers: await _headers(),
     );
     _ensureSuccess(response);
   }
 
   @override
-  Future<RescueLinkRemoteSession> accept({
+  Future<RescueLinkAcceptedSession> accept({
     required String id,
-    required String role,
+    required String shareToken,
   }) async {
     final response = await _client.post(
-      _uri(
-        '/v1/rescue-links/' + Uri.encodeComponent(id) + '/accept',
-      ),
+      _uri('/v1/rescue-links/' + Uri.encodeComponent(id) + '/accept'),
       headers: await _headers(),
-      body: jsonEncode({'role': role}),
+      body: jsonEncode({'shareToken': shareToken}),
     );
     _ensureSuccess(response);
 
     final json = _decodeMap(response.body);
-    final token = json['shareToken']?.toString() ?? '';
-    final url = Uri.tryParse(json['shareUrl']?.toString() ?? '');
+    final responseId = json['id']?.toString() ?? '';
+    final capabilityToken = json['capabilityToken']?.toString() ?? '';
     final expiresAt =
         DateTime.tryParse(json['expiresAt']?.toString() ?? '');
+    final locationJson = json['location'];
 
-    if (token.isEmpty ||
-        url == null ||
-        !url.hasScheme ||
-        expiresAt == null) {
+    if (responseId.isEmpty ||
+        capabilityToken.isEmpty ||
+        expiresAt == null ||
+        locationJson is! Map) {
       throw const FormatException(
         'Invalid Rescue Link acceptance response.',
       );
     }
 
-    return RescueLinkRemoteSession(
-      id: id,
-      shareToken: token,
-      shareUrl: url,
+    final location = _decodeLocation(locationJson);
+    return RescueLinkAcceptedSession(
+      id: responseId,
+      capabilityToken: capabilityToken,
       expiresAt: expiresAt.toUtc(),
+      location: location,
+    );
+  }
+
+  RescueLinkLocation _decodeLocation(Map<dynamic, dynamic> json) {
+    final latitude = (json['latitude'] as num?)?.toDouble();
+    final longitude = (json['longitude'] as num?)?.toDouble();
+    final accuracy = (json['accuracyMeters'] as num?)?.toDouble();
+    final capturedAt = DateTime.tryParse(
+      json['capturedAt']?.toString() ?? '',
+    );
+    final type = EmergencyType.values
+        .where((item) => item.name == json['type']?.toString())
+        .firstOrNull;
+    final exact = json['exact'] == true;
+
+    if (latitude == null ||
+        longitude == null ||
+        accuracy == null ||
+        capturedAt == null ||
+        type == null ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180 ||
+        accuracy < 0) {
+      throw const FormatException(
+        'Invalid Rescue Link location response.',
+      );
+    }
+
+    return RescueLinkLocation(
+      position: GeoPoint(
+        latitude: latitude,
+        longitude: longitude,
+      ),
+      accuracyMeters: accuracy,
+      capturedAt: capturedAt.toUtc(),
+      type: type,
+      exact: exact,
     );
   }
 
@@ -124,7 +162,6 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
         'Rescue Link requires an authenticated OIDC session.',
       );
     }
-
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
@@ -135,8 +172,7 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
   void _ensureSuccess(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
-        'Rescue Link request failed: ' +
-            response.statusCode.toString(),
+        'Rescue Link request failed: ' + response.statusCode.toString(),
       );
     }
   }
@@ -150,7 +186,6 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
     final normalized = value.toString().endsWith('/')
         ? value
         : Uri.parse(value.toString() + '/');
-
     if (normalized.scheme != 'https' &&
         !(allowHttpForDevelopment && normalized.scheme == 'http')) {
       throw ArgumentError.value(
@@ -159,7 +194,6 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
         'Rescue Link requires HTTPS.',
       );
     }
-
     return normalized;
   }
 }
