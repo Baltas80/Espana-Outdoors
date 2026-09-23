@@ -4,11 +4,16 @@ import 'package:http/http.dart' as http;
 
 import '../../core/contracts/source_gateway.dart';
 
+typedef AccessTokenProvider = Future<String?> Function();
+
 /// Client for the first-party Source Gateway. Provider credentials remain on
 /// the server; the mobile client receives normalized, attributed records.
 final class RemoteSourceGateway implements SourceGateway {
-  RemoteSourceGateway({required this.baseUri, http.Client? client})
-      : _client = client ?? http.Client() {
+  RemoteSourceGateway({
+    required this.baseUri,
+    http.Client? client,
+    this.accessTokenProvider,
+  }) : _client = client ?? http.Client() {
     if (baseUri.scheme != 'https' || baseUri.host.isEmpty) {
       throw ArgumentError.value(
         baseUri,
@@ -20,12 +25,16 @@ final class RemoteSourceGateway implements SourceGateway {
 
   final Uri baseUri;
   final http.Client _client;
+  final AccessTokenProvider? accessTokenProvider;
 
   @override
   Future<SourceSnapshot> health(String sourceId) async {
     _validateSourceId(sourceId);
 
-    final response = await _client.get(_uri('/v1/sources/$sourceId/health'));
+    final response = await _client.get(
+      _uri('/v1/sources/$sourceId/health'),
+      headers: await _headers(),
+    );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
         'Source gateway health failed: HTTP ${response.statusCode}',
@@ -79,10 +88,11 @@ final class RemoteSourceGateway implements SourceGateway {
 
     final query = <String, String>{
       for (final entry in parameters.entries)
-        '${entry.key}': '${entry.value}',
+        entry.key: '${entry.value}',
     };
     final response = await _client.get(
       _uri('/v1/sources/$sourceId', queryParameters: query),
+      headers: await _headers(),
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
@@ -105,6 +115,20 @@ final class RemoteSourceGateway implements SourceGateway {
       ];
     }
     throw const FormatException('Invalid source gateway data response.');
+  }
+
+  Future<Map<String, String>> _headers() async {
+    final headers = <String, String>{
+      'Accept': 'application/json',
+    };
+    final provider = accessTokenProvider;
+    if (provider != null) {
+      final token = (await provider())?.trim();
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+    return headers;
   }
 
   Uri _uri(String path, {Map<String, String>? queryParameters}) {
