@@ -35,6 +35,12 @@ final class OpenIdConnectAuthService {
 
   Future<bool> isSignedIn() async => (await _getClient()).isLoggedIn();
 
+  Future<String?> accessToken() async {
+    final client = await _getClient();
+    if (!await client.verifyToken()) return null;
+    return client.identity?.accessToken;
+  }
+
   Future<OpenIdIdentity> signIn(BuildContext context) async {
     final client = await _getClient();
     return client.loginInteractive(
