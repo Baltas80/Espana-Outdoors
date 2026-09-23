@@ -1,0 +1,22 @@
+{
+  "version": 8,
+  "sources": {
+    "protomaps": {
+      "type": "vector",
+      "url": "__PMTILES_URL__",
+      "attribution": "© OpenStreetMap contributors"
+    }
+  },
+  "layers": [
+    {"id":"background","type":"background","paint":{"background-color":"#f4f1e8"}},
+    {"id":"earth","type":"fill","source":"protomaps","source-layer":"earth","paint":{"fill-color":"#f4f1e8"}},
+    {"id":"landcover","type":"fill","source":"protomaps","source-layer":"landcover","paint":{"fill-color":"#e5eadf","fill-opacity":0.75}},
+    {"id":"landuse","type":"fill","source":"protomaps","source-layer":"landuse","paint":{"fill-color":"#edf0e7","fill-opacity":0.55}},
+    {"id":"water","type":"fill","source":"protomaps","source-layer":"water","paint":{"fill-color":"#cfe3e8"}},
+    {"id":"water-line","type":"line","source":"protomaps","source-layer":"water","filter":["==",["geometry-type"],"LineString"],"paint":{"line-color":"#9fc8d3","line-width":1.2}},
+    {"id":"roads","type":"line","source":"protomaps","source-layer":"roads","paint":{"line-color":"#c9bda9","line-width":["interpolate",["linear"],["zoom"],5,0.4,10,1.2,14,3]}},
+    {"id":"physical-line","type":"line","source":"protomaps","source-layer":"physical_line","paint":{"line-color":"#9fc8d3","line-width":1}},
+    {"id":"boundaries","type":"line","source":"protomaps","source-layer":"boundaries","paint":{"line-color":"#9b9b93","line-width":0.8,"line-dasharray":[3,2]}},
+    {"id":"buildings","type":"fill","source":"protomaps","source-layer":"buildings","minzoom":14,"paint":{"fill-color":"#d8d2c8","fill-opacity":0.7}}
+  ]
+}
