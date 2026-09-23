@@ -18,6 +18,7 @@ class MapPage extends ConsumerWidget {
     final location = ref.watch(locationControllerProvider);
     final recording = ref.watch(routeRecorderProvider);
     final recorder = ref.read(routeRecorderProvider.notifier);
+    final provider = MapProviderConfig.fromEnvironment();
 
     return Scaffold(
       appBar: AppBar(
@@ -32,49 +33,61 @@ class MapPage extends ConsumerWidget {
       ),
       body: Stack(
         children: [
-          FlutterMap(
-            options: const MapOptions(
-              initialCenter: _spainCenter,
-              initialZoom: 6.0,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
-                userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
+          if (provider.isConfigured)
+            FlutterMap(
+              options: const MapOptions(
+                initialCenter: _spainCenter,
+                initialZoom: 6.0,
               ),
-              RichAttributionWidget(
-                alignment: AttributionAlignment.bottomLeft,
-                attributions: [
-                  TextSourceAttribution(MapProviderConfig.openStreetMap.attribution),
-                ],
-              ),
-              if (recording.points.length > 1)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: recording.points
-                          .map((point) => LatLng(point.latitude, point.longitude))
-                          .toList(growable: false),
-                      strokeWidth: 5,
-                    ),
+              children: [
+                TileLayer(
+                  urlTemplate: provider.tileUrlTemplate,
+                  userAgentPackageName: provider.userAgent,
+                ),
+                RichAttributionWidget(
+                  alignment: AttributionAlignment.bottomLeft,
+                  attributions: [
+                    TextSourceAttribution(provider.attribution),
                   ],
                 ),
-              if (location.position != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(
-                        location.position!.latitude,
-                        location.position!.longitude,
+                if (recording.points.length > 1)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: recording.points
+                            .map((point) => LatLng(point.latitude, point.longitude))
+                            .toList(growable: false),
+                        strokeWidth: 5,
                       ),
-                      width: 48,
-                      height: 48,
-                      child: const Icon(Icons.my_location, size: 34),
-                    ),
-                  ],
+                    ],
+                  ),
+                if (location.position != null)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: LatLng(
+                          location.position!.latitude,
+                          location.position!.longitude,
+                        ),
+                        width: 48,
+                        height: 48,
+                        child: const Icon(Icons.my_location, size: 34),
+                      ),
+                    ],
+                  ),
+              ],
+            )
+          else
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'El proveedor cartográfico de producción aún no está configurado. '
+                  'Las funciones GPS y offline preparadas localmente siguen disponibles.',
+                  textAlign: TextAlign.center,
                 ),
-            ],
-          ),
+              ),
+            ),
           Positioned(
             left: 16,
             right: 16,
