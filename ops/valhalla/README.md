@@ -8,7 +8,7 @@ The mobile client receives only the first-party `VALHALLA_BASE_URL`. In producti
 
 Required production properties:
 
-- Valhalla image pinned to `3.9.0`.
+- Valhalla image pinned to `3.9.0` and recorded in the deployment change record.
 - Spain regional tiles built from an approved OSM/Geofabrik extract.
 - Health endpoint exposed only through the controlled routing service.
 - Reverse proxy/TLS termination in front of Valhalla.
