@@ -115,6 +115,8 @@ class GpxImportService {
       descentMeters: descentMeters,
       startedAt: startedAt,
       endedAt: endedAt,
+      elevationsMeters: List.unmodifiable(elevations),
+      timestamps: List.unmodifiable(times),
     );
   }
 
