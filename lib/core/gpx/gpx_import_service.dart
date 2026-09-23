@@ -26,6 +26,8 @@ class ImportedTrack {
   final double descentMeters;
   final DateTime? startedAt;
   final DateTime? endedAt;
+  final List<double?>? elevationsMeters;
+  final List<DateTime?>? timestamps;
 }
 
 class GpxImportService {
