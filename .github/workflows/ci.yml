@@ -37,8 +37,18 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Focused routing/offline tests
-        run: flutter test test/routing_config_test.dart test/offline_region_test.dart test/valhalla_routing_service_test.dart
+      - name: Focused routing/offline/safety tests
+        run: >-
+          flutter test
+          test/routing_config_test.dart
+          test/offline_region_test.dart
+          test/valhalla_routing_service_test.dart
+          test/core/route_recording_store_test.dart
+          test/core/offline_package_verifier_test.dart
+          test/core/offline_sync_store_test.dart
+          test/core/offline_sync_runner_test.dart
+          test/core/emergency_share_service_test.dart
+          test/core/rescue_link_policy_test.dart
 
       - name: Full test suite
         run: flutter test --coverage
