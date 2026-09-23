@@ -40,6 +40,9 @@ jobs:
       - name: Map provider guard
         run: dart run tool/check_map_provider_usage.dart
 
+      - name: Live data provider guard
+        run: dart run tool/check_live_data_provider_usage.dart
+
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
@@ -56,6 +59,8 @@ jobs:
           test/core/emergency_share_service_test.dart
           test/core/rescue_link_policy_test.dart
           test/remote_source_gateway_test.dart
+          test/gateway_weather_service_test.dart
+          test/source_gateway_config_test.dart
 
       - name: Full test suite
         run: flutter test --coverage
@@ -135,3 +140,34 @@ jobs:
 
       - name: Container build
         run: docker build -t espana-outdoors-rescue-link:ci .
+
+
+  source-gateway:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/source-gateway
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.1'
+          cache-dependency-path: services/source-gateway/go.mod
+
+      - name: Tidy and verify Go modules
+        run: go mod tidy
+
+      - name: Show Go module diff
+        run: git diff -- go.mod go.sum
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Tests
+        run: go test ./...
+
+      - name: Container build
+        run: docker build -t espana-outdoors-source-gateway:ci .
