@@ -27,12 +27,16 @@ Secrets and provider endpoints are injected at build/deployment time. They must 
 |---|---|---|
 | `VALHALLA_BASE_URL` | Routing endpoint | Yes |
 | `OFFLINE_CATALOG_URL` | Published offline-region catalogue | Yes |
+| `SOURCE_GATEWAY_BASE_URL` | First-party normalized official-data gateway | Yes |
 | `AEMET_API_KEY` | AEMET OpenData credential | Backend only; never ship to the client |
 | `SENTRY_DSN` | Error/crash telemetry | Yes |
 | `APP_ENV` | Environment label | Yes |
+| `MAP_TILE_URL` | Contracted/owned online raster provider | Yes for raster MVP; replace with vector/PMTiles where deployed |
+| `MAP_ATTRIBUTION` | Required map attribution | Yes when provider requires it |
 | `REVENUECAT_API_KEY` | Public RevenueCat SDK key | Yes for store billing |
 | `OIDC_ISSUER` | Keycloak/OIDC issuer | Yes for authenticated production |
 | `OIDC_CLIENT_ID` | Public OIDC client identifier | Yes |
+| `OIDC_REDIRECT_URI` | Registered OIDC callback | Yes |
 
 ## Billing
 
@@ -48,6 +52,10 @@ The Professional entitlement takes precedence if both are active. Store products
 ## Identity
 
 The client target is OpenID Connect Authorization Code + PKCE against Keycloak. Native and browser authentication must use platform/system browser flows. Passwords are never collected by the application itself when OIDC is enabled.
+
+## Source Gateway
+
+The client calls only the first-party normalized Source Gateway for dynamic official data. Provider credentials stay server-side. The gateway must preserve provenance, attribution, freshness, expiry and source status. See `docs/api/source-gateway.md`.
 
 ## Safety data policy
 
