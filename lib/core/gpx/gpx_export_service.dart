@@ -18,14 +18,21 @@ class GpxExportService {
           name: track.name,
           trksegs: [
             Trkseg(
-              trkpts: track.points
-                  .map(
-                    (point) => Wpt(
-                      lat: point.latitude,
-                      lon: point.longitude,
-                    ),
-                  )
-                  .toList(growable: false),
+              trkpts: List.generate(track.points.length, (index) {
+                final point = track.points[index];
+                final elevations = track.elevationsMeters;
+                final timestamps = track.timestamps;
+                return Wpt(
+                  lat: point.latitude,
+                  lon: point.longitude,
+                  ele: elevations != null && index < elevations.length
+                      ? elevations[index]
+                      : null,
+                  time: timestamps != null && index < timestamps.length
+                      ? timestamps[index]
+                      : null,
+                );
+              }, growable: false),
             ),
           ],
         ),
