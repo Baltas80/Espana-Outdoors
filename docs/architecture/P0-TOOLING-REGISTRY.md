@@ -19,3 +19,4 @@
 3. Provider data licenses are separate from software licenses and must be recorded per dataset.
 4. New dependencies for safety-critical paths require a replacement/fallback plan.
 5. The registry must match the versions actually resolved by `pubspec.yaml`/`pubspec.lock`.
+6. The registry intentionally records the exact versions selected for the current P0 branch; CI remains authoritative for the final resolved graph.
