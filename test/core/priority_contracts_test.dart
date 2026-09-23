@@ -6,7 +6,7 @@ import 'package:espana_outdoors/core/map/offline_map_download.dart';
 import 'package:espana_outdoors/core/routing/elevation_models.dart';
 import 'package:espana_outdoors/core/routing/offline_navigation_engine.dart';
 import 'package:espana_outdoors/core/routing/routing_models.dart';
-import 'package:espana_outdoors/core/safety/sos_models.dart';
+import 'package:espana_outdoors/core/safety/sos_models.dart' as sos;
 
 void main() {
   test('routing rejects invalid waypoints', () {
@@ -59,16 +59,16 @@ void main() {
       capturedAt: DateTime.utc(2026, 9, 23),
       batteryPercent: 60,
     );
-    final sos = SosSnapshot(
-      state: SosState.active,
-      mode: SosMode.unableToSpeak,
+    final sosSnapshot = sos.SosSnapshot(
+      state: sos.SosState.active,
+      mode: sos.SosMode.unableToSpeak,
       emergency: emergency,
-      precision: LocationPrecision.approximate,
+      precision: sos.LocationPrecision.approximate,
       capturedAt: captured,
       expiresAt: expires,
     );
-    expect(sos.isExpiredAt(expires), isTrue);
-    expect(sos.isExpiredAt(captured), isFalse);
+    expect(sosSnapshot.isExpiredAt(expires), isTrue);
+    expect(sosSnapshot.isExpiredAt(captured), isFalse);
   });
 
   test('elevation profile reports usability from available samples', () {
