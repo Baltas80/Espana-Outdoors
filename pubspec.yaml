@@ -45,3 +45,4 @@ flutter:
   generate: true
   assets:
     - assets/brand/
+    - assets/map/
