@@ -143,12 +143,24 @@ class PlatformOfflineArchiveDownloader implements OfflineArchiveDownloader {
   }
 
   Future<String> _sha256(File file) async {
-    final output = AccumulatorSink<Digest>();
-    final input = sha256.startChunkedConversion(output);
+    final sink = _DigestSink();
+    final input = sha256.startChunkedConversion(sink);
     await for (final chunk in file.openRead()) {
       input.add(chunk);
     }
     input.close();
-    return output.events.single.toString().toLowerCase();
+    return sink.value.toString().toLowerCase();
   }
+}
+
+class _DigestSink implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest event) {
+    value = event;
+  }
+
+  @override
+  void close() {}
 }
