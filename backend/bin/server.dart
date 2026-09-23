@@ -15,13 +15,9 @@ Future<void> main() async {
   final alertsPath = Platform.environment['OFFICIAL_ALERTS_FILE']?.trim();
   final port = int.tryParse(Platform.environment['PORT'] ?? '8080') ?? 8080;
 
-  if (aemetKey == null || aemetKey.isEmpty) {
-    stderr.writeln('AEMET_API_KEY is required.');
-    exitCode = 64;
-    return;
-  }
-
-  final aemet = AemetGatewayClient(apiKey: aemetKey);
+  final aemet = aemetKey == null || aemetKey.isEmpty
+      ? null
+      : AemetGatewayClient(apiKey: aemetKey);
   final alertCatalog = alertsPath == null || alertsPath.isEmpty
       ? null
       : AlertCatalog(path: alertsPath);
@@ -52,7 +48,15 @@ Future<void> main() async {
     }
 
     try {
-      final result = await aemet.municipalityDailyWithMetadata(code);
+      final client = aemet;
+      if (client == null) {
+        return Response(
+          503,
+          body: jsonEncode({'error': 'aemet_not_configured'}),
+          headers: _jsonHeaders(),
+        );
+      }
+      final result = await client.municipalityDailyWithMetadata(code);
       return Response.ok(
         jsonEncode({
           'data': result.payload,
