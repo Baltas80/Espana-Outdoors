@@ -31,8 +31,8 @@ jobs:
       - name: Generate mobile platform projects
         run: flutter create . --platforms=android,ios --org com.espanaoutdoors
 
-      - name: Apply mobile native configuration
-        run: python3 tool/configure_mobile_native.py
+      - name: Apply Android native configuration
+        run: python3 tool/configure_mobile_native.py --platform android
 
       - name: Dependencies
         run: flutter pub get
@@ -94,8 +94,8 @@ jobs:
       - name: Generate iOS project
         run: flutter create . --platforms=ios --org com.espanaoutdoors
 
-      - name: Apply mobile native configuration
-        run: python3 tool/configure_mobile_native.py
+      - name: Apply iOS native configuration
+        run: python3 tool/configure_mobile_native.py --platform ios
 
       - name: Dependencies
         run: flutter pub get

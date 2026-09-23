@@ -49,7 +49,7 @@ Secrets and provider endpoints are injected at build/deployment time. They must 
 | RESCUE_LINK_BASE_URL | First-party Rescue Link API | Yes |
 | SENTRY_DSN | Error/crash telemetry | Yes |
 | APP_ENV | Environment label | Yes |
-| MAP_TILE_URL | Contracted or owned online map provider | Required only for the configured online map mode; production still fails closed without an approved provider |
+| MAP_PMTILES_URL | Approved/operated PMTiles source for the production MapLibre style | Yes |
 | MAP_ATTRIBUTION | Required map attribution | Yes when provider requires it |
 | REVENUECAT_API_KEY | Public RevenueCat SDK key | Yes for store billing |
 | OIDC_ISSUER | Keycloak/OIDC issuer | Yes |

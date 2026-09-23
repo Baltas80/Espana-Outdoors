@@ -6,7 +6,7 @@
 
 España Outdoor needs a provider-independent mapping layer, online and offline operation, vector/raster support, attribution, Spanish official data and the ability to change suppliers without rewriting product features.
 
-The current Flutter client uses `flutter_map` behind `MapProviderConfig`. This is intentionally retained for the MVP because it is already integrated, BSD-3-Clause licensed, and supports Android, iOS, Linux, macOS, Web and Windows.
+The current Flutter client uses `maplibre_gl` behind the provider-neutral map boundary. PMTiles are the current offline/vector package path. The product scope is deliberately limited to Android and iOS/iPadOS; Web and desktop renderer compatibility is therefore not a production requirement for the current MVP.
 
 ## Research snapshot — 2026-09-23
 
@@ -22,9 +22,9 @@ Source: https://operations.osmfoundation.org/policies/tiles/
 
 MapLibre remains the leading open-source candidate for the vector-map production path. Current Flutter options need to be evaluated by target platform rather than treated as a single universal renderer.
 
-The `maplibre_flutter_gpu` package currently targets iOS, Android, macOS, Windows and Linux, but not Web. It requires Flutter 3.47 or later, and its current documentation notes that Flutter 3.47 does not yet support Flutter GPU in Windows/Linux release builds. That makes it unsuitable as the sole production renderer for España Outdoor's required Web + desktop matrix at the current stage.
+España Outdoor is not evaluating renderers against a Web/desktop matrix in the current product scope. The concrete Flutter dependency in the repository is `maplibre_gl`; production validation is focused on Android and iOS/iPadOS, including vector rendering, overlays, GPS-following and offline PMTiles materialization.
 
-Decision: **do not replace `flutter_map` yet.** Benchmark MapLibre on mobile/desktop as a production candidate while retaining a desktop/Web-capable fallback and the provider-neutral map abstraction.
+Decision: **retain the current `maplibre_gl` integration for the mobile MVP and validate it as the production renderer on Android and iOS/iPadOS.** Keep provider-facing configuration behind the map abstraction so the renderer/provider can be replaced without leaking into feature code.
 
 Sources:
 - https://maplibre.org/
@@ -56,11 +56,11 @@ The product layer must never depend directly on a provider SDK or tile URL.
 
 ## Production recommendation
 
-1. Keep `flutter_map` for the immediate MVP.
-2. Build and enforce a provider-neutral `MapService` before adding offline downloads.
-3. Benchmark MapLibre on Android/iOS/desktop for vector rendering, overlays, GPS-following and offline regions.
-4. Retain a Web-capable renderer until the selected MapLibre path has production-ready Web support.
-5. For offline maps, use self-hosted or explicitly licensed offline-capable tiles. Do not use public OSM raster/vector tile servers for prefetching.
+1. Keep the provider-neutral `MapService` boundary enforced across feature code.
+2. Validate `maplibre_gl` on Android/iOS with the production PMTiles style, GPS-following, overlays and representative offline regions.
+3. Use self-hosted or explicitly licensed PMTiles/MBTiles/offline-capable packages. Do not use public OSM raster/vector tile servers for prefetching.
+4. Model storage quota, checksum, version, expiry/freshness and attribution as part of the offline-region lifecycle.
+5. A future renderer/provider change remains an explicit architecture decision rather than a feature-level rewrite.
 6. Use OSM data with correct attribution, but treat data licensing and tile-service licensing as separate concerns.
 7. Add official Spanish layers through independent data adapters rather than modifying the base map provider.
 
