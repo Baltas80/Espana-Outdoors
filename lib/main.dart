@@ -12,8 +12,9 @@ Future<void> main() async {
   await Hive.openBox<Map<dynamic, dynamic>>('route_records');
   await Hive.openBox<Map<dynamic, dynamic>>('offline_regions');
   await Hive.openBox<String>('weather_cache');
+  await Hive.openBox<dynamic>('route_tracking');
+  await Hive.openBox<dynamic>('offline_sync');
 
-  // Used for large offline package transfers on Android and iOS.
   await FileDownloader().start(autoCleanDatabase: true);
 
   await SentryObservability.run(() async {
