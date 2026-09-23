@@ -1,11 +1,12 @@
 import '../live_data/live_data_gateway_client.dart';
+import '../live_data/live_data_models.dart';
 import 'weather_models.dart';
 import 'weather_service.dart';
 
 class GatewayWeatherService implements WeatherService {
   const GatewayWeatherService(this._gateway);
 
-  final HttpLiveDataGateway _gateway;
+  final LiveDataGateway _gateway;
 
   @override
   Future<WeatherForecast> dailyMunicipalityForecast(
