@@ -669,5 +669,3 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 func writeError(w http.ResponseWriter, status int, message string) {
     writeJSON(w, status, map[string]string{"error": message})
 }
-
-var _ = x509.VerifyOptions{}
