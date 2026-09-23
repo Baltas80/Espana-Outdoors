@@ -14,12 +14,7 @@ void main() {
 
   test('official closure always overrides other factors', () {
     final result = engine.evaluate(
-      const RouteReadinessInput(
-        officialClosure: true,
-        routeRiskLevel: 0,
-        weatherRiskLevel: 0,
-        hazardRiskLevel: 0,
-      ),
+      const RouteReadinessInput(officialClosure: true),
     );
 
     expect(result.decision, RouteReadinessDecision.noRecomendado);
@@ -68,7 +63,7 @@ void main() {
     );
 
     expect(result.decision, RouteReadinessDecision.precaucion);
-    expect(result.factors, contains(RouteReadinessFactor.staleInformation), isFalse);
+    expect(result.factors, isEmpty);
   });
 
   test('stale information never upgrades a route to apto', () {
