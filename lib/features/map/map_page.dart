@@ -32,8 +32,8 @@ class MapPage extends ConsumerWidget {
             ),
             children: [
               TileLayer(
-                urlTemplate: MapProviderConfig.openStreetMap.tileUrlTemplate,
-                userAgentPackageName: MapProviderConfig.openStreetMap.userAgent,
+                urlTemplate: MapProviderConfig.onlineDefault.tileUrlTemplate,
+                userAgentPackageName: MapProviderConfig.onlineDefault.userAgent,
               ),
               OfflineMbtilesLayer(
                 anchor: location.position == null
@@ -50,7 +50,7 @@ class MapPage extends ConsumerWidget {
               RichAttributionWidget(
                 alignment: AttributionAlignment.bottomLeft,
                 attributions: [
-                  TextSourceAttribution(MapProviderConfig.openStreetMap.attribution),
+                  TextSourceAttribution(MapProviderConfig.onlineDefault.attribution),
                 ],
               ),
               if (recording.points.length > 1)
