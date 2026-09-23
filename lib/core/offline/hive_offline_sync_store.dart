@@ -74,6 +74,16 @@ final class HiveOfflineSyncStore implements OfflineSyncStore {
   }
 
   @override
+  Future<void> markFailed(String operationId) async {
+    final operation = _read(operationId);
+    if (operation == null) return;
+    await _box.put(
+      operationId,
+      _encode(operation.markFailed()),
+    );
+  }
+
+  @override
   Future<void> remove(String operationId) => _box.delete(operationId);
 
   Future<void> pruneCompleted({
