@@ -1,17 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart' as ml;
 
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
+import '../../core/map/maplibre_style_provider.dart';
 import 'map_provider_config.dart';
 
 class MapPage extends ConsumerWidget {
   const MapPage({super.key});
 
-  static const _spainCenter = LatLng(40.4168, -3.7038);
+  bool get _mapLibreSupported =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,61 +39,15 @@ class MapPage extends ConsumerWidget {
       ),
       body: Stack(
         children: [
-          if (provider.isConfigured)
-            FlutterMap(
-              options: const MapOptions(
-                initialCenter: _spainCenter,
-                initialZoom: 6.0,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: provider.tileUrlTemplate,
-                  userAgentPackageName: provider.userAgent,
-                ),
-                RichAttributionWidget(
-                  alignment: AttributionAlignment.bottomLeft,
-                  attributions: [
-                    TextSourceAttribution(provider.attribution),
-                  ],
-                ),
-                if (recording.points.length > 1)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: recording.points
-                            .map((point) => LatLng(point.latitude, point.longitude))
-                            .toList(growable: false),
-                        strokeWidth: 5,
-                      ),
-                    ],
+          Positioned.fill(
+            child: _mapLibreSupported
+                ? const _MapLibreSurface()
+                : _DesktopFlutterMap(
+                    provider: provider,
+                    location: location,
+                    recording: recording,
                   ),
-                if (location.position != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: LatLng(
-                          location.position!.latitude,
-                          location.position!.longitude,
-                        ),
-                        width: 48,
-                        height: 48,
-                        child: const Icon(Icons.my_location, size: 34),
-                      ),
-                    ],
-                  ),
-              ],
-            )
-          else
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'El proveedor cartográfico de producción aún no está configurado. '
-                  'Las funciones GPS y offline preparadas localmente siguen disponibles.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+          ),
           Positioned(
             left: 16,
             right: 16,
@@ -100,13 +60,13 @@ class MapPage extends ConsumerWidget {
                     Icon(
                       recording.isRecording
                           ? Icons.fiber_manual_record
-                          : Icons.info_outline,
+                          : Icons.map_outlined,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         recording.isRecording
-                            ? 'Grabando ${_formatKm(recording.distanceMeters)} km'
+                            ? 'Grabando ${(recording.distanceMeters / 1000).toStringAsFixed(2)} km'
                             : location.message,
                       ),
                     ),
@@ -135,9 +95,7 @@ class MapPage extends ConsumerWidget {
                 }
               },
               child: Icon(
-                recording.isRecording
-                    ? Icons.stop
-                    : Icons.fiber_manual_record,
+                recording.isRecording ? Icons.stop : Icons.fiber_manual_record,
               ),
             ),
           ),
@@ -164,8 +122,160 @@ class MapPage extends ConsumerWidget {
       ),
     );
   }
+}
 
-  String _formatKm(double meters) {
-    return (meters / 1000).toStringAsFixed(2);
+class _MapLibreSurface extends StatefulWidget {
+  const _MapLibreSurface();
+
+  @override
+  State<_MapLibreSurface> createState() => _MapLibreSurfaceState();
+}
+
+class _MapLibreSurfaceState extends State<_MapLibreSurface>
+    with WidgetsBindingObserver {
+  final _styles = const MapLibreStyleProvider();
+  String? _style;
+  String? _error;
+  DateTime? _backgroundedAt;
+  int _mapEpoch = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadStyle();
+  }
+
+  Future<void> _loadStyle() async {
+    try {
+      final local = await _styles.findLatestLocalRegion();
+      final style = await _styles.load(localPmtilesPath: local);
+      if (!mounted) return;
+      setState(() {
+        _style = style;
+        _error = null;
+      });
+    } on Object catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.toString());
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _backgroundedAt ??= DateTime.now();
+    }
+    if (state == AppLifecycleState.resumed && _backgroundedAt != null) {
+      final elapsed = DateTime.now().difference(_backgroundedAt!);
+      _backgroundedAt = null;
+      if (elapsed >= const Duration(minutes: 2)) {
+        setState(() => _mapEpoch++);
+        _loadStyle();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('No se pudo cargar el mapa: $_error'),
+        ),
+      );
+    }
+    final style = _style;
+    if (style == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ml.MapLibreMap(
+      key: ValueKey(_mapEpoch),
+      styleString: style,
+      initialCameraPosition: const ml.CameraPosition(
+        target: ml.LatLng(40.4168, -3.7038),
+        zoom: 6,
+      ),
+      myLocationEnabled: true,
+      myLocationTrackingMode: ml.MyLocationTrackingMode.none,
+      compassEnabled: true,
+      attributionButtonMargins: const Point(12, 12),
+    );
+  }
+}
+
+class _DesktopFlutterMap extends StatelessWidget {
+  const _DesktopFlutterMap({
+    required this.provider,
+    required this.location,
+    required this.recording,
+  });
+
+  final MapProviderConfig provider;
+  final LocationState location;
+  final RouteRecorderState recording;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!provider.isConfigured) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'MapLibre está disponible en Android, iOS y Web. Para escritorio se mantiene el renderer GIS de respaldo hasta disponer de soporte MapLibre nativo estable.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    return FlutterMap(
+      options: const MapOptions(
+        initialCenter: LatLng(40.4168, -3.7038),
+        initialZoom: 6,
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: provider.tileUrlTemplate,
+          userAgentPackageName: provider.userAgent,
+        ),
+        RichAttributionWidget(
+          alignment: AttributionAlignment.bottomLeft,
+          attributions: [TextSourceAttribution(provider.attribution)],
+        ),
+        if (recording.points.length > 1)
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: recording.points
+                    .map((point) => LatLng(point.latitude, point.longitude))
+                    .toList(growable: false),
+                strokeWidth: 5,
+              ),
+            ],
+          ),
+        if (location.position != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(
+                  location.position!.latitude,
+                  location.position!.longitude,
+                ),
+                width: 48,
+                height: 48,
+                child: const Icon(Icons.my_location, size: 34),
+              ),
+            ],
+          ),
+      ],
+    );
   }
 }
