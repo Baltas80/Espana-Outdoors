@@ -15,6 +15,7 @@ import (
     "fmt"
     "log/slog"
     "math"
+    "net"
     "net/http"
     "net/url"
     "os"
@@ -258,7 +259,7 @@ func loadConfig() (config, error) {
         maxResponders: maxResponders,
         rateLimit: rate.Limit(rps),
         rateBurst: burst,
-        hsts: envOrDefault("ENABLE_HSTS", "true") == "true",
+        hsts: envOrDefault("ENABLE_HSTS", "false") == "true",
         allowHTTPDev: envOrDefault("ALLOW_HTTP_DEV", "false") == "true",
     }
 
@@ -351,7 +352,7 @@ func (s *server) create(w http.ResponseWriter, r *http.Request) {
     if !s.allow("subject:"+p.Subject) { writeError(w, http.StatusTooManyRequests, "rate limit exceeded"); return }
 
     var req createRequest
-    if err := decodeJSON(r, &req, 16<<10); err != nil { writeError(w, http.StatusBadRequest, "invalid request"); return }
+    if err := decodeJSON(w, r, &req, 16<<10); err != nil { writeError(w, http.StatusBadRequest, "invalid request"); return }
     if !validCoordinate(req.Latitude, req.Longitude) || math.IsNaN(req.AccuracyMeters) || math.IsInf(req.AccuracyMeters, 0) || req.AccuracyMeters < 0 || req.AccuracyMeters > 5000 {
         writeError(w, http.StatusBadRequest, "invalid location"); return
     }
@@ -395,7 +396,7 @@ func (s *server) accept(w http.ResponseWriter, r *http.Request) {
     id := r.PathValue("id")
     if id == "" { writeError(w, http.StatusBadRequest, "invalid id"); return }
     var req acceptRequest
-    if err := decodeJSON(r, &req, 4096); err != nil || len(req.ShareToken) < 32 || len(req.ShareToken) > 256 { writeError(w, http.StatusBadRequest, "invalid acceptance"); return }
+    if err := decodeJSON(w, r, &req, 4096); err != nil || len(req.ShareToken) < 32 || len(req.ShareToken) > 256 { writeError(w, http.StatusBadRequest, "invalid acceptance"); return }
 
     role, ok := p.rescueRole()
     if !ok { writeError(w, http.StatusForbidden, "no Rescue Link role"); return }
@@ -494,7 +495,11 @@ func (s *server) location(w http.ResponseWriter, r *http.Request) {
 func (s *server) sharePreview(w http.ResponseWriter, r *http.Request) {
     token := r.PathValue("token")
     if len(token) < 32 || len(token) > 256 { writeError(w, http.StatusNotFound, "Rescue Link not available"); return }
-    if !s.allow("ip:"+r.RemoteAddr) { writeError(w, http.StatusTooManyRequests, "rate limit exceeded"); return }
+    rateKey := r.RemoteAddr
+    if host, _, splitErr := net.SplitHostPort(r.RemoteAddr); splitErr == nil {
+        rateKey = host
+    }
+    if !s.allow("ip:"+rateKey) { writeError(w, http.StatusTooManyRequests, "rate limit exceeded"); return }
     var expiresAt time.Time
     var revokedAt *time.Time
     err := s.db.QueryRow(r.Context(), `SELECT expires_at, revoked_at FROM rescue_links WHERE token_hash=$1`, tokenHash(token)).Scan(&expiresAt, &revokedAt)
@@ -646,8 +651,8 @@ func decryptLocation(key []byte, id string, encrypted []byte) (locationRecord, e
     return loc, nil
 }
 
-func decodeJSON(r *http.Request, dst any, maxBytes int64) error {
-    r.Body = http.MaxBytesReader(nil, r.Body, maxBytes)
+func decodeJSON(w http.ResponseWriter, r *http.Request, dst any, maxBytes int64) error {
+    r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
     dec := json.NewDecoder(r.Body)
     dec.DisallowUnknownFields()
     if err := dec.Decode(dst); err != nil { return err }
