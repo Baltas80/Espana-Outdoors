@@ -89,6 +89,7 @@ class ArchiveBackedOfflineMapService implements OfflineMapDownloadService {
   @override
   Future<void> pauseOfflineRegion(String regionId) async {
     _paused.add(regionId);
+    await _downloader.cancel(regionId);
     final current = _progress[regionId];
     if (current != null) {
       _emit(
@@ -113,6 +114,11 @@ class ArchiveBackedOfflineMapService implements OfflineMapDownloadService {
   @override
   Future<void> deleteOfflineRegion(String regionId) async {
     _paused.remove(regionId);
+    final current = _progress[regionId];
+    if (current != null) {
+      final source = await _resolveArchive(current.region);
+      await _downloader.delete(source);
+    }
     _progress.remove(regionId);
     final controller = _controllers.remove(regionId);
     await controller?.close();
