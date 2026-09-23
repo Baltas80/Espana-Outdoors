@@ -1,126 +1,86 @@
 # ESPAÑA OUTDOOR — THIRD-PARTY SOFTWARE & LICENCE REGISTER
 
-**Estado:** registro inicial; debe validarse automáticamente y actualizarse antes de cada release.
-
-Este documento separa claramente el código propietario de ESPAÑA OUTDOOR de las dependencias y servicios de terceros.
+Estado: registro inicial; validar automáticamente y actualizar antes de cada release.
 
 ## Principio de aceptación
 
-Una dependencia solo se incorpora a producción después de revisar:
+Una dependencia solo se incorpora a producción después de revisar licencia, mantenimiento, seguridad, soporte móvil, rendimiento, coste, lock-in, procedencia, obligaciones de atribución y compatibilidad con distribución propietaria.
 
-1. licencia y compatibilidad con distribución propietaria;
-2. mantenimiento y actividad del proyecto;
-3. seguridad y vulnerabilidades conocidas;
-4. soporte multiplataforma;
-5. rendimiento y consumo de batería/red;
-6. coste y límites comerciales;
-7. lock-in y facilidad de sustitución;
-8. procedencia y cadena de suministro;
-9. obligaciones de atribución/notices;
-10. impacto sobre la distribución de aplicaciones propietarias.
-
-## Dependencias actuales del MVP
+## Dependencias actuales del MVP móvil
 
 | Componente | Uso | Licencia/condición | Estado |
 |---|---|---|---|
-| Flutter / Dart | Aplicación multiplataforma | Ecosistema Flutter | Aceptado como base de plataforma; verificar notices en release |
-| flutter_map | Renderizado cartográfico Flutter | Open source | Aceptado provisionalmente; validar licencia/versionado antes de producción |
-| flutter_map_mbtiles | Mapas MBTiles/offline | Open source | Aceptado provisionalmente |
-| maplibre_gl | Renderizado MapLibre disponible para evolución del mapa | Open source | Aceptado provisionalmente; mantener como alternativa desacoplada |
-| pmtiles | Lectura de archivos PMTiles | BSD-2-Clause | Aceptado |
-| latlong2 | Geometría/geodesia básica | Open source | Aceptado provisionalmente |
-| Riverpod | Estado | Open source | Aceptado provisionalmente |
-| go_router | Navegación | Open source | Aceptado provisionalmente |
-| geolocator | GPS/ubicación | Open source | Aceptado provisionalmente |
-| connectivity_plus | Conectividad | Open source | Aceptado provisionalmente |
-| shared_preferences | Preferencias no críticas | Open source | Aceptado provisionalmente |
-| flutter_secure_storage | Secretos/credenciales locales | Open source | Aceptado provisionalmente |
-| file_picker | Selección de archivos | Open source | Aceptado provisionalmente |
-| path_provider | Rutas de almacenamiento | Open source | Aceptado provisionalmente |
-| gpx | GPX | Open source | Aceptado provisionalmente |
-| Hive CE | Persistencia local | Open source | Revisar mantenimiento antes de producción |
-| url_launcher | Enlaces/acciones del SO | Open source | Aceptado provisionalmente |
-| http | Cliente HTTP | Dart | Aceptado provisionalmente |
-| purchases_flutter / purchases_ui_flutter 10.13.1 | Entitlements y compras multiplataforma | MIT / RevenueCat; revisar términos comerciales | Aceptado como infraestructura de billing, pendiente de configuración de producción |
-| background_downloader 9.6.2 | Transferencias offline con pausa/reanudación | BSD-3-Clause / MIT | Aceptado para Android, iOS, Windows, macOS y Linux; Web mantiene un camino específico |
-| openidconnect 3.0.0 | OpenID Connect / OAuth 2.0 + PKCE | Apache-2.0 | Aceptado para integración con Keycloak; validar configuración de callbacks por plataforma |
-| sentry_flutter 9.30.1 | Crash/error telemetry y performance | MIT | Aceptado; DSN solo por configuración de despliegue |
-| flutter_lints | Calidad estática | Ecosistema Flutter | Desarrollo/CI |
+| Flutter / Dart | Aplicación móvil | Ecosistema Flutter | Aceptado; revisar notices |
+| maplibre_gl 0.27.1 | Renderizado MapLibre Android/iOS | BSD-3-Clause | Aceptado |
+| pmtiles 2.2.0 | Lectura PMTiles | BSD-2-Clause | Aceptado |
+| latlong2 | Geometría/geodesia | Open source | Aceptado |
+| Riverpod | Estado | Open source | Aceptado |
+| go_router | Navegación | Open source | Aceptado |
+| geolocator | GPS/ubicación | Open source | Aceptado |
+| connectivity_plus | Conectividad | Open source | Aceptado |
+| shared_preferences | Preferencias no críticas | Open source | Aceptado |
+| flutter_secure_storage | Secretos/credenciales locales | Open source | Aceptado |
+| file_picker | Selección de archivos | Open source | Aceptado |
+| path_provider | Rutas de almacenamiento | Open source | Aceptado |
+| gpx | GPX | Open source | Aceptado |
+| Hive CE | Persistencia local temporal | Open source | Mantener durante MVP; migrar progresivamente |
+| url_launcher | Acciones del SO | Open source | Aceptado |
+| http | Cliente HTTP | Dart | Aceptado |
+| purchases_flutter / purchases_ui_flutter 10.13.1 | Billing/entitlements | RevenueCat; revisar términos comerciales | Aceptado |
+| background_downloader 9.6.2 | Descarga de paquetes offline | BSD-3-Clause / MIT | Aceptado para móvil |
+| openidconnect 3.0.0 | OIDC/OAuth 2.0 + PKCE | Apache-2.0 | Aceptado |
+| sentry_flutter 9.30.1 | Crash/error telemetry | MIT | Aceptado |
+| battery_plus 7.1.1 | Estado de batería | Open source | Incorporado para SOS |
+| firebase_messaging 16.7.0 | Push Android/iOS | Plugin oficial Flutter/Firebase | Incorporado; configuración pendiente |
+| drift 2.35.0 | SQLite tipado, migraciones, transacciones | Open source | Incorporado para siguiente capa de persistencia |
 
-## Infraestructura aceptada/priorizada
+## Infraestructura priorizada
 
 ### Routing
 
-**Valhalla 3.9.0** es el motor seleccionado. Su código está bajo MIT. La aplicación utiliza una interfaz `RoutingService` y un adaptador fino, evitando algoritmos propios de routing. La infraestructura se fija inicialmente a 3.9.0 para reproducibilidad.
+Valhalla 3.9.0 es el motor seleccionado. La aplicación utiliza una interfaz RoutingService y un adaptador fino.
 
 ### GIS y cartografía
 
-- **PostgreSQL + PostGIS** para almacenamiento y consultas geoespaciales.
-- **GDAL** para ingestión/conversión de datos geoespaciales.
-- **PROJ** para transformaciones de coordenadas.
-- **MapLibre** como opción prioritaria para reducir lock-in del renderizado.
-- **PMTiles / MBTiles** para distribución y almacenamiento offline cuando el flujo de datos lo permita.
+- PostgreSQL + PostGIS.
+- GDAL.
+- PROJ.
+- MapLibre.
+- PMTiles.
+- Martin como servidor de vector tiles y herramientas PMTiles/MBTiles en backend.
 
-### Identidad y autorización
+### Indexación espacial
 
-**Keycloak / OpenID Connect** es el componente prioritario para identidad, autenticación, MFA y autorización, evitando implementar autenticación casera. La aplicación usa un adaptador OIDC y mantiene la configuración del proveedor fuera del código. Keycloak 26.7.4 es la referencia de infraestructura actual; debe mantenerse en la última versión de parche de la rama desplegada antes de cada release. 
+H3 de Uber es candidato prioritario para backend: celdas, geofencing aproximado, agregación espacial, búsqueda de voluntarios y privacidad de localización. Licencia Apache 2.0.
+
+### Identidad
+
+Keycloak / OIDC.
 
 ### Observabilidad
 
-**Sentry** es el primer nivel de crash/error telemetry del cliente. **OpenTelemetry** queda como estándar de trazas cuando se conecte el backend; **Prometheus + Grafana** quedan para métricas y operación de infraestructura. La instrumentación debe evitar PII y coordenadas de emergencia en eventos.
+Sentry para cliente; OpenTelemetry + Prometheus + Grafana para backend/infraestructura.
 
 ### Datos oficiales
 
-Integrar mediante adaptadores desacoplados fuentes oficiales como **AEMET OpenData**, **MITECO**, **IGN/CNIG**, Protección Civil y fuentes autonómicas/municipales cuando sus condiciones de reutilización y estabilidad sean adecuadas. Cada adaptador debe conservar procedencia, timestamp, vigencia, licencia y nivel de confianza.
+AEMET, MITECO, IGN/CNIG, Protección Civil y fuentes territoriales mediante Source Gateway.
 
-### Datos OSM
+## Componentes eliminados o descartados
 
-Los extractos de OSM usados para Valhalla y cartografía deben gestionarse respetando ODbL y las obligaciones de atribución. Los extractos grandes y tiles generados no se almacenan en Git.
+- flutter_map: eliminado del MVP móvil.
+- flutter_map_mbtiles: no es dependencia activa.
+- adaptadores específicos Web/desktop: fuera de alcance.
+- BRouter como router principal: no proporciona una estrategia única Android+iOS adecuada.
+- flutter_foreground_task para navegación continua: no satisface el modelo iOS requerido.
+- bgeo_background_geolocation: motor nativo cerrado, licencia de release y uploader no verificado; no se incorpora ahora.
+- libre_location: no suficientemente maduro para una función crítica.
 
-## Componentes que NO deben reinventarse
+## Persistencia
 
-No implementar desde cero cuando exista una alternativa madura y compatible:
+Hive CE se mantiene únicamente para no romper el MVP actual. Drift queda incorporado para la siguiente capa, donde necesitaremos rutas, sesiones, offline queue, reportes y reconciliación con transacciones y migraciones.
 
-- autenticación/OIDC;
-- criptografía;
-- almacenamiento seguro de secretos;
-- renderizado de mapas;
-- parsing GPX;
-- proyección geográfica;
-- procesamiento GIS;
-- observabilidad/tracing;
-- métricas;
-- gestión de logs;
-- push notifications;
-- pagos/suscripciones;
-- CI/CD;
-- escaneo de dependencias y SBOM;
-- almacenamiento de objetos;
-- colas/event bus;
-- servidor de teselas;
-- routing genérico;
-- transferencias de archivos en segundo plano.
-
-## Código que sí debe ser propio
-
-La diferenciación de ESPAÑA OUTDOOR debe concentrarse en:
-
-- modelo de estado y riesgo de rutas;
-- motor "¿PUEDO HACER ESTA RUTA HOY?";
-- Plan de Ruta;
-- SOS y flujos de seguridad específicos;
-- Rescue Link y sus políticas de autorización/caducidad;
-- NATURA PROTECT;
-- modelo de conservación;
-- integración y normalización de fuentes oficiales;
-- reglas de privacidad de ubicación;
-- experiencia outdoor y Design System;
-- reglas de producto para mascotas/fauna;
-- orquestación de recomendaciones;
-- búsqueda semántica propia sobre datos autorizados;
-- modelo de datos y APIs propias;
-- sincronización offline específica del producto.
+PowerSync queda en evaluación: el cliente es Apache-2.0, pero deben evaluarse las condiciones del servidor antes de comprometer la arquitectura.
 
 ## Regla de release
 
-Antes de publicar una build de producción se debe generar y revisar un SBOM, comprobar licencias directas y transitivas, detectar vulnerabilidades, conservar notices requeridos y verificar que ningún componente con obligaciones incompatibles haya sido incorporado accidentalmente.
+Antes de publicar una build de producción se debe generar y revisar SBOM, licencias directas y transitivas, vulnerabilidades, notices y obligaciones de atribución.
