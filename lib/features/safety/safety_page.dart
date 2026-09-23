@@ -13,7 +13,7 @@ class SafetyPage extends StatefulWidget {
 }
 
 class _SafetyPageState extends State<SafetyPage> {
-  final _emergency = const EmergencyService();
+  final _emergency = EmergencyService();
   final _share = const EmergencyShareService();
   final _contacts = TrustedContactStore();
   bool _capturing = false;
