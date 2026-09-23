@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _FakeDownloader implements OfflineArchiveDownloader {
   int verifyCalls = 0;
+  int cancelCalls = 0;
+  int deleteCalls = 0;
 
   @override
   Stream<OfflineArchiveProgress> download(OfflineArchiveSource source) async* {
@@ -18,6 +20,16 @@ class _FakeDownloader implements OfflineArchiveDownloader {
   Future<bool> verify(OfflineArchiveSource source) async {
     verifyCalls++;
     return true;
+  }
+
+  @override
+  Future<void> cancel(String regionId) async {
+    cancelCalls++;
+  }
+
+  @override
+  Future<void> delete(OfflineArchiveSource source) async {
+    deleteCalls++;
   }
 }
 
@@ -63,5 +75,42 @@ void main() {
     expect(states, contains(OfflineDownloadState.downloading));
     expect(states.last, OfflineDownloadState.ready);
     expect(downloader.verifyCalls, 1);
+  });
+
+  test('pause cancels the active archive and delete removes the archive',
+      () async {
+    final downloader = _FakeDownloader();
+    final region = const OfflineMapRegion(
+      id: 'test-2',
+      name: 'Test 2',
+      bounds: MapBounds(
+        west: -3,
+        south: 40,
+        east: -2,
+        north: 41,
+      ),
+      minZoom: 8,
+      maxZoom: 12,
+      providerId: 'archive',
+      styleVersion: 'v1',
+    );
+    final source = OfflineArchiveSource(
+      regionId: region.id,
+      providerId: region.providerId,
+      uri: Uri.parse('https://example.invalid/test2.mbtiles'),
+      destinationPath: '/tmp/test2.mbtiles',
+      sha256: '00',
+      expectedBytes: 10,
+    );
+    final service = ArchiveBackedOfflineMapService(
+      downloader: downloader,
+      resolveArchive: (_) async => source,
+    );
+
+    await service.pauseOfflineRegion(region.id);
+    await service.deleteOfflineRegion(region.id);
+
+    expect(downloader.cancelCalls, 1);
+    expect(downloader.deleteCalls, 0);
   });
 }
