@@ -100,7 +100,7 @@ El catálogo se inyecta con:
 flutter run --dart-define=OFFLINE_CATALOG_URL=https://api.example.com/v1/offline/regions
 ```
 
-El endpoint debe devolver un array JSON con `id`, `name`, `description`, `downloadUrl`, `sizeBytes`, `updatedAt` y opcionalmente `sha256`. No se deben publicar URLs ni paquetes ficticios.
+El endpoint debe devolver un array JSON con `id`, `name`, `description`, `providerId`, `licenseUrl`, `attribution`, `downloadUrl`, `sizeBytes`, `updatedAt` y `sha256`. Todos los paquetes deben declarar una licencia HTTPS, atribución y SHA-256 válidos; no se deben publicar URLs ni paquetes ficticios.
 
 ## Identidad OIDC / Keycloak
 
