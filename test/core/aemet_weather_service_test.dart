@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:espana_outdoors/core/weather/aemet_weather_service.dart';
+import 'package:espana_outdoors/core/weather/weather_runtime_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 
@@ -36,7 +37,10 @@ void main() {
     ]);
 
     final service = AemetWeatherService(
-      apiKey: 'test-key-never-persisted',
+      config: WeatherRuntimeConfig(
+        apiKey: 'test-key-never-persisted',
+        expiresAt: DateTime.utc(2026, 10, 15),
+      ),
       client: client,
     );
 
@@ -54,7 +58,13 @@ void main() {
 
   test('rejects malformed municipality codes before network access', () async {
     final client = _QueueClient(const []);
-    final service = AemetWeatherService(apiKey: 'test', client: client);
+    final service = AemetWeatherService(
+      config: WeatherRuntimeConfig(
+        apiKey: 'test',
+        expiresAt: DateTime.utc(2026, 10, 15),
+      ),
+      client: client,
+    );
 
     expect(
       () => service.dailyMunicipalityForecast('Madrid'),
