@@ -38,7 +38,7 @@ class HttpLiveDataGateway implements LiveDataGateway {
     final response = await _client.get(
       uri,
       headers: {
-        if (_bearerToken != null && _bearerToken!.isNotEmpty)
+        if (_bearerToken?.isNotEmpty == true)
           'authorization': 'Bearer $_bearerToken',
         'accept': 'application/json',
       },
