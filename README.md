@@ -86,7 +86,7 @@ Producción requiere un proveedor contratado/operado y sus obligaciones de atrib
 ```bash
 flutter run \
   --dart-define=APP_ENV=production \
-  --dart-define=MAP_TILE_URL=https://maps.example.com/{z}/{x}/{y}.png \
+  --dart-define=MAP_PMTILES_URL=https://maps.example.com/spain.pmtiles \
   --dart-define=MAP_ATTRIBUTION="Proveedor cartográfico"
 ```
 
