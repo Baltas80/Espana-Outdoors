@@ -1,7 +1,7 @@
 FROM golang:1.27.1-alpine AS build
 WORKDIR /src
 RUN apk add --no-cache ca-certificates git
-COPY go.mod go.sum ./
+COPY go.mod ./
 RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags='-s -w' -o /out/rescue-link ./cmd/rescue-link
