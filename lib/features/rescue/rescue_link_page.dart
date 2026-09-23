@@ -55,6 +55,7 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
     _expiryTimer = Timer(remaining, () {
       if (!mounted) return;
       _expiryTimer?.cancel();
+      _expiryTimer?.cancel();
       setState(() => _session = null);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Rescue Link ha caducado.')),
