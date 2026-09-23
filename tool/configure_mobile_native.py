@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import plistlib
 from pathlib import Path
 
@@ -26,16 +27,13 @@ def patch_android() -> None:
 
     insertion = []
     for permission in permissions:
-        declaration = (
-            f'    <uses-permission android:name="{permission}" />'
-        )
+        declaration = f'    <uses-permission android:name="{permission}" />'
         if permission not in text:
             insertion.append(declaration)
 
     if insertion:
         text = text[: marker_end + 1] + "\n" + "\n".join(insertion) + text[marker_end + 1 :]
         manifest.write_text(text, encoding="utf-8")
-
 
     gradle_candidates = [
         ROOT / "android" / "app" / "build.gradle.kts",
@@ -57,6 +55,7 @@ def patch_android() -> None:
             "minSdkVersion 24",
         )
     gradle_path.write_text(gradle, encoding="utf-8")
+
 
 def patch_ios() -> None:
     plist_path = ROOT / "ios" / "Runner" / "Info.plist"
@@ -83,7 +82,23 @@ def patch_ios() -> None:
         plistlib.dump(plist, handle, fmt=plistlib.FMT_XML, sort_keys=False)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Apply platform-specific native configuration after flutter create."
+    )
+    parser.add_argument(
+        "--platform",
+        choices=("android", "ios", "all"),
+        default="all",
+        help="Platform to configure; defaults to all for local use.",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    patch_android()
-    patch_ios()
-    print("Mobile native configuration applied.")
+    args = parse_args()
+    if args.platform in ("android", "all"):
+        patch_android()
+    if args.platform in ("ios", "all"):
+        patch_ios()
+    print(f"Mobile native configuration applied: {args.platform}.")
