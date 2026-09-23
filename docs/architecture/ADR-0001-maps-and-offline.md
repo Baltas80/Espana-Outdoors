@@ -6,7 +6,7 @@
 
 España Outdoor needs a provider-independent mapping layer, online and offline operation, vector/raster support, attribution, Spanish official data and the ability to change suppliers without rewriting product features.
 
-The current Flutter client uses `flutter_map` behind `MapProviderConfig`. This is intentionally retained for the MVP because it is already integrated, BSD-3-Clause licensed, and supports Android, iOS, Linux, macOS, Web and Windows.
+The current Flutter client uses `maplibre_gl` behind the provider-neutral `MapService` boundary. PMTiles are the current offline/vector package path. The active product target is Android and iOS/iPadOS; Web and desktop are not release targets for this MVP.
 
 ## Research snapshot — 2026-09-23
 
@@ -24,7 +24,7 @@ MapLibre remains the leading open-source candidate for the vector-map production
 
 The `maplibre_flutter_gpu` package currently targets iOS, Android, macOS, Windows and Linux, but not Web. It requires Flutter 3.47 or later, and its current documentation notes that Flutter 3.47 does not yet support Flutter GPU in Windows/Linux release builds. That makes it unsuitable as the sole production renderer for España Outdoor's required Web + desktop matrix at the current stage.
 
-Decision: **do not replace `flutter_map` yet.** Benchmark MapLibre on mobile/desktop as a production candidate while retaining a desktop/Web-capable fallback and the provider-neutral map abstraction.
+Decision: **retain `maplibre_gl` for the mobile MVP.** Validate it on Android and iOS/iPadOS with the production PMTiles style, GPS-following, overlays and representative offline regions. Keep provider-facing configuration behind the map abstraction.
 
 Sources:
 - https://maplibre.org/
@@ -56,13 +56,12 @@ The product layer must never depend directly on a provider SDK or tile URL.
 
 ## Production recommendation
 
-1. Keep `flutter_map` for the immediate MVP.
-2. Build and enforce a provider-neutral `MapService` before adding offline downloads.
-3. Benchmark MapLibre on Android/iOS/desktop for vector rendering, overlays, GPS-following and offline regions.
-4. Retain a Web-capable renderer until the selected MapLibre path has production-ready Web support.
-5. For offline maps, use self-hosted or explicitly licensed offline-capable tiles. Do not use public OSM raster/vector tile servers for prefetching.
-6. Use OSM data with correct attribution, but treat data licensing and tile-service licensing as separate concerns.
-7. Add official Spanish layers through independent data adapters rather than modifying the base map provider.
+1. Keep the provider-neutral `MapService` boundary enforced across feature code.
+2. Validate `maplibre_gl` on Android/iOS with the production PMTiles style, GPS-following, overlays and representative offline regions.
+3. Use a first-party PMTiles catalog for offline artifacts. The reference pipeline is OSM-derived Spain extract → Protomaps Basemaps/Planetiler → immutable PMTiles object → HTTPS catalog entry.
+4. Do not use public OSM raster/vector tile servers for bulk prefetch or offline delivery.
+5. Publish OSM/ODbL attribution and all additional data-source licences with each catalog artifact.
+6. Add official Spanish layers through independent data adapters rather than modifying the base map provider.
 
 ## Offline download contract
 
@@ -115,6 +114,17 @@ AEMET also currently exposes daily and hourly municipality prediction endpoints,
 Sources:
 - https://www.aemet.es/es/datos_abiertos/AEMET_OpenData
 - https://opendata.aemet.es/centrodedescargas/novedades
+
+## Offline provider decision — 2026-09-23
+
+For the mobile MVP, the approved implementation path is a first-party OSM-derived PMTiles catalog rather than a public tile service or a proprietary offline SDK. Geofabrik publishes daily Spain OSM extracts; Protomaps Basemaps provides a mature Planetiler-based PMTiles build path and MapLibre styles. Production artifacts remain immutable and must pass checksum, licence and attribution validation before publication.
+
+Sources:
+- https://download.geofabrik.de/europe/spain.html
+- https://github.com/protomaps/basemaps
+- https://www.openstreetmap.org/copyright
+
+This is an implementation path, not a claim that the production artifact pipeline has already been deployed.
 
 ## Non-goals for this ADR
 
