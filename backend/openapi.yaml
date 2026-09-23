@@ -10,6 +10,7 @@ security:
 paths:
   /v1/weather:
     get:
+      security: []
       operationId: getWeather
       summary: Get normalized weather with provenance
       parameters:
@@ -29,6 +30,20 @@ paths:
         '401': {description: Authentication required}
         '429': {description: Rate limit exceeded}
         '503': {description: Provider unavailable}
+  /v1/maps/catalog:
+    get:
+      security: []
+      operationId: getOfflineMapCatalog
+      summary: Get available offline map packages
+      responses:
+        '200':
+          description: Offline package catalog with provenance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapCatalogEnvelope'
+        '429': {description: Rate limit exceeded}
+        '503': {description: Offline catalog unavailable}
   /v1/route:
     post:
       operationId: calculateRoute
@@ -170,6 +185,45 @@ components:
       required: [data, provenance]
       properties:
         data: {type: object, additionalProperties: true}
+        provenance: {$ref: '#/components/schemas/Provenance'}
+    MapPackage:
+      type: object
+      required: [id, name, providerId, version, uri, sha256, bytes, bounds, minZoom, maxZoom]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        providerId: {type: string}
+        version: {type: string}
+        uri: {type: string, format: uri}
+        sha256: {type: string, pattern: '^[A-Fa-f0-9]{64}
+      required: [alerts, generatedAt]
+      properties:
+        alerts:
+          type: array
+          items: {$ref: '#/components/schemas/Alert'}
+        generatedAt: {type: string, format: date-time}
+        provenance: {$ref: '#/components/schemas/Provenance'}
+}
+        bytes: {type: integer, minimum: 1}
+        license: {type: string}
+        attribution: {type: string}
+        bounds:
+          type: object
+          required: [west, south, east, north]
+          properties:
+            west: {type: number, minimum: -180, maximum: 180}
+            south: {type: number, minimum: -90, maximum: 90}
+            east: {type: number, minimum: -180, maximum: 180}
+            north: {type: number, minimum: -90, maximum: 90}
+        minZoom: {type: integer, minimum: 0}
+        maxZoom: {type: integer, minimum: 0}
+    MapCatalogEnvelope:
+      type: object
+      required: [data, provenance]
+      properties:
+        data:
+          type: array
+          items: {$ref: '#/components/schemas/MapPackage'}
         provenance: {$ref: '#/components/schemas/Provenance'}
     AlertEnvelope:
       type: object
