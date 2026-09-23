@@ -58,4 +58,4 @@ Verify that volunteer offers remain blocked when the backend policy reports fire
 
 ## Release evidence
 
-Attach device model, OS version, app build, test date, scenario result and observed failure mode to the release record. Do not attach exact personal locations or emergency contact data.
+Attach device model, OS version, app build commit, test date, scenario result and observed failure mode to the release record. Do not attach exact personal locations or emergency contact data.
