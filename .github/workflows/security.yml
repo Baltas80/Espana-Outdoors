@@ -22,7 +22,7 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter create . --platforms=android,ios,web,windows,macos,linux --org com.espanaoutdoors
+      - run: flutter create . --platforms=android,ios --org com.espanaoutdoors
       - run: flutter pub get
       - name: Outdated dependency report
         run: flutter pub outdated
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: aquasecurity/trivy-action@v0.36.0
+      - uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: fs
           scan-ref: .
