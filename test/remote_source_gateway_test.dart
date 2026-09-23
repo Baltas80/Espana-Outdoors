@@ -10,6 +10,7 @@ void main() {
   test('normalizes source health metadata', () async {
     final client = MockClient((request) async {
       expect(request.url.path, '/v1/sources/aemet/health');
+      expect(request.headers['authorization'], 'Bearer test-access-token');
       return http.Response(
         jsonEncode({
           'kind': 'official',
@@ -26,6 +27,7 @@ void main() {
     final gateway = RemoteSourceGateway(
       baseUri: Uri.parse('https://api.example.test'),
       client: client,
+      accessTokenProvider: () async => 'test-access-token',
     );
     final snapshot = await gateway.health('aemet');
 
