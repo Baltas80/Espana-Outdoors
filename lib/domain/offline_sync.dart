@@ -32,6 +32,16 @@ class SyncOperation {
         attempts: attempts + 1,
         nextAttemptAt: nextAttemptAt,
       );
+
+  SyncOperation markFailed() => SyncOperation(
+        id: id,
+        type: type,
+        payload: payload,
+        createdAt: createdAt,
+        priority: priority,
+        state: SyncOperationState.failed,
+        attempts: attempts,
+      );
 }
 
 abstract interface class OfflineSyncStore {
@@ -39,10 +49,10 @@ abstract interface class OfflineSyncStore {
   Future<List<SyncOperation>> pending({int limit = 50});
   Future<void> complete(String operationId);
   Future<void> fail(String operationId, {required DateTime retryAt});
+  Future<void> markFailed(String operationId);
   Future<void> remove(String operationId);
 }
 
-/// Coordinates local-first writes. Network adapters remain outside the domain.
 class OfflineSyncCoordinator {
   OfflineSyncCoordinator(this.store);
 
