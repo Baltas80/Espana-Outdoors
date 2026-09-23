@@ -37,4 +37,6 @@ class OfflineArchiveProgress {
 abstract interface class OfflineArchiveDownloader {
   Stream<OfflineArchiveProgress> download(OfflineArchiveSource source);
   Future<bool> verify(OfflineArchiveSource source);
+  Future<void> cancel(String regionId);
+  Future<void> delete(OfflineArchiveSource source);
 }
