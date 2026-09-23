@@ -13,8 +13,8 @@ void main() {
       );
 
       expect(alert.id, isNotEmpty);
-      expect(alert.policy.visibility, RescueVisibility.approximateLocation);
-      expect(alert.expired, isFalse);
+      expect(alert.policy.initialVisibility, LocationPrivacy.approximate);
+      expect(alert.expiredAt(DateTime.now()), isFalse);
       expect(alert.state, RescueLinkState.preparing);
     });
 
