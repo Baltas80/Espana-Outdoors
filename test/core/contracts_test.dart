@@ -53,7 +53,7 @@ void main() {
   test('expired emergency snapshot is detectable', () {
     final snapshot = EmergencySnapshot(
       mode: EmergencyMode.sos,
-      location: const EmergencyLocation(
+      location: EmergencyLocation(
         latitude: 40,
         longitude: -3,
         recordedAt: DateTime(2026, 1, 1),
