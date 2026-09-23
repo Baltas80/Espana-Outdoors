@@ -2,7 +2,7 @@
 
 ## Architecture
 
-España Outdoor does not bulk-download tiles from the public OpenStreetMap tile servers. Those servers prohibit bulk/offline prefetching and are not a production dependency for the app. cite not embedded
+España Outdoor does not bulk-download tiles from the public OpenStreetMap tile servers. Those servers prohibit bulk/offline prefetching and are not a production dependency for the app.
 
 The production artifact pipeline is:
 
