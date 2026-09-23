@@ -28,11 +28,41 @@ final class RescueLinkRemoteSession {
   final DateTime expiresAt;
 }
 
+final class RescueLinkLocation {
+  const RescueLinkLocation({
+    required this.position,
+    required this.accuracyMeters,
+    required this.capturedAt,
+    required this.type,
+    required this.exact,
+  });
+
+  final GeoPoint position;
+  final double accuracyMeters;
+  final DateTime capturedAt;
+  final EmergencyType type;
+  final bool exact;
+}
+
+final class RescueLinkAcceptedSession {
+  const RescueLinkAcceptedSession({
+    required this.id,
+    required this.capabilityToken,
+    required this.expiresAt,
+    required this.location,
+  });
+
+  final String id;
+  final String capabilityToken;
+  final DateTime expiresAt;
+  final RescueLinkLocation location;
+}
+
 abstract interface class RescueLinkGateway {
   Future<RescueLinkRemoteSession> create(RescueLinkCreateRequest request);
   Future<void> revoke(String id);
-  Future<RescueLinkRemoteSession> accept({
+  Future<RescueLinkAcceptedSession> accept({
     required String id,
-    required String role,
+    required String shareToken,
   });
 }
