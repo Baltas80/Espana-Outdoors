@@ -28,9 +28,9 @@ class GatewayWeatherService implements WeatherService {
       throw const FormatException('Código de municipio inválido.');
     }
 
+    final basePath = _baseUri.path.replaceFirst(RegExp(r'/?$'), '');
     final uri = _baseUri.replace(
-      path: '${_baseUri.path.replaceFirst(RegExp(r'/?$'), '')}'
-          '/weather/municipality/$code/daily',
+      path: '$basePath/weather/municipality/$code/daily',
     );
 
     final response = await _client
@@ -49,6 +49,76 @@ class GatewayWeatherService implements WeatherService {
       throw const FormatException('Respuesta meteorológica inválida.');
     }
 
-    return WeatherForecast.fromJson(decoded);
+    return _parseForecast(decoded);
+  }
+
+  WeatherForecast _parseForecast(Map<String, dynamic> payload) {
+    final rawDays = payload['days'];
+    if (rawDays is! List) {
+      throw const FormatException('Faltan días de predicción.');
+    }
+
+    final days = <WeatherDay>[];
+    for (final raw in rawDays) {
+      if (raw is! Map<String, dynamic>) continue;
+      final date = DateTime.tryParse('${raw['date'] ?? ''}');
+      if (date == null) continue;
+
+      days.add(
+        WeatherDay(
+          date: date,
+          condition: _condition('${raw['condition'] ?? ''}'),
+          minTemperatureC: _double(raw['minTemperatureC']),
+          maxTemperatureC: _double(raw['maxTemperatureC']),
+          precipitationProbabilityPercent:
+              _int(raw['precipitationProbabilityPercent']),
+          precipitationMm: _double(raw['precipitationMm']),
+          windSpeedKmh: _double(raw['windSpeedKmh']),
+          windDirection: raw['windDirection']?.toString(),
+        ),
+      );
+    }
+
+    final fetchedAt = DateTime.tryParse('${payload['fetchedAt'] ?? ''}') ??
+        DateTime.now().toUtc();
+    final sourceUpdatedAt = DateTime.tryParse(
+      '${payload['sourceUpdatedAt'] ?? ''}',
+    );
+
+    return WeatherForecast(
+      days: List.unmodifiable(days),
+      source: '${payload['source'] ?? 'España Outdoor gateway'}',
+      fetchedAt: fetchedAt,
+      sourceUpdatedAt: sourceUpdatedAt,
+    );
+  }
+
+  double? _double(dynamic value) => value is num
+      ? value.toDouble()
+      : double.tryParse('${value ?? ''}'.replaceAll(',', '.'));
+
+  int? _int(dynamic value) => value is num
+      ? value.round()
+      : int.tryParse('${value ?? ''}');
+
+  WeatherCondition _condition(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'clear':
+        return WeatherCondition.clear;
+      case 'partlycloudy':
+        return WeatherCondition.partlyCloudy;
+      case 'cloudy':
+        return WeatherCondition.cloudy;
+      case 'rain':
+        return WeatherCondition.rain;
+      case 'storm':
+        return WeatherCondition.storm;
+      case 'snow':
+        return WeatherCondition.snow;
+      case 'fog':
+        return WeatherCondition.fog;
+      default:
+        return WeatherCondition.unknown;
+    }
   }
 }
