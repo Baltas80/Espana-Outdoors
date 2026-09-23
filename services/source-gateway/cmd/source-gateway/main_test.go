@@ -39,7 +39,7 @@ func TestMunicipalityCodeValidation(t *testing.T) {
         {"03O99", false},
     } {
         if got := validMunicipalityCode(tc.value); got != tc.ok {
-            t.Fatalf("validMunicipalityCode(%q) = %v, want %v", tc.value, tc.ok)
+            t.Fatalf("validMunicipalityCode(%q) = %v, want %v", tc.value, got, tc.ok)
         }
     }
 }
