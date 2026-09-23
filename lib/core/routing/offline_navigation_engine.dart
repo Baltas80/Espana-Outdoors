@@ -54,9 +54,6 @@ class OfflineNavigationEngine {
       remaining += _distanceMeters(geometry[i], geometry[i + 1]);
     }
 
-    final fraction = route.distanceMeters <= 0
-        ? 0.0
-        : (remaining / route.distanceMeters).clamp(0.0, 1.0);
     final offRoute = nearestDistance > offRouteThresholdMeters;
 
     final instruction = offRoute
