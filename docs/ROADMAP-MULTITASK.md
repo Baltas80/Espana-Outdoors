@@ -64,15 +64,12 @@ The project is developed in parallel tracks so no major capability waits for ano
 - [ ] Natura Protect index
 
 ## Track F — Platform
-- [x] Flutter architecture targeting mobile, web and desktop
+- [x] Flutter architecture targeting Android and iOS/iPadOS
 - [ ] Android production build validation
 - [ ] iOS production build validation
-- [ ] Web/PWA validation
-- [ ] Windows validation
-- [ ] macOS validation
-- [ ] Linux validation
 - [ ] platform-specific permission adapters
 - [ ] wearable/GNSS/Bluetooth integration contracts
+- Web/PWA, Windows, macOS and Linux are explicitly out of active product scope (ADR-0006).
 
 ## Track G — Security & privacy
 - [x] secure local storage foundation
