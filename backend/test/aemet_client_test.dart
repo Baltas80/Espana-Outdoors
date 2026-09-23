@@ -43,6 +43,44 @@ void main() {
     expect(client.requestCount, 2);
   });
 
+  test('returns stale cached data when AEMET is unavailable', () async {
+    final client = _QueueClient([
+      http.Response(
+        jsonEncode({
+          'estado': 200,
+          'datos': 'https://aemet.test/data',
+        }),
+        200,
+      ),
+      http.Response(
+        jsonEncode({
+          'prediccion': {
+            'dia': [
+              {
+                'fecha': '2026-09-23',
+                'temperatura': {'minima': 10, 'maxima': 22},
+              },
+            ],
+          },
+        }),
+        200,
+      ),
+      http.Response('temporarily unavailable', 503),
+    ]);
+    final service = AemetGatewayClient(
+      apiKey: 'runtime-test-key',
+      baseUri: 'https://aemet.test/api',
+      cacheTtl: Duration.zero,
+      client: client,
+    );
+
+    await service.municipalityDaily('30001');
+    final result = await service.municipalityDailyWithMetadata('30001');
+
+    expect(result.stale, isTrue);
+    expect(result.payload['prediccion'], isNotNull);
+  });
+
   test('AEMET client rejects malformed municipality codes', () {
     final service = AemetGatewayClient(
       apiKey: 'runtime-test-key',
