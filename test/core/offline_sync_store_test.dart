@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:espana_outdoors/core/offline/hive_offline_sync_store.dart';
@@ -5,11 +7,16 @@ import 'package:espana_outdoors/domain/offline_sync.dart';
 
 void main() {
   group('HiveOfflineSyncStore', () {
+    late Directory hiveDir;
     late Box<dynamic> box;
     late HiveOfflineSyncStore store;
 
+    setUpAll(() async {
+      hiveDir = await Directory.systemTemp.createTemp('espana-outdoors-hive-');
+      Hive.init(hiveDir.path);
+    });
+
     setUp(() async {
-      await Hive.initFlutter();
       box = await Hive.openBox<dynamic>('offline_sync_test');
       await box.clear();
       store = HiveOfflineSyncStore(box: box);
@@ -18,6 +25,11 @@ void main() {
     tearDown(() async {
       await box.close();
       await Hive.deleteBoxFromDisk('offline_sync_test');
+    });
+
+    tearDownAll(() async {
+      await Hive.close();
+      if (await hiveDir.exists()) await hiveDir.delete(recursive: true);
     });
 
     test('orders due operations by priority and creation time', () async {
