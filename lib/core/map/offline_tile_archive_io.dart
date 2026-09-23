@@ -5,5 +5,5 @@ Future<TileProvider> openOfflineMbTiles(String path) async {
   if (path.trim().isEmpty) {
     throw ArgumentError.value(path, 'path', 'no puede estar vacío');
   }
-  return MbTilesTileProvider.fromSource(path);
+  return MbTilesTileProvider.fromPath(path: path);
 }
