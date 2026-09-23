@@ -10,6 +10,7 @@ enum RouteReadinessDecision { apto, precaucion, noRecomendado }
 enum RouteReadinessFactor {
   officialClosure,
   officialEmergencyAlert,
+  weatherRisk,
   severeWeather,
   activeHazard,
   poorVisibility,
