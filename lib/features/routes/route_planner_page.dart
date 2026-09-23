@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -48,7 +50,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
     }
   }
 
-  Future<void> _onMapClick(Point<double> _, ml.LatLng coordinates) async {
+  Future<void> _onMapClick(math.Point<double> _, ml.LatLng coordinates) async {
     setState(() {
       _destination = LatLng(coordinates.latitude, coordinates.longitude);
       _route = null;
@@ -155,7 +157,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                         initialCameraPosition: ml.CameraPosition(target: initial, zoom: 12),
                         myLocationEnabled: true,
                         compassEnabled: true,
-                        attributionButtonMargins: const Point(12, 12),
+                        attributionButtonMargins: const math.Point(12, 12),
                         onMapCreated: (controller) => _controller = controller,
                         onMapClick: _onMapClick,
                         onStyleLoadedCallback: () {
