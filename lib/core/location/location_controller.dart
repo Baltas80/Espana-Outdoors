@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
-final locationControllerProvider = NotifierProvider<LocationController, LocationState>(LocationController.new);
+final locationControllerProvider =
+    NotifierProvider<LocationController, LocationState>(LocationController.new);
 
 class LocationState {
-  const LocationState({this.position, this.message = 'Pulsa el botón para usar tu ubicación.'});
+  const LocationState({
+    this.position,
+    this.message = 'Pulsa el botón para usar tu ubicación.',
+  });
 
   final Position? position;
   final String message;
@@ -20,9 +24,12 @@ class LocationController extends Notifier<LocationState> {
   LocationState build() => const LocationState();
 
   Future<void> locate() async {
+    state = const LocationState(message: 'Obteniendo ubicación…');
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        state = state.copyWith(message: 'Activa la ubicación del dispositivo para continuar.');
+        state = const LocationState(
+          message: 'Activa la ubicación del dispositivo para continuar.',
+        );
         return;
       }
 
@@ -30,20 +37,27 @@ class LocationController extends Notifier<LocationState> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-        state = state.copyWith(message: 'Permiso de ubicación no disponible. Puedes seguir usando el mapa sin compartir tu posición.');
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        state = const LocationState(
+          message: 'Permiso de ubicación no disponible.',
+        );
         return;
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
-      state = state.copyWith(
+      state = LocationState(
         position: position,
-        message: 'Ubicación obtenida. La app no la comparte con terceros desde este módulo.',
+        message: 'Ubicación obtenida.',
       );
     } catch (_) {
-      state = state.copyWith(message: 'No se ha podido obtener la ubicación. Comprueba el GPS e inténtalo de nuevo.');
+      state = const LocationState(
+        message: 'No se ha podido obtener la ubicación. Comprueba el GPS e inténtalo de nuevo.',
+      );
     }
   }
 }
