@@ -9,7 +9,7 @@ import '../../core/contracts/routing_service.dart';
 /// Routing algorithms remain outside the application.
 class ValhallaRoutingService implements RoutingService {
   ValhallaRoutingService({required Uri baseUri, http.Client? client})
-      : _baseUri = baseUri,
+      : _baseUri = _normalizeBaseUri(baseUri),
         _client = client ?? http.Client();
 
   final Uri _baseUri;
@@ -27,6 +27,7 @@ class ValhallaRoutingService implements RoutingService {
       'costing': _costing(request.profile),
       'units': 'kilometers',
       'shape_format': 'geojson',
+      'directions_options': {'units': 'kilometers', 'language': 'es-ES'},
     });
     return _parseTrip(response);
   }
@@ -52,11 +53,13 @@ class ValhallaRoutingService implements RoutingService {
     String endpoint,
     Map<String, Object?> body,
   ) async {
-    final response = await _client.post(
-      _baseUri.resolve(endpoint),
-      headers: const {'content-type': 'application/json'},
-      body: jsonEncode(body),
-    );
+    final response = await _client
+        .post(
+          _baseUri.resolve(endpoint),
+          headers: const {'content-type': 'application/json'},
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 20));
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError('Valhalla $endpoint failed: HTTP ${response.statusCode}');
     }
@@ -79,22 +82,25 @@ class ValhallaRoutingService implements RoutingService {
 
     final points = <LatLng>[];
     var distanceKm = 0.0;
-    var durationMinutes = 0.0;
+    var durationSeconds = 0.0;
 
     for (final item in legs) {
       if (item is! Map<String, dynamic>) continue;
       final summary = item['summary'];
       if (summary is Map<String, dynamic>) {
         distanceKm += (summary['length'] as num?)?.toDouble() ?? 0;
-        durationMinutes += (summary['time'] as num?)?.toDouble() ?? 0;
+        // Valhalla reports summary.time in seconds, not minutes.
+        durationSeconds += (summary['time'] as num?)?.toDouble() ?? 0;
       }
       final shape = item['shape'];
       if (shape is Map<String, dynamic>) {
         final coordinates = shape['coordinates'];
         if (coordinates is List) {
           for (final coordinate in coordinates) {
-            if (coordinate is List && coordinate.length >= 2 &&
-                coordinate[0] is num && coordinate[1] is num) {
+            if (coordinate is List &&
+                coordinate.length >= 2 &&
+                coordinate[0] is num &&
+                coordinate[1] is num) {
               points.add(LatLng(
                 (coordinate[1] as num).toDouble(),
                 (coordinate[0] as num).toDouble(),
@@ -105,10 +111,14 @@ class ValhallaRoutingService implements RoutingService {
       }
     }
 
+    if (points.length < 2) {
+      throw FormatException('Valhalla route did not contain a usable shape.');
+    }
+
     return RouteResult(
       points: points,
       distanceMeters: distanceKm * 1000,
-      durationSeconds: durationMinutes * 60,
+      durationSeconds: durationSeconds,
     );
   }
 
@@ -125,5 +135,10 @@ class ValhallaRoutingService implements RoutingService {
       default:
         return 'pedestrian';
     }
+  }
+
+  static Uri _normalizeBaseUri(Uri uri) {
+    final path = uri.path.endsWith('/') ? uri.path : '${uri.path}/';
+    return uri.replace(path: path);
   }
 }
