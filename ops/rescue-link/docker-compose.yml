@@ -44,11 +44,7 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    healthcheck:
-      test: ["CMD", "/app/rescue-link", "--healthcheck"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+    # The distroless image has no shell/curl. Probe /healthz from the edge/monitoring system.
 
 volumes:
   rescue-link-postgres:
