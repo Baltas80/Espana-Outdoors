@@ -139,7 +139,8 @@ func main() {
     }
 
     log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-    provider, err := oidc.NewProvider(ctx, cfg.oidcIssuer)
+
+    provider, err := discoverOIDCWithRetry(ctx, cfg.oidcIssuer, 30*time.Second)
     if err != nil {
         log.Error("oidc discovery failed", "error", err)
         os.Exit(1)
@@ -152,10 +153,7 @@ func main() {
     }
     defer db.Close()
 
-    pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-    err = db.Ping(pingCtx)
-    cancel()
-    if err != nil {
+    if err := pingDatabaseWithRetry(ctx, db, 30*time.Second); err != nil {
         log.Error("database unavailable", "error", err)
         os.Exit(1)
     }
@@ -220,6 +218,58 @@ func main() {
     if err := srv.Shutdown(shutdownCtx); err != nil {
         log.Error("http shutdown failed", "error", err)
     }
+}
+
+func discoverOIDCWithRetry(ctx context.Context, issuer string, timeout time.Duration) (*oidc.Provider, error) {
+    deadline := time.Now().Add(timeout)
+    var lastErr error
+    delay := time.Second
+    for time.Now().Before(deadline) {
+        provider, err := oidc.NewProvider(ctx, issuer)
+        if err == nil {
+            return provider, nil
+        }
+        lastErr = err
+        select {
+        case <-ctx.Done():
+            return nil, ctx.Err()
+        case <-time.After(delay):
+        }
+        if delay < 5*time.Second {
+            delay *= 2
+        }
+    }
+    if lastErr == nil {
+        lastErr = errors.New("OIDC discovery timed out")
+    }
+    return nil, lastErr
+}
+
+func pingDatabaseWithRetry(ctx context.Context, db *pgxpool.Pool, timeout time.Duration) error {
+    deadline := time.Now().Add(timeout)
+    var lastErr error
+    delay := time.Second
+    for time.Now().Before(deadline) {
+        pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+        err := db.Ping(pingCtx)
+        cancel()
+        if err == nil {
+            return nil
+        }
+        lastErr = err
+        select {
+        case <-ctx.Done():
+            return ctx.Err()
+        case <-time.After(delay):
+        }
+        if delay < 5*time.Second {
+            delay *= 2
+        }
+    }
+    if lastErr == nil {
+        lastErr = errors.New("database ping timed out")
+    }
+    return lastErr
 }
 
 func loadConfig() (config, error) {
