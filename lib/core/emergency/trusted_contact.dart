@@ -45,5 +45,5 @@ class EmergencySharePayload {
   final DateTime expiresAt;
   final String shareToken;
 
-  bool get expired => DateTime.now().isAfter(expiresAt);
+  bool get expired => !DateTime.now().toUtc().isBefore(expiresAt);
 }
