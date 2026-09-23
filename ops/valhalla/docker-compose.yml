@@ -3,7 +3,11 @@ services:
     image: ghcr.io/valhalla/valhalla:3.9.0
     restart: unless-stopped
     ports:
-      - "8002:8002"
+      - "127.0.0.1:8002:8002"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     volumes:
       - ./data:/data/valhalla
       - ./config:/config:ro
