@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../core/gpx/gpx_import_service.dart';
+import '../../core/navigation/navigation_models.dart';
 import '../../core/routing/offline_navigation_engine.dart';
 import '../../core/routing/routing_models.dart';
 import '../map/map_page.dart';
