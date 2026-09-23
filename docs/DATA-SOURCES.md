@@ -53,10 +53,17 @@ Una alerta oficial, un reporte comunitario y una inferencia de IA deben ser visu
 
 Las credenciales de proveedores no deben incrustarse en el cliente móvil/web. Cuando un proveedor exige una API key, la integración de producción debe pasar por un gateway/backend controlado por España Outdoor, con rate limiting, rotación y observabilidad. El cliente recibe solamente el dato normalizado que necesita.
 
-AEMET ofrece OpenData mediante API REST y también canales RSS/Atom para avisos meteorológicos; la arquitectura debe poder usar ambos mecanismos como adaptadores, no como contratos de UI. citehttps://www.aemet.es/es/datos_abiertos/AEMET_OpenData
+AEMET ofrece OpenData mediante API REST y también canales RSS/Atom para avisos meteorológicos. La arquitectura debe poder usar ambos mecanismos como adaptadores, no como contratos de UI.
 
-IGN/CNIG publica servicios geográficos, incluyendo WFS, WCS y OGC API/descargas para distintos productos; deben evaluarse por dataset concreto y no asumirse licencias o coberturas idénticas entre productos. citehttps://www.ign.es/web/es/ign/portal/ide-area-nodo-ide-ign
+- https://www.aemet.es/es/datos_abiertos/AEMET_OpenData
+- https://www.aemet.es/en/rss_info/avisos/esp
+
+IGN/CNIG publica servicios geográficos, incluyendo WFS, WCS y OGC API/descargas para distintos productos. Deben evaluarse por dataset concreto y no asumirse licencias o coberturas idénticas entre productos.
+
+- https://www.ign.es/web/es/ign/portal/ide-area-nodo-ide-ign
 
 ## Cartografía OSM
 
-Los servidores públicos de teselas de OpenStreetMap no son un backend de descargas offline. Para mapas descargables se usarán paquetes/licencias y proveedores que permitan explícitamente el uso offline, o infraestructura propia. La atribución visible seguirá siendo obligatoria cuando corresponda. citehttps://operations.osmfoundation.org/policies/tiles/
+Los servidores públicos de teselas de OpenStreetMap no son un backend de descargas offline. Para mapas descargables se usarán paquetes/licencias y proveedores que permitan explícitamente el uso offline, o infraestructura propia. La atribución visible seguirá siendo obligatoria cuando corresponda.
+
+- https://operations.osmfoundation.org/policies/tiles/
