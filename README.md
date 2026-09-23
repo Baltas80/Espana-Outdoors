@@ -1,10 +1,18 @@
 # España Outdoor
 
-Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, conservación y emergencias.
+Plataforma móvil premium para naturaleza, rutas, seguridad, mascotas, fauna, conservación y emergencias.
 
 ## Estado
 
 **MVP 0.1 en construcción activa.** La base actual incluye arquitectura por capas, navegación, mapa, GPS, grabación de rutas, importación GPX, persistencia local de rutas, modo offline básico, privacidad y CI. El sistema visual premium de España Outdoor ya está incorporado en la app y documentado en `docs/brand_system.md`.
+
+## Objetivo de plataformas
+
+España Outdoor se concentra deliberadamente en **Android y iOS/iPadOS**. Son las plataformas de producto soportadas oficialmente y reciben toda la inversión de UX, GPS, navegación, mapas offline, SOS, Rescue Link, rendimiento y QA.
+
+Web/PWA, Windows, macOS y Linux quedan fuera del alcance del producto y del MVP. No se desarrollarán adaptaciones de escritorio ni Web mientras no exista una decisión de producto posterior que justifique reabrir ese alcance. Esto reduce superficie de mantenimiento, matrices de pruebas, complejidad de distribución y código específico de plataforma.
+
+La arquitectura conserva interfaces abstractas para permitir en el futuro integraciones con wearables, Garmin, GPS externos, Bluetooth y sensores sin comprometer el foco móvil actual.
 
 ## Trabajo reciente
 
@@ -27,37 +35,37 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 - Risk Engine corregido para que la confianza represente realmente la completitud de los datos verificados.
 - CI de seguridad reforzado con Dependabot, Gitleaks, Trivy y CodeQL para GitHub Actions.
 
-## Objetivos
+## Alcance MVP
 
-- Android, iOS/iPadOS, Web, Windows, macOS y Linux.
+- Android.
+- iOS/iPadOS.
 - Offline-first para las funciones críticas.
 - Mapas y GIS desacoplados del proveedor.
 - Datos con procedencia, fecha de actualización y nivel de confianza.
 - Seguridad y privacidad desde el diseño.
-- Importación y análisis GPX con persistencia local multiplataforma.
+- Importación y análisis GPX con persistencia local.
 - Grabación GPS de rutas directamente sobre el mapa.
 - SOS, contactos de confianza y Rescue Link como módulos aislados y auditables.
 - Reutilización de SDKs, APIs y software maduro en lugar de reinventar componentes.
 
 ## Stack inicial
 
-- Flutter / Dart
-- Riverpod para estado
-- go_router para navegación
-- flutter_map para cartografía multiplataforma en el MVP
-- MapLibre/PMTiles como evolución prioritaria del renderizado/vector/offline
-- geolocator para ubicación
-- connectivity_plus para estado de conectividad
-- shared_preferences para preferencias no críticas
-- flutter_secure_storage para secretos y credenciales locales
-- Hive CE para persistencia local de rutas
-- GPX para importación/exportación
-- Valhalla 3.9.0 para routing/map matching
-- PMTiles para paquetes cartográficos regionales
-- background_downloader para transferencias offline multiplataforma
-- RevenueCat para billing/entitlements
-- OpenID Connect para identidad; Keycloak es el proveedor de infraestructura objetivo
-- Sentry para errores/crashes
+- Flutter / Dart.
+- Riverpod para estado.
+- go_router para navegación.
+- MapLibre/PMTiles como renderizado/vector/offline cartográfico prioritario.
+- geolocator para ubicación.
+- connectivity_plus para estado de conectividad.
+- shared_preferences para preferencias no críticas.
+- flutter_secure_storage para secretos y credenciales locales.
+- Hive CE para persistencia local de rutas.
+- GPX para importación/exportación.
+- Valhalla 3.9.0 para routing/map matching.
+- PMTiles para paquetes cartográficos regionales.
+- background_downloader para transferencias offline móviles.
+- RevenueCat para billing/entitlements.
+- OpenID Connect para identidad; Keycloak es el proveedor de infraestructura objetivo.
+- Sentry para errores/crashes.
 
 Las versiones se mantienen deliberadamente en rangos compatibles y deben revisarse periódicamente antes de releases.
 
@@ -158,19 +166,19 @@ ops/            infraestructura local/producción no sensible
 scripts/        bootstrap local
 ```
 
-## Arranque local
+## Arranque local móvil
 
-Requiere Flutter estable instalado.
+Requiere Flutter estable y toolchains de Android/iOS.
 
 ```bash
-flutter create . --platforms=android,ios,web,windows,macos,linux
+flutter create . --platforms=android,ios
 flutter pub get
 flutter analyze
 flutter test
-flutter run -d chrome
+flutter devices
 ```
 
-> `flutter create .` solo debe ejecutarse para generar los directorios nativos que el repositorio no necesita almacenar manualmente durante este bootstrap.
+Para iOS se requiere macOS/Xcode para compilar, firmar y distribuir. Android puede compilarse con el SDK de Android correspondiente.
 
 ## Principios
 
@@ -188,6 +196,8 @@ flutter run -d chrome
 12. Cada componente de terceros conserva su licencia y obligaciones originales.
 13. La confianza del motor de riesgo mide calidad/completitud de datos, nunca seguridad absoluta.
 14. Las funciones críticas de emergencia no dependen de billing, analytics ni conectividad continua.
+15. Android e iOS/iPadOS son las únicas plataformas de producto soportadas actualmente.
+16. Web, Windows, macOS y Linux no forman parte del alcance activo y no deben recibir trabajo específico salvo nueva decisión de producto.
 
 ## Documentación clave
 
