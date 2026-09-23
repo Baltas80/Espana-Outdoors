@@ -57,7 +57,10 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
   RouteRecordingState build() {
     ref.onDispose(() {
       _disposed = true;
-      unawaited(_subscription?.cancel());
+      final subscription = _subscription;
+      if (subscription != null) {
+        unawaited(subscription.cancel());
+      }
     });
     unawaited(_restore());
     return const RouteRecordingState();
@@ -77,6 +80,7 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
   Future<void> start() async {
     if (state.isRecording) return;
     await _ensureLocationPermission();
+    await _persistTail;
     final startedAt = DateTime.now().toUtc();
     await _store.begin(startedAt: startedAt);
     state = RouteRecordingState(isRecording: true, startedAt: startedAt);
@@ -183,14 +187,16 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
       distanceMeters: nextDistance,
       persistenceHealthy: true,
     );
-    _persistTail = _persistTail
-        .then((_) => _store.append(
-              point: point,
-              distanceMeters: nextDistance,
-            ))
-        .catchError((Object _) {
-      if (!_disposed) {
-        state = state.copyWith(persistenceHealthy: false);
+    _persistTail = _persistTail.then<void>((_) async {
+      try {
+        await _store.append(
+          point: point,
+          distanceMeters: nextDistance,
+        );
+      } on Object {
+        if (!_disposed) {
+          state = state.copyWith(persistenceHealthy: false);
+        }
       }
     });
   }
