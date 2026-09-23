@@ -17,6 +17,7 @@ class _OfflinePageState extends State<OfflinePage> {
   final _downloader = const OfflineRegionDownloader();
   late Future<List<OfflineRegion>> _catalogFuture;
   final Map<String, Transfer> _transfers = {};
+  final Set<String> _verified = {};
 
   @override
   void initState() {
@@ -34,11 +35,26 @@ class _OfflinePageState extends State<OfflinePage> {
     try {
       final transfer = await _downloader.start(region);
       if (!mounted) return;
-      setState(() => _transfers[region.id] = transfer);
+      setState(() {
+        _transfers[region.id] = transfer;
+        _verified.remove(region.id);
+      });
+
+      final file = await transfer.file;
+      await _downloader.verifyExisting(
+        region,
+        file,
+        requireChecksum: true,
+      );
+      if (!mounted) return;
+      setState(() => _verified.add(region.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Mapa offline verificado: ${region.name}')),
+      );
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+        SnackBar(content: Text('No se pudo verificar el mapa: $error')),
       );
     }
   }
@@ -72,7 +88,7 @@ class _OfflinePageState extends State<OfflinePage> {
                     const SizedBox(width: 14),
                     Expanded(
                       child: Text(
-                        'Prepara una zona antes de salir. Los paquetes publicados por España Outdoor incluyen metadatos de versión y procedencia y pueden reanudarse cuando la plataforma lo permita.',
+                        'Prepara una zona antes de salir. Los paquetes publicados por España Outdoor deben incluir versión, procedencia, HTTPS y SHA-256 antes de poder utilizarse.',
                       ),
                     ),
                   ],
@@ -104,7 +120,7 @@ class _OfflinePageState extends State<OfflinePage> {
                 if (regions.isEmpty) {
                   return _CatalogMessage(
                     icon: Icons.cloud_off_outlined,
-                    message: 'El catálogo de regiones todavía no está configurado o no ha publicado paquetes. No se muestran zonas ficticias.',
+                    message: 'El catálogo de regiones todavía no está configurado o no ha publicado paquetes válidos. No se muestran zonas ficticias.',
                   );
                 }
                 return Column(
@@ -121,7 +137,7 @@ class _OfflinePageState extends State<OfflinePage> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'La aplicación diferencia datos descargados de información dinámica. Un paquete offline no se presenta como una alerta actual si su vigencia ha expirado.',
+              'La aplicación verifica la integridad del archivo antes de considerarlo disponible para cartografía offline. Un paquete sin SHA-256 o con una firma diferente se rechaza.',
             ),
           ],
         ),
@@ -131,6 +147,7 @@ class _OfflinePageState extends State<OfflinePage> {
 
   Widget _regionCard(OfflineRegion region) {
     final transfer = _transfers[region.id];
+    final verified = _verified.contains(region.id);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -142,6 +159,13 @@ class _OfflinePageState extends State<OfflinePage> {
             Text(region.description),
             const SizedBox(height: 4),
             Text('${_size(region.sizeBytes)} · actualizado ${region.updatedAt.toLocal()}'),
+            if (verified) ...[
+              const SizedBox(height: 10),
+              const Chip(
+                avatar: Icon(Icons.verified_outlined, size: 18),
+                label: Text('Verificado'),
+              ),
+            ],
             if (transfer != null) ...[
               const SizedBox(height: 10),
               ValueListenableBuilder<double?>(
@@ -169,11 +193,12 @@ class _OfflinePageState extends State<OfflinePage> {
                             onPressed: () => _downloader.resume(transfer),
                             icon: const Icon(Icons.play_arrow),
                           ),
-                        IconButton(
-                          tooltip: 'Cancelar',
-                          onPressed: () => _downloader.cancel(transfer),
-                          icon: const Icon(Icons.close),
-                        ),
+                        if (!status.isFinalState)
+                          IconButton(
+                            tooltip: 'Cancelar',
+                            onPressed: () => _downloader.cancel(transfer),
+                            icon: const Icon(Icons.close),
+                          ),
                       ],
                     ),
                   ],
@@ -185,7 +210,7 @@ class _OfflinePageState extends State<OfflinePage> {
                 child: FilledButton.icon(
                   onPressed: kIsWeb ? null : () => _download(region),
                   icon: const Icon(Icons.download),
-                  label: const Text('Descargar'),
+                  label: const Text('Descargar y verificar'),
                 ),
               ),
           ],
