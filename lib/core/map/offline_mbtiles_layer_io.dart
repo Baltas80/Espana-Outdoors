@@ -61,7 +61,7 @@ class _OfflineMbtilesLayerState extends State<OfflineMbtilesLayer> {
       if (!await File(path).exists()) continue;
 
       try {
-        final provider = await MbTilesTileProvider.fromSource(path);
+        final provider = await MbTilesTileProvider.fromPath(path: path);
         if (!mounted) {
           provider.dispose();
           return null;
