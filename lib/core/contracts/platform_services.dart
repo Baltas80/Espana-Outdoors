@@ -1,19 +1,16 @@
-/// Stable application contracts around mature infrastructure providers.
+/// Stable compatibility contracts around mature infrastructure providers.
 ///
-/// Product code depends on these contracts rather than directly depending on
-/// Valhalla, Keycloak, AEMET, RevenueCat, MapLibre or a particular backend.
-/// Provider adapters live outside the domain layer.
+/// New product code should prefer the focused contracts under core/map,
+/// routing, auth, rescue and subscriptions plus the canonical domain models.
 library;
 
-enum DataConfidence { official, confirmed, community, stale, unknown }
+import '../domain/outdoor_models.dart' as domain;
+
+typedef GeoPoint = domain.GeoPoint;
 
 enum LocationPrivacy { exact, approximate, private, temporary, shared }
 
-class GeoPoint {
-  const GeoPoint({required this.latitude, required this.longitude});
-  final double latitude;
-  final double longitude;
-}
+enum LegacyDataConfidence { official, confirmed, community, stale, unknown }
 
 class RouteRequest {
   const RouteRequest({required this.origin, required this.destination});
@@ -28,10 +25,16 @@ class RouteResult {
 }
 
 class WeatherSnapshot {
-  const WeatherSnapshot({required this.observedAt, required this.expiresAt, required this.confidence, this.summary});
+  const WeatherSnapshot({
+    required this.observedAt,
+    required this.expiresAt,
+    required this.confidence,
+    this.summary,
+  });
+
   final DateTime observedAt;
   final DateTime expiresAt;
-  final DataConfidence confidence;
+  final LegacyDataConfidence confidence;
   final String? summary;
 }
 
@@ -64,7 +67,10 @@ abstract interface class StorageService {
 
 abstract interface class EmergencyService {
   Future<void> callEmergencyServices();
-  Future<void> shareLocation({required GeoPoint point, required LocationPrivacy privacy});
+  Future<void> shareLocation({
+    required GeoPoint point,
+    required LocationPrivacy privacy,
+  });
 }
 
 abstract interface class AlertService {
