@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
@@ -14,11 +13,8 @@ Future<void> main() async {
   await Hive.openBox<Map<dynamic, dynamic>>('offline_regions');
   await Hive.openBox<String>('weather_cache');
 
-  // background_downloader is the mature native transfer layer for Android,
-  // iOS, Windows, macOS and Linux. Web keeps its own browser download path.
-  if (!kIsWeb) {
-    await FileDownloader().start(autoCleanDatabase: true);
-  }
+  // Used for large offline package transfers on Android and iOS.
+  await FileDownloader().start(autoCleanDatabase: true);
 
   await SentryObservability.run(() async {
     runApp(const ProviderScope(child: EspanaOutdoorApp()));
