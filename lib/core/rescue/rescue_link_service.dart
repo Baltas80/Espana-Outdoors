@@ -26,7 +26,8 @@ class RescueLinkService {
   }
 
   bool canRespond(RescueLinkAlert alert) {
-    return !alert.expired && alert.state == RescueLinkState.active;
+    return !alert.expiredAt(DateTime.now()) &&
+        alert.state == RescueLinkState.active;
   }
 
   String _id() {
