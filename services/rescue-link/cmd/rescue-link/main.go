@@ -7,7 +7,6 @@ import (
     "crypto/rand"
     "crypto/sha256"
     "crypto/subtle"
-    "embed"
     "encoding/base64"
     "encoding/hex"
     "encoding/json"
@@ -33,8 +32,6 @@ import (
     "golang.org/x/time/rate"
 )
 
-//go:embed ../../migrations/001_rescue_links.sql
-var schemaSQL string
 
 var emergencyTypes = map[string]struct{}{
     "accident": {},
@@ -162,7 +159,13 @@ func main() {
         log.Error("database unavailable", "error", err)
         os.Exit(1)
     }
-    if _, err = db.Exec(ctx, schemaSQL); err != nil {
+    migrationPath := envOrDefault("RESCUE_MIGRATION_PATH", "migrations/001_rescue_links.sql")
+    migration, err := os.ReadFile(migrationPath)
+    if err != nil {
+        log.Error("database migration file missing", "path", migrationPath, "error", err)
+        os.Exit(1)
+    }
+    if _, err = db.Exec(ctx, string(migration)); err != nil {
         log.Error("database migration failed", "error", err)
         os.Exit(1)
     }
