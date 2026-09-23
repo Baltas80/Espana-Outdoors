@@ -8,7 +8,9 @@ final class RescueLinkConfig {
   final bool allowHttpForDevelopment;
 
   bool get isConfigured =>
-      baseUrl.hasScheme && baseUrl.host.isNotEmpty;
+      baseUrl.host.isNotEmpty &&
+      (baseUrl.scheme == 'https' ||
+          (allowHttpForDevelopment && baseUrl.scheme == 'http'));
 
   static RescueLinkConfig fromEnvironment() {
     const raw = String.fromEnvironment('RESCUE_LINK_BASE_URL');
