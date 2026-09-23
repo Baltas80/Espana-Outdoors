@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../../domain/subscriptions/entitlements.dart';
+import '../../infrastructure/subscriptions/revenuecat_subscription_service.dart';
 
-class PlansPage extends StatelessWidget {
+class PlansPage extends StatefulWidget {
   const PlansPage({super.key});
+
+  @override
+  State<PlansPage> createState() => _PlansPageState();
+}
+
+class _PlansPageState extends State<PlansPage> {
+
+  final _subscriptions = RevenueCatSubscriptionService.fromEnvironment();
 
   static const _features = <({String label, OutdoorEntitlement entitlement})>[
     (label: 'Descubrimiento y planificación de rutas', entitlement: OutdoorEntitlement.routeDiscovery),
@@ -26,6 +36,34 @@ class PlansPage extends StatelessWidget {
         OutdoorPlan.professional => 'PROFESSIONAL',
       };
 
+  Future<void> _openPremium() async {
+    try {
+      await _subscriptions.configure();
+      await RevenueCatUI.presentPaywallIfNeeded('premium');
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Suscripciones no disponibles: $error')),
+      );
+    }
+  }
+
+  Future<void> _restore() async {
+    try {
+      await _subscriptions.configure();
+      await _subscriptions.restorePurchases();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Compras restauradas.')),
+      );
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudieron restaurar las compras: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,6 +77,17 @@ class PlansPage extends StatelessWidget {
                   )),
           const SizedBox(height: 8),
           const Text('Las capacidades se controlan mediante entitlements, no mediante comprobaciones dispersas en la interfaz.'),
+          FilledButton.icon(
+            onPressed: _openPremium,
+            icon: const Icon(Icons.workspace_premium_outlined),
+            label: const Text('Ver opciones de suscripción'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _restore,
+            icon: const Icon(Icons.restore),
+            label: const Text('Restaurar compras'),
+          ),
           const SizedBox(height: 20),
           for (final plan in OutdoorPlan.values) ...[
             Card(
