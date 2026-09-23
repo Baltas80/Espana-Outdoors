@@ -4,7 +4,7 @@ Status: accepted for MVP evaluation
 
 ## Decisions
 
-- Use flutter_map 8.3.2 as the current renderer boundary and flutter_map_mbtiles 1.0.4 plus mbtiles 0.5.1 for guaranteed local MBTiles archives on native platforms.
+- Use flutter_map 8.3.2 as the current renderer boundary and flutter_map_mbtiles 1.0.4 plus mbtiles 0.4.2 for guaranteed local MBTiles archives on native platforms.
 - Use Dio 5.11.1 for resumable HTTP archive downloads and cancellation/progress primitives.
 - Use Valhalla 3.9.0 as the first routing/elevation adapter candidate. It provides route, elevation, map matching and tiled data suitable for regional/offline architectures.
 - Use battery_plus 7.1.1 for cross-platform battery telemetry in emergency snapshots.
