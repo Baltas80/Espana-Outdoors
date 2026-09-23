@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -65,14 +66,11 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
 
     state = RouteRecordingState(
       isRecording: true,
-      startedAt: DateTime.now(),
+      startedAt: DateTime.now().toUtc(),
     );
 
     _subscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 5,
-      ),
+      locationSettings: _locationSettings(),
     ).listen(_onPosition);
   }
 
@@ -80,6 +78,38 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
     await _subscription?.cancel();
     _subscription = null;
     state = state.copyWith(isRecording: false);
+  }
+
+  LocationSettings _locationSettings() {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return const AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+        intervalDuration: Duration(seconds: 5),
+        foregroundNotificationConfig: ForegroundNotificationConfig(
+          notificationTitle: 'España Outdoor',
+          notificationText: 'Grabando tu ruta en segundo plano.',
+          notificationChannelName: 'Seguimiento GPS',
+          enableWakeLock: true,
+        ),
+      );
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return const AppleSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+        activityType: ActivityType.fitness,
+        pauseLocationUpdatesAutomatically: false,
+        allowBackgroundLocationUpdates: true,
+        showBackgroundLocationIndicator: true,
+      );
+    }
+
+    return const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 5,
+    );
   }
 
   void _onPosition(Position position) {
