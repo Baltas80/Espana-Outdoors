@@ -24,7 +24,7 @@ class OfflineDownloadProgress {
           : (completedBytes / totalBytes!).clamp(0, 1);
 }
 
-abstract interface class OfflineMapDownloadService extends MapService {
+abstract class OfflineMapDownloadService extends MapService {
   Stream<OfflineDownloadProgress> watch(String regionId);
 
   Future<void> verifyOfflineRegion(String regionId);
