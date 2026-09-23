@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../core/contracts/routing_service.dart';
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
 
@@ -12,7 +13,9 @@ import '../../core/location/route_recorder.dart';
 /// are shown only when a real route/step feed is available from the routing
 /// provider.
 class NavigationPage extends ConsumerStatefulWidget {
-  const NavigationPage({super.key});
+  const NavigationPage({super.key, this.route});
+
+  final RouteResult? route;
 
   @override
   ConsumerState<NavigationPage> createState() => _NavigationPageState();
@@ -130,6 +133,39 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
               ),
             ),
             const SizedBox(height: 12),
+            if (widget.route != null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Ruta calculada',
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${((widget.route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((widget.route!.durationSeconds ?? 0) / 60).round()} min',
+                      ),
+                      if (widget.route!.steps.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        for (final step in widget.route!.steps.take(3))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.turn_right_outlined, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(step.instruction)),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(18),
@@ -139,8 +175,10 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                     Text('Instrucciones de ruta',
                         style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Las indicaciones giro a giro aparecerán cuando exista una ruta calculada con pasos reales. No se muestran instrucciones inventadas.',
+                    Text(
+                      widget.route == null
+                          ? 'Las indicaciones giro a giro aparecerán cuando exista una ruta calculada con pasos reales. No se muestran instrucciones inventadas.'
+                          : 'La ruta usa pasos devueltos por el motor de routing configurado.',
                     ),
                   ],
                 ),
