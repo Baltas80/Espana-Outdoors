@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 
 import '../../core/auth/oidc_config.dart';
 import '../../core/domain/outdoor_models.dart';
@@ -24,17 +25,20 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
   late final OpenIdConnectAuthService _auth =
       OpenIdConnectAuthService(OidcConfig.fromEnvironment());
   late final RescueLinkConfig _config = RescueLinkConfig.fromEnvironment();
+  final http.Client _httpClient = http.Client();
   RescueLinkRemoteSession? _session;
   bool _busy = false;
 
-  RescueLinkGateway get _gateway => HttpRescueLinkGateway(
-        baseUrl: _config.baseUrl,
-        accessToken: _auth.accessToken,
-        allowHttpForDevelopment: _config.allowHttpForDevelopment,
-      );
+  late final RescueLinkGateway _gateway = HttpRescueLinkGateway(
+    baseUrl: _config.baseUrl,
+    accessToken: _auth.accessToken,
+    client: _httpClient,
+    allowHttpForDevelopment: _config.allowHttpForDevelopment,
+  );
 
   @override
   void dispose() {
+    _httpClient.close();
     unawaited(_auth.dispose());
     super.dispose();
   }
