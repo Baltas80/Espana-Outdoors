@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rescue_link
+      POSTGRES_USER: rescue_link
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the deployment secret store}
+    volumes:
+      - rescue-link-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rescue_link -d rescue_link"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rescue-link:
+    build:
+      context: ../../services/rescue-link
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      DATABASE_URL: postgres://rescue_link:${POSTGRES_PASSWORD}@postgres:5432/rescue_link?sslmode=disable
+      OIDC_ISSUER: ${OIDC_ISSUER:?set OIDC_ISSUER in the deployment secret store}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:?set OIDC_AUDIENCE in the deployment secret store}
+      PUBLIC_SHARE_BASE_URL: ${PUBLIC_SHARE_BASE_URL:?set PUBLIC_SHARE_BASE_URL to the HTTPS public edge}
+      LOCATION_ENCRYPTION_KEY: ${LOCATION_ENCRYPTION_KEY:?set LOCATION_ENCRYPTION_KEY in the deployment secret store}
+      RESCUE_MAX_TTL: 15m
+      RESCUE_RETENTION: 24h
+      RESCUE_CAPABILITY_TTL: 5m
+      RESCUE_MAX_RESPONDERS: 5
+      RESCUE_RATE_LIMIT_RPS: 2
+      RESCUE_RATE_LIMIT_BURST: 10
+      ENABLE_HSTS: "true"
+      ALLOW_HTTP_DEV: "false"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "/app/rescue-link", "--healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  rescue-link-postgres:
