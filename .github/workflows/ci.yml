@@ -103,6 +103,45 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
+      - name: Focused iOS safety and offline tests
+        run: >-
+          flutter test
+          test/routing_config_test.dart
+          test/offline_region_test.dart
+          test/valhalla_routing_service_test.dart
+          test/core/route_recording_store_test.dart
+          test/core/offline_package_verifier_test.dart
+          test/core/offline_sync_store_test.dart
+          test/core/offline_sync_runner_test.dart
+          test/core/emergency_share_service_test.dart
+          test/core/rescue_link_policy_test.dart
+          test/remote_source_gateway_test.dart
+
+      - name: Full iOS test suite
+        run: flutter test
+
+      - name: Verify iOS native location configuration
+        run: |
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+
+          path = Path('ios/Runner/Info.plist')
+          with path.open('rb') as handle:
+              plist = plistlib.load(handle)
+
+          required = {
+              'NSLocationWhenInUseUsageDescription',
+              'NSLocationAlwaysAndWhenInUseUsageDescription',
+          }
+          missing = sorted(required - plist.keys())
+          if missing:
+              raise SystemExit(f'Missing iOS location usage descriptions: {missing}')
+
+          if 'location' not in plist.get('UIBackgroundModes', []):
+              raise SystemExit('Missing iOS background location mode.')
+          PY
+
       - name: iOS release build
         run: flutter build ios --release --no-codesign
 
