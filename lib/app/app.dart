@@ -5,6 +5,7 @@ import '../features/alerts/alerts_page.dart';
 import '../features/explore/explore_page.dart';
 import '../features/home/home_page.dart';
 import '../features/map/map_page.dart';
+import '../features/navigation/navigation_page.dart';
 import '../features/offline/offline_page.dart';
 import '../features/profile/plans_page.dart';
 import '../features/profile/profile_page.dart';
@@ -40,6 +41,7 @@ class EspanaOutdoorApp extends StatelessWidget {
         },
       ),
       GoRoute(path: '/map', builder: (_, __) => const MapPage()),
+      GoRoute(path: '/navigation', builder: (_, __) => const NavigationPage()),
       GoRoute(path: '/pets', builder: (_, __) => const PetsPage()),
       GoRoute(path: '/wildlife', builder: (_, __) => const WildlifePage()),
       GoRoute(path: '/natura', builder: (_, __) => const NaturaProtectPage()),
