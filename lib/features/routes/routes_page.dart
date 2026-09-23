@@ -119,6 +119,7 @@ class _RoutesPageState extends State<RoutesPage> {
             _RouteCard(
               route: route,
               onOpen: () => context.push('/routes/detail', extra: route),
+              onPlan: () => context.push('/safety/plan', extra: route),
             ),
             const SizedBox(height: 12),
           ],
@@ -182,10 +183,11 @@ class _ImportedTrackCard extends StatelessWidget {
 }
 
 class _RouteCard extends StatelessWidget {
-  const _RouteCard({required this.route, required this.onOpen});
+  const _RouteCard({required this.route, required this.onOpen, required this.onPlan});
 
   final RouteSummary route;
   final VoidCallback onOpen;
+  final VoidCallback onPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -208,10 +210,20 @@ class _RouteCard extends StatelessWidget {
               '${route.distanceKm.toStringAsFixed(1)} km  •  +${route.elevationGainM.toStringAsFixed(0)} m  •  ${route.durationMinutes} min',
             ),
             const SizedBox(height: 12),
-            FilledButton.tonalIcon(
-              onPressed: onOpen,
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('Abrir detalle'),
+            Wrap(
+              spacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: onOpen,
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Abrir detalle'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onPlan,
+                  icon: const Icon(Icons.shield_outlined),
+                  label: const Text('Planificar'),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Wrap(
