@@ -82,3 +82,6 @@ jobs:
 
       - name: Tests
         run: go test ./...
+
+      - name: Container build
+        run: docker build -t espana-outdoors-rescue-link:ci .
