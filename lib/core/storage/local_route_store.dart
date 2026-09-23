@@ -19,6 +19,8 @@ class LocalRouteStore {
       'descentMeters': track.descentMeters,
       'startedAt': track.startedAt?.toIso8601String(),
       'endedAt': track.endedAt?.toIso8601String(),
+      'elevationsMeters': track.elevationsMeters,
+      'timestamps': track.timestamps?.map((value) => value?.toIso8601String()).toList(growable: false),
       'points': track.points
           .map((point) => {
                 'latitude': point.latitude,
@@ -55,6 +57,8 @@ class LocalRouteStore {
       descentMeters: _asDouble(record['descentMeters']) ?? 0,
       startedAt: _asDate(record['startedAt']),
       endedAt: _asDate(record['endedAt']),
+      elevationsMeters: _asDoubleList(record['elevationsMeters']),
+      timestamps: _asDateList(record['timestamps']),
     );
   }
 
@@ -68,5 +72,15 @@ class LocalRouteStore {
   DateTime? _asDate(Object? value) {
     final raw = value?.toString();
     return raw == null ? null : DateTime.tryParse(raw);
+  }
+
+  List<double?>? _asDoubleList(Object? value) {
+    if (value is! List) return null;
+    return value.map(_asDouble).toList(growable: false);
+  }
+
+  List<DateTime?>? _asDateList(Object? value) {
+    if (value is! List) return null;
+    return value.map(_asDate).toList(growable: false);
   }
 }
