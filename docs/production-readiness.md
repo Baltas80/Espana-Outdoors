@@ -17,7 +17,7 @@ España Outdoor uses mature third-party infrastructure for commodity layers and 
 - Sentry: crash/error telemetry.
 - GitHub Actions + Dependabot + Trivy + Gitleaks: CI and supply-chain baseline.
 - Rescue Link first-party Go service: server-authoritative expiry, revocation and role-scoped location access.
-- SHA-256 verification for offline packages when the catalogue supplies a checksum.
+- SHA-256 verification is mandatory for published offline packages; regions without a valid 64-hex checksum are rejected.
 
 ## Rescue Link backend
 
@@ -49,7 +49,7 @@ Secrets and provider endpoints are injected at build/deployment time. They must 
 | RESCUE_LINK_BASE_URL | First-party Rescue Link API | Yes |
 | SENTRY_DSN | Error/crash telemetry | Yes |
 | APP_ENV | Environment label | Yes |
-| MAP_TILE_URL | Contracted or owned online map provider | Yes for raster MVP; replace with vector/PMTiles where deployed |
+| MAP_TILE_URL | Contracted or owned online map provider | Required only for the configured online map mode; production still fails closed without an approved provider |
 | MAP_ATTRIBUTION | Required map attribution | Yes when provider requires it |
 | REVENUECAT_API_KEY | Public RevenueCat SDK key | Yes for store billing |
 | OIDC_ISSUER | Keycloak/OIDC issuer | Yes |
@@ -66,7 +66,7 @@ Emergency features must not depend on analytics, billing or remote map availabil
 
 A production release is blocked unless:
 
-1. flutter analyze passes.
+1. flutter analyze passes with no warnings/errors.
 2. Unit and widget tests pass.
 3. Routing/offline focused tests pass.
 4. Go backend tests and vet pass.
@@ -77,7 +77,8 @@ A production release is blocked unless:
 9. No production endpoint or secret is hard-coded in the client.
 10. SOS/112 flows have been tested on supported mobile hardware.
 11. Offline navigation has been tested with connectivity disabled.
-12. Rescue Link backend expiry, revocation and role-based visibility have been integration-tested.
+12. Android release APK/AAB and iOS release (no-code-sign CI build) complete successfully.
+13. Rescue Link backend expiry, revocation and role-based visibility have been integration-tested.
 
 ## Known external prerequisites
 
