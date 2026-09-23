@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:espana_outdoors/core/domain/outdoor_models.dart';
 import 'package:espana_outdoors/core/rescue/rescue_link_policy.dart';
 import 'package:espana_outdoors/core/rescue/rescue_link_service.dart';
-import 'package:espana_outdoors/core/contracts/platform_services.dart';
+import 'package:espana_outdoors/core/contracts/platform_services.dart' show LocationPrivacy;
 
 void main() {
   group('Rescue Link', () {
