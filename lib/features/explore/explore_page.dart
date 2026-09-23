@@ -42,6 +42,10 @@ class ExplorePage extends StatelessWidget {
                         context.go('/pets');
                       case 'Fauna':
                         context.go('/wildlife');
+                      case 'Meteorología':
+                        context.go('/weather');
+                      case 'Incendios':
+                        context.go('/safety/alerts');
                       case 'Offline':
                         context.go('/offline');
                       default:
