@@ -81,6 +81,7 @@ class ValhallaRoutingService implements RoutingService {
     }
 
     final points = <LatLng>[];
+    final steps = <RouteStep>[];
     var distanceKm = 0.0;
     var durationSeconds = 0.0;
 
@@ -92,6 +93,25 @@ class ValhallaRoutingService implements RoutingService {
         // Valhalla reports summary.time in seconds, not minutes.
         durationSeconds += (summary['time'] as num?)?.toDouble() ?? 0;
       }
+
+      final maneuvers = item['maneuvers'];
+      if (maneuvers is List) {
+        for (final maneuver in maneuvers) {
+          if (maneuver is! Map<String, dynamic>) continue;
+          final instruction = maneuver['instruction'];
+          if (instruction is! String || instruction.trim().isEmpty) continue;
+          steps.add(
+            RouteStep(
+              instruction: instruction,
+              distanceMeters: _number(maneuver['length'], multiplier: 1000),
+              durationSeconds: _number(maneuver['time']),
+              beginShapeIndex: (maneuver['begin_shape_index'] as num?)?.toInt(),
+              endShapeIndex: (maneuver['end_shape_index'] as num?)?.toInt(),
+            ),
+          );
+        }
+      }
+
       final shape = item['shape'];
       if (shape is Map<String, dynamic>) {
         final coordinates = shape['coordinates'];
@@ -119,7 +139,13 @@ class ValhallaRoutingService implements RoutingService {
       points: points,
       distanceMeters: distanceKm * 1000,
       durationSeconds: durationSeconds,
+      steps: List.unmodifiable(steps),
     );
+  }
+
+  static double? _number(Object? value, {double multiplier = 1}) {
+    final number = value as num?;
+    return number == null ? null : number.toDouble() * multiplier;
   }
 
   String _costing(String profile) {
