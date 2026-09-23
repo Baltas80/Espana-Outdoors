@@ -455,7 +455,7 @@ func (s *server) revoke(w http.ResponseWriter, r *http.Request) {
     if !s.allow("subject:"+p.Subject) { writeError(w, http.StatusTooManyRequests, "rate limit exceeded"); return }
     id := r.PathValue("id")
     if id == "" { writeError(w, http.StatusBadRequest, "invalid id"); return }
-    tag, err := s.db.Exec(r.Context(), `UPDATE rescue_links SET revoked_at=$3 WHERE id=$1 AND owner_subject=$2 AND revoked_at IS NULL`, id, p.Subject, time.Now().UTC())
+    tag, err := s.db.Exec(r.Context(), `UPDATE rescue_links SET revoked_at=COALESCE(revoked_at,$3) WHERE id=$1 AND owner_subject=$2`, id, p.Subject, time.Now().UTC())
     if err != nil { s.log.Error("rescue revoke failed", "error", err); writeError(w, http.StatusInternalServerError, "temporary failure"); return }
     if tag.RowsAffected() == 0 { writeError(w, http.StatusNotFound, "Rescue Link not found"); return }
     w.WriteHeader(http.StatusNoContent)
