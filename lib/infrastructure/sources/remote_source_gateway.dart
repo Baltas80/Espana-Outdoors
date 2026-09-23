@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/contracts/source_gateway.dart';
+import '../../core/source_gateway/source_gateway_config.dart';
 
 typedef AccessTokenProvider = Future<String?> Function();
 
@@ -25,6 +26,7 @@ final class RemoteSourceGateway implements SourceGateway {
 
   final Uri baseUri;
   final http.Client _client;
+  final AccessTokenProvider? accessTokenProvider;
   final AccessTokenProvider? accessTokenProvider;
 
   @override
@@ -129,6 +131,30 @@ final class RemoteSourceGateway implements SourceGateway {
       }
     }
     return headers;
+  }
+
+  Future<Map<String, String>> _headers() async {
+    final headers = <String, String>{'Accept': 'application/json'};
+    final provider = accessTokenProvider;
+    if (provider == null) return headers;
+    final token = (await provider())?.trim();
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
+
+  static RemoteSourceGateway fromEnvironment({
+    AccessTokenProvider? accessTokenProvider,
+    http.Client? client,
+  }) {
+    final config = SourceGatewayConfig.fromEnvironment();
+    config.validate();
+    return RemoteSourceGateway(
+      baseUri: config.baseUri,
+      accessTokenProvider: accessTokenProvider,
+      client: client,
+    );
   }
 
   Uri _uri(String path, {Map<String, String>? queryParameters}) {
