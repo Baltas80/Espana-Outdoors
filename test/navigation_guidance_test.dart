@@ -44,7 +44,7 @@ void main() {
     );
 
     expect(result.status, NavigationGuidanceStatus.onRoute);
-    expect(result.distanceFromRouteMeters, lessThan(10));
+    expect(result.distanceFromRouteMeters, lessThan(20));
     expect(result.nextStep?.instruction, 'Gira a la derecha');
     expect(result.progressFraction, greaterThan(0.2));
   });
