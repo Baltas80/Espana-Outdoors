@@ -42,7 +42,7 @@ final class OfflineSyncRunner {
             operation.attempts + 1 < maxAttempts) {
           await _defer(operation);
         } else {
-          await _store.remove(operation.id);
+          await _store.markFailed(operation.id);
         }
       } on Object {
         if (operation.attempts + 1 < maxAttempts) {
