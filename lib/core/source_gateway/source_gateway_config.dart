@@ -18,7 +18,7 @@ final class SourceGatewayConfig {
 
   void validate() {
     if (!isConfigured) {
-      throw const StateError(
+      throw StateError(
         'SOURCE_GATEWAY_BASE_URL is missing or is not an HTTPS URL.',
       );
     }
