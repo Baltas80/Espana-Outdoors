@@ -39,7 +39,7 @@ void main() {
   test('reports on-route guidance with the next real maneuver', () {
     final result = engine.evaluate(
       route: _route(),
-      position: const GeoPoint(latitude: 40.0006, longitude: -3.00002),
+      position: const GeoPoint(latitude: 40.0001, longitude: -3.00002),
       accuracyMeters: 5,
     );
 
