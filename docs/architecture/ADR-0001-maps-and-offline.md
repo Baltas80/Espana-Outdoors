@@ -98,6 +98,8 @@ Official and open layers must preserve provenance:
 - transformation pipeline version
 - confidence/quality state
 
+Offline packages must carry provider ID, HTTPS licence URL and attribution before a region can reach `ready`.
+
 ### IGN/CNIG
 
 IGN states that its geographic information policy is compatible with CC BY 4.0, with the applicable general conditions and attribution requirements. España Outdoor must preserve IGN/CNIG attribution and source metadata in derived layers and exports.
