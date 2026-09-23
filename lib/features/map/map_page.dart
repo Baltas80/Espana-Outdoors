@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -134,6 +136,7 @@ class _MapLibreSurfaceState extends State<_MapLibreSurface>
   Future<void> _loadStyle() async {
     try {
       final local = await _styles.findLatestLocalRegion();
+      final location = null;
       final style = await _styles.load(localPmtilesPath: local);
       if (!mounted) return;
       setState(() {
@@ -194,7 +197,7 @@ class _MapLibreSurfaceState extends State<_MapLibreSurface>
       myLocationEnabled: true,
       myLocationTrackingMode: ml.MyLocationTrackingMode.none,
       compassEnabled: true,
-      attributionButtonMargins: const Point(12, 12),
+      attributionButtonMargins: const math.Point(12, 12),
     );
   }
 }
