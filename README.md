@@ -14,6 +14,8 @@ Plataforma multiplataforma para naturaleza, rutas, seguridad, mascotas, fauna, c
 - Atribución visible de OpenStreetMap en el mapa.
 - ADR de cartografía/offline con decisión de no usar los servidores públicos de teselas OSM para descargas offline.
 - Arquitectura preparada para sustituir proveedor cartográfico sin acoplar la UI al proveedor.
+- Licencia propietaria incorporada para el código y activos propios; las dependencias de terceros conservan sus licencias.
+- Registro inicial de dependencias y alternativas maduras en `docs/THIRD_PARTY_LICENSES.md`.
 
 ## Objetivos
 
@@ -84,12 +86,16 @@ flutter run -d chrome
 8. Ningún secreto entra en Git.
 9. No usar `tile.openstreetmap.org` para descargas offline o prefetched bulk.
 10. Las decisiones de proveedor deben considerar licencia, capacidad, coste, lock-in y rendimiento.
+11. El código y los activos propios de España Outdoor son propietarios salvo indicación expresa.
+12. Cada componente de terceros conserva su licencia y obligaciones originales.
 
 ## Documentación clave
 
 - `docs/brand_system.md` — identidad visual y Design System.
 - `docs/architecture/ADR-0001-maps-and-offline.md` — estrategia de cartografía, proveedores y offline.
+- `docs/THIRD_PARTY_LICENSES.md` — registro de software de terceros y alternativas maduras.
+- `LICENSE.md` — licencia propietaria de España Outdoor.
 
 ## Licencia
 
-Pendiente de decisión del propietario antes del lanzamiento público. Las dependencias de terceros mantienen sus propias licencias.
+El código, diseño y activos propios de España Outdoor están bajo **licencia propietaria**. El repositorio público no concede por sí mismo derechos de reutilización, redistribución, modificación o creación de productos derivados. Los componentes y datos de terceros se rigen por sus respectivas licencias y condiciones.
