@@ -1,35 +1,54 @@
 openapi: 3.1.0
 info:
   title: España Outdoor Live Data Gateway
-  version: 0.2.1
+  version: 0.3.0
   description: Provider-neutral boundary for official and licensed outdoor data.
 servers:
   - url: https://api.example.invalid
-security:
-  - bearerAuth: []
 paths:
-  /v1/weather:
+  /health:
     get:
       security: []
+      operationId: health
+      responses:
+        '200':
+          description: Gateway health
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+  /v1/weather:
+    get:
+      security:
+        - bearerAuth: []
       operationId: getWeather
-      summary: Get normalized weather with provenance
+      summary: Get municipal daily weather with provenance
       parameters:
         - name: municipalityCode
           in: query
           required: true
           schema:
             type: string
-            pattern: '^\\d{5}$'
+            pattern: '^\d{5}$'
       responses:
         '200':
-          description: Normalized weather response
+          description: Weather response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DataEnvelope'
-        '401': {description: Authentication required}
-        '429': {description: Rate limit exceeded}
-        '503': {description: Provider unavailable}
+        '400':
+          description: Invalid municipality code
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limit exceeded
+        '503':
+          description: Provider unavailable
   /v1/maps/catalog:
     get:
       security: []
@@ -37,200 +56,148 @@ paths:
       summary: Get available offline map packages
       responses:
         '200':
-          description: Offline package catalog with provenance
+          description: Offline map catalog
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MapCatalogEnvelope'
-        '429': {description: Rate limit exceeded}
-        '503': {description: Offline catalog unavailable}
-  /v1/route:
-    post:
-      operationId: calculateRoute
-      summary: Calculate a normalized route through the configured routing provider
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RouteRequest'
-      responses:
-        '200':
-          description: Normalized route
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataEnvelope'
-        '400': {description: Invalid route request}
-        '429': {description: Rate limit exceeded}
-        '503': {description: Routing provider unavailable}
-  /v1/elevation:
-    post:
-      operationId: sampleElevation
-      summary: Sample normalized elevation for route points
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ElevationRequest'
-      responses:
-        '200':
-          description: Elevation profile
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataEnvelope'
-        '400': {description: Invalid coordinates}
-        '503': {description: Elevation provider unavailable}
-  /v1/alerts:
-    get:
-      operationId: getAlerts
-      summary: Get normalized safety alerts with authority and provenance
-      parameters:
-        - name: lat
-          in: query
-          required: true
-          schema: {type: number, minimum: -90, maximum: 90}
-        - name: lon
-          in: query
-          required: true
-          schema: {type: number, minimum: -180, maximum: 180}
-        - name: radiusKm
-          in: query
-          schema: {type: number, minimum: 0, maximum: 500, default: 25}
-      responses:
-        '200':
-          description: Normalized alerts
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AlertEnvelope'
-        '401': {description: Authentication required}
-        '429': {description: Rate limit exceeded}
-        '503': {description: Alert providers unavailable}
-  /v1/health/providers:
-    get:
-      operationId: providerHealth
-      summary: Provider health without exposing credentials
-      security: []
-      responses:
-        '200': {description: Provider health summary}
+        '429':
+          description: Rate limit exceeded
+        '503':
+          description: Offline catalog unavailable
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
-    Coordinate:
-      type: object
-      required: [latitude, longitude]
-      properties:
-        latitude: {type: number, minimum: -90, maximum: 90}
-        longitude: {type: number, minimum: -180, maximum: 180}
-    RouteRequest:
-      type: object
-      required: [waypoints, profile]
-      properties:
-        waypoints:
-          type: array
-          minItems: 2
-          items: {$ref: '#/components/schemas/Coordinate'}
-        profile: {type: string, enum: [hiking, cycling, trailRunning, walking]}
-        allowUnpaved: {type: boolean, default: true}
-    ElevationRequest:
-      type: object
-      required: [points]
-      properties:
-        points:
-          type: array
-          minItems: 1
-          items: {$ref: '#/components/schemas/Coordinate'}
-    Alert:
-      type: object
-      required: [id, authority, type, severity, confidence, title, sourceName, sourceUrl, issuedAt, updatedAt, validUntil]
-      properties:
-        id: {type: string}
-        authority: {type: string, enum: [official, espanaOutdoor]}
-        type: {type: string, enum: [wildfire, flood, storm, wind, snow, heat, cold, earthquake, tsunami, volcano, landslide, closure, other]}
-        severity: {type: string, enum: [information, caution, danger, emergency]}
-        confidence: {type: string, enum: [confirmed, probable, preliminary, unknown]}
-        title: {type: string}
-        description: {type: string}
-        sourceName: {type: string}
-        sourceUrl: {type: string, format: uri}
-        issuedAt: {type: string, format: date-time}
-        updatedAt: {type: string, format: date-time}
-        validUntil: {type: string, format: date-time}
-        regionId: {type: string}
     Provenance:
       type: object
-      required: [sourceId, sourceName, retrievedAt, freshnessState, confidence]
+      required:
+        - sourceId
+        - sourceName
+        - retrievedAt
+        - freshnessState
+        - confidence
       properties:
-        sourceId: {type: string}
-        sourceName: {type: string}
-        sourceUrl: {type: string, format: uri}
-        license: {type: string}
-        attribution: {type: string}
-        retrievedAt: {type: string, format: date-time}
-        sourceUpdatedAt: {type: string, format: date-time}
-        validFrom: {type: string, format: date-time}
-        validUntil: {type: string, format: date-time}
-        freshnessState: {type: string, enum: [fresh, stale, unavailable, unknown]}
-        confidence: {type: number, minimum: 0, maximum: 1}
-        adapterVersion: {type: string}
+        sourceId:
+          type: string
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+          format: uri
+        license:
+          type: string
+        attribution:
+          type: string
+        retrievedAt:
+          type: string
+          format: date-time
+        sourceUpdatedAt:
+          type: string
+          format: date-time
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        freshnessState:
+          type: string
+          enum: [fresh, stale, unavailable, unknown]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        adapterVersion:
+          type: string
+
     DataEnvelope:
       type: object
       required: [data, provenance]
       properties:
-        data: {type: object, additionalProperties: true}
-        provenance: {$ref: '#/components/schemas/Provenance'}
+        data:
+          type: object
+          additionalProperties: true
+        provenance:
+          $ref: '#/components/schemas/Provenance'
+
+    Bounds:
+      type: object
+      required: [west, south, east, north]
+      properties:
+        west:
+          type: number
+          minimum: -180
+          maximum: 180
+        south:
+          type: number
+          minimum: -90
+          maximum: 90
+        east:
+          type: number
+          minimum: -180
+          maximum: 180
+        north:
+          type: number
+          minimum: -90
+          maximum: 90
+
     MapPackage:
       type: object
-      required: [id, name, providerId, version, uri, sha256, bytes, bounds, minZoom, maxZoom]
+      required:
+        - id
+        - name
+        - providerId
+        - version
+        - uri
+        - sha256
+        - bytes
+        - bounds
+        - minZoom
+        - maxZoom
       properties:
-        id: {type: string}
-        name: {type: string}
-        providerId: {type: string}
-        version: {type: string}
-        uri: {type: string, format: uri}
-        sha256: {type: string, pattern: '^[A-Fa-f0-9]{64}
-      required: [alerts, generatedAt]
-      properties:
-        alerts:
-          type: array
-          items: {$ref: '#/components/schemas/Alert'}
-        generatedAt: {type: string, format: date-time}
-        provenance: {$ref: '#/components/schemas/Provenance'}
-}
-        bytes: {type: integer, minimum: 1}
-        license: {type: string}
-        attribution: {type: string}
+        id:
+          type: string
+        name:
+          type: string
+        providerId:
+          type: string
+        version:
+          type: string
+        uri:
+          type: string
+          format: uri
+        sha256:
+          type: string
+          pattern: '^[A-Fa-f0-9]{64}$'
+        bytes:
+          type: integer
+          minimum: 1
+        license:
+          type: string
+        attribution:
+          type: string
         bounds:
-          type: object
-          required: [west, south, east, north]
-          properties:
-            west: {type: number, minimum: -180, maximum: 180}
-            south: {type: number, minimum: -90, maximum: 90}
-            east: {type: number, minimum: -180, maximum: 180}
-            north: {type: number, minimum: -90, maximum: 90}
-        minZoom: {type: integer, minimum: 0}
-        maxZoom: {type: integer, minimum: 0}
+          $ref: '#/components/schemas/Bounds'
+        minZoom:
+          type: integer
+          minimum: 0
+        maxZoom:
+          type: integer
+          minimum: 0
+
     MapCatalogEnvelope:
       type: object
       required: [data, provenance]
       properties:
         data:
           type: array
-          items: {$ref: '#/components/schemas/MapPackage'}
-        provenance: {$ref: '#/components/schemas/Provenance'}
-    AlertEnvelope:
-      type: object
-      required: [alerts, generatedAt]
-      properties:
-        alerts:
-          type: array
-          items: {$ref: '#/components/schemas/Alert'}
-        generatedAt: {type: string, format: date-time}
-        provenance: {$ref: '#/components/schemas/Provenance'}
+          items:
+            $ref: '#/components/schemas/MapPackage'
+        provenance:
+          $ref: '#/components/schemas/Provenance'
