@@ -42,8 +42,7 @@ class OfflineRegionManager extends ChangeNotifier {
     _busy = true;
     StreamSubscription<OfflineDownloadProgress>? progressSubscription;
 
-    if (_mapService is OfflineMapDownloadService) {
-      final service = _mapService as OfflineMapDownloadService;
+    if (_mapService case final OfflineMapDownloadService service) {
       progressSubscription = service.watch(regionId).listen((progress) {
         unawaited(
           _persistProgress(progress),
@@ -112,9 +111,8 @@ class OfflineRegionManager extends ChangeNotifier {
     final current = _store.get(regionId);
     if (current == null) return;
 
-    if (_mapService is OfflineMapDownloadService) {
-      await (_mapService as OfflineMapDownloadService)
-          .updateOfflineRegion(regionId);
+    if (_mapService case final OfflineMapDownloadService service) {
+      await service.updateOfflineRegion(regionId);
       return;
     }
 
