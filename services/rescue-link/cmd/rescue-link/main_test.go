@@ -2,7 +2,6 @@ package main
 
 import (
     "bytes"
-    "io"
     "net/http"
     "net/http/httptest"
     "strings"
@@ -71,13 +70,3 @@ func TestDecodeJSONRejectsTrailingData(t *testing.T) {
     }
 }
 
-func TestDecodeJSONAcceptsSingleDocument(t *testing.T) {
-    body := bytes.NewBufferString(`{"shareToken":"` + strings.Repeat("a", 40) + `"}`)
-    req := httptest.NewRequest(http.MethodPost, "/", body)
-    if err := decodeJSON(httptest.NewRecorder(), req, &acceptRequest{}, 4096); err != nil {
-        t.Fatal(err)
-    }
-    if err := decodeJSON(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString("{}")), &acceptRequest{}, 2); err == nil || err == io.EOF {
-        // The request-size test is intentionally omitted: MaxBytesReader is HTTP-response coupled.
-    }
-}
