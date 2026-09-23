@@ -38,6 +38,9 @@ Future<String?> findLatestLocalPmtiles({LatLng? location}) async {
         await archive?.close();
       }
     }
+    // Do not activate an unrelated region when the current position is
+    // outside every downloaded package.
+    return null;
   }
 
   return files.first.path;
