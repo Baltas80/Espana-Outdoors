@@ -13,6 +13,7 @@ import '../../core/gpx/gpx_import_service.dart';
 import '../../core/models/route_summary.dart';
 import '../features/routes/routes_page.dart';
 import '../features/safety/safety_page.dart';
+import '../features/safety/route_plan_page.dart';
 import '../features/safety/trusted_contacts_page.dart';
 import 'theme.dart';
 
@@ -39,6 +40,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/pets', builder: (_, __) => const PetsPage()),
       GoRoute(path: '/wildlife', builder: (_, __) => const WildlifePage()),
       GoRoute(path: '/safety', builder: (_, __) => const SafetyPage()),
+      GoRoute(path: '/safety/plan', builder: (_, __) => const RoutePlanPage()),
       GoRoute(
         path: '/safety/contacts',
         builder: (_, __) => const TrustedContactsPage(),
