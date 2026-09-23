@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart' hide RoutingConfig;
 import 'package:latlong2/latlong.dart';
 import 'package:maplibre_gl/maplibre_gl.dart' as ml;
 
@@ -117,7 +117,6 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
             lineWidth: 6,
             lineOpacity: 0.95,
             lineColor: '#2E7D32',
-            lineCap: 'round',
             lineJoin: 'round',
           ),
         );
