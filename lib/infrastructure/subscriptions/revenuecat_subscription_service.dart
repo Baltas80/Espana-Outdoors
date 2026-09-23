@@ -12,6 +12,19 @@ final class RevenueCatSubscriptionService implements SubscriptionService {
     this.professionalEntitlementId = 'professional',
   });
 
+  factory RevenueCatSubscriptionService.fromEnvironment() =>
+      RevenueCatSubscriptionService(
+        apiKey: const String.fromEnvironment('REVENUECAT_API_KEY'),
+        premiumEntitlementId: const String.fromEnvironment(
+          'REVENUECAT_PREMIUM_ENTITLEMENT',
+          defaultValue: 'premium',
+        ),
+        professionalEntitlementId: const String.fromEnvironment(
+          'REVENUECAT_PROFESSIONAL_ENTITLEMENT',
+          defaultValue: 'professional',
+        ),
+      );
+
   final String apiKey;
   final String premiumEntitlementId;
   final String professionalEntitlementId;
