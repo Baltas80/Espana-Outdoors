@@ -1,6 +1,6 @@
 import '../domain/outdoor_models.dart';
 import 'rescue_link_policy.dart';
-import '../contracts/platform_services.dart';
+import '../contracts/platform_services.dart' show LocationPrivacy;
 
 class RescuePresence {
   const RescuePresence({
