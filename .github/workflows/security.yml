@@ -49,6 +49,18 @@ jobs:
           ignore-unfixed: true
           format: table
 
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          artifact-name: espana-outdoors-sbom.cdx.json
+          output-file: espana-outdoors-sbom.cdx.json
+
   github-actions-codeql:
     name: CodeQL - GitHub Actions
     runs-on: ubuntu-latest
