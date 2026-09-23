@@ -25,6 +25,9 @@ final class SentryObservability {
         options.sendDefaultPii = false;
         options.tracesSampleRate = kDebugMode ? 0.0 : 0.1;
         options.enableLogs = false;
+        // Do not propagate tracing headers to third-party data providers by
+        // default. Enable only for explicitly controlled first-party domains.
+        options.tracePropagationTargets.clear();
       },
       appRunner: appRunner,
     );
