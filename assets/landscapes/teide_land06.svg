@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-label="Teide: paisaje volcánico de Canarias al amanecer">
+<defs>
+<linearGradient id="s" x2="0" y2="1"><stop stop-color="#293f68"/><stop offset=".48" stop-color="#e18e78"/><stop offset="1" stop-color="#e5b06b"/></linearGradient>
+<linearGradient id="v" x2="0" y2="1"><stop stop-color="#7b6c67"/><stop offset="1" stop-color="#211f22"/></linearGradient>
+<radialGradient id="sun"><stop stop-color="#fff4bf"/><stop offset="1" stop-color="#ffc56c" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1080" height="1920" fill="url(#s)"/>
+<circle cx="790" cy="620" r="250" fill="url(#sun)"/><circle cx="790" cy="620" r="48" fill="#ffd88a"/>
+<g fill="#fff4e5" opacity=".25"><path d="M0 470C180 400 350 480 510 420C700 350 880 400 1080 330V530C850 560 680 510 490 575C300 630 140 590 0 630Z"/></g>
+<path d="M0 1230 140 1050 250 1110 365 900 480 1110 620 720 790 1040 930 860 1080 1080V1400H0Z" fill="#514b50"/>
+<path d="M0 1380C210 1260 370 1310 520 1240C690 1160 870 1240 1080 1150V1920H0Z" fill="url(#v)"/>
+<path d="M450 1920C470 1740 520 1580 585 1440C635 1330 700 1210 760 1060C815 930 845 780 800 650C760 800 705 920 630 1040C540 1180 450 1320 395 1480C345 1630 330 1780 335 1920Z" fill="#8c776d" opacity=".95"/>
+<path d="M0 1610C180 1540 360 1580 510 1650C700 1740 880 1660 1080 1560V1920H0Z" fill="#17171a"/>
+<g fill="#5d514c"><ellipse cx="160" cy="1730" rx="120" ry="48"/><ellipse cx="350" cy="1830" rx="150" ry="60"/><ellipse cx="850" cy="1760" rx="160" ry="62"/><ellipse cx="1010" cy="1880" rx="140" ry="55"/></g>
+</svg>
