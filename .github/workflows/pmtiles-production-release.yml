@@ -1,0 +1,141 @@
+name: PMTiles production release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Immutable map version (for example 2026-09-24)
+        required: true
+        type: string
+      planetiler_image:
+        description: Pinned Planetiler image tag or digest; never use :latest
+        required: true
+        type: string
+      osm_url:
+        description: Immutable/versioned Geofabrik OSM PBF URL
+        required: true
+        default: https://download.geofabrik.de/europe/spain-latest.osm.pbf
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-24.04
+    environment: maps-production
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      MAPS_PUBLIC_BASE_URL: ${{ vars.MAPS_PUBLIC_BASE_URL }}
+      MAPS_LICENSE_URL: ${{ vars.MAPS_LICENSE_URL }}
+      MAPS_ATTRIBUTION: ${{ vars.MAPS_ATTRIBUTION }}
+      VERSION: ${{ inputs.version }}
+      PLANETILER_IMAGE: ${{ inputs.planetiler_image }}
+      OSM_URL: ${{ inputs.osm_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${R2_ACCOUNT_ID:?R2_ACCOUNT_ID secret is required}"
+          : "${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID secret is required}"
+          : "${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY secret is required}"
+          : "${R2_BUCKET:?R2_BUCKET environment variable is required}"
+          : "${MAPS_PUBLIC_BASE_URL:?MAPS_PUBLIC_BASE_URL environment variable is required}"
+          : "${MAPS_LICENSE_URL:?MAPS_LICENSE_URL environment variable is required}"
+          : "${MAPS_ATTRIBUTION:?MAPS_ATTRIBUTION environment variable is required}"
+          case "${PLANETILER_IMAGE}" in
+            *:latest|ghcr.io/onthegomap/planetiler:latest) echo "Do not use Planetiler :latest"; exit 1;;
+          esac
+          case "${MAPS_PUBLIC_BASE_URL}" in
+            https://*) ;;
+            *) echo "MAPS_PUBLIC_BASE_URL must be HTTPS"; exit 1;;
+          esac
+
+      - name: Install PMTiles CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Keep the CLI version pinned in this workflow before enabling the
+          # production environment. This job intentionally fails closed until
+          # the approved pmtiles CLI version is recorded.
+          if [ -z "${PMTILES_CLI_VERSION:-}" ]; then
+            echo "PMTILES_CLI_VERSION is not configured; refusing unpinned production tooling."
+            exit 1
+          fi
+
+      - name: Download pinned/versioned OSM extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/maps
+          curl --fail --location --retry 5 --retry-all-errors             --output build/maps/spain.osm.pbf "${OSM_URL}"
+          sha256sum build/maps/spain.osm.pbf | tee build/maps/spain.osm.pbf.sha256
+
+      - name: Build Spain PMTiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm             -e JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:--Xmx4g}"             -v "${PWD}/build/maps:/data"             "${PLANETILER_IMAGE}"             --osm-path=/data/spain.osm.pbf             --output=/data/spain.pmtiles             --force
+          test -s build/maps/spain.pmtiles
+          sha256sum build/maps/spain.pmtiles | tee build/maps/spain.pmtiles.sha256
+
+      - name: Upload immutable PMTiles to R2
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="${R2_ACCESS_KEY_ID}"
+          export AWS_SECRET_ACCESS_KEY="${R2_SECRET_ACCESS_KEY}"
+          export AWS_DEFAULT_REGION=auto
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          prefix="basemap/spain/${VERSION}"
+          aws s3 cp build/maps/spain.pmtiles "${endpoint}/${R2_BUCKET}/${prefix}/spain.pmtiles" --endpoint-url "${endpoint}"
+          aws s3 cp build/maps/spain.pmtiles.sha256 "${endpoint}/${R2_BUCKET}/${prefix}/spain.pmtiles.sha256" --endpoint-url "${endpoint}"
+
+      - name: Publish immutable catalog entry
+        shell: bash
+        run: |
+          set -euo pipefail
+          checksum="$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)"
+          size="$(stat -c '%s' build/maps/spain.pmtiles)"
+          url="${MAPS_PUBLIC_BASE_URL%/}/basemap/spain/${VERSION}/spain.pmtiles"
+          cat > build/maps/spain.json <<EOF
+          {
+            "id": "spain",
+            "name": "España",
+            "description": "Mapa base vectorial de España para España Outdoor.",
+            "providerId": "approved-pmtiles-catalog",
+            "licenseUrl": "${MAPS_LICENSE_URL}",
+            "attribution": "${MAPS_ATTRIBUTION}",
+            "downloadUrl": "${url}",
+            "sizeBytes": ${size},
+            "updatedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "sha256": "${checksum}"
+          }
+          EOF
+          export AWS_ACCESS_KEY_ID="${R2_ACCESS_KEY_ID}"
+          export AWS_SECRET_ACCESS_KEY="${R2_SECRET_ACCESS_KEY}"
+          export AWS_DEFAULT_REGION=auto
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          aws s3 cp build/maps/spain.json "${endpoint}/${R2_BUCKET}/catalog/spain.json"             --content-type application/json             --cache-control "no-cache"             --endpoint-url "${endpoint}"
+
+      - name: Verify HTTPS and byte range
+        shell: bash
+        env:
+          MAP_PMTILES_URL: ${{ vars.MAPS_PUBLIC_BASE_URL }}/basemap/spain/${{ inputs.version }}/spain.pmtiles
+        run: |
+          bash ops/offline/verify-pmtiles-http.sh
+
+      - name: Upload release evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmtiles-release-evidence-${{ inputs.version }}
+          path: |
+            build/maps/spain.osm.pbf.sha256
+            build/maps/spain.pmtiles.sha256
+            build/maps/spain.json
