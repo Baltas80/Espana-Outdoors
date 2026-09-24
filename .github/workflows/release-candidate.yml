@@ -11,6 +11,7 @@ env:
   MAP_PMTILES_URL: ${{ secrets.MAP_PMTILES_URL }}
   VALHALLA_BASE_URL: ${{ secrets.VALHALLA_BASE_URL }}
   SOURCE_GATEWAY_BASE_URL: ${{ secrets.SOURCE_GATEWAY_BASE_URL }}
+  OFFLINE_CATALOG_URL: ${{ secrets.OFFLINE_CATALOG_URL }}
   RESCUE_LINK_BASE_URL: ${{ secrets.RESCUE_LINK_BASE_URL }}
 
 jobs:
@@ -23,7 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in MAP_PMTILES_URL VALHALLA_BASE_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL; do
+          for name in MAP_PMTILES_URL VALHALLA_BASE_URL OFFLINE_CATALOG_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL; do
             value="${!name:-}"
             if [[ -z "$value" ]]; then
               echo "Missing required production secret: $name"
@@ -68,6 +69,7 @@ jobs:
             --dart-define=MAP_PMTILES_URL="$MAP_PMTILES_URL"
             --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL"
             --dart-define=SOURCE_GATEWAY_BASE_URL="$SOURCE_GATEWAY_BASE_URL"
+            --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL"
             --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL"
           )
           flutter build apk --release "${DART_DEFINES[@]}"
@@ -129,4 +131,5 @@ jobs:
             --dart-define=MAP_PMTILES_URL="$MAP_PMTILES_URL" \
             --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL" \
             --dart-define=SOURCE_GATEWAY_BASE_URL="$SOURCE_GATEWAY_BASE_URL" \
+            --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL" \
             --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL"
