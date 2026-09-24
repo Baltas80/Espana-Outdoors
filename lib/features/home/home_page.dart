@@ -153,7 +153,7 @@ class _HomeHero extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Image.asset(
-              'assets/landscapes/picos_europa.jpg',
+              'assets/landscapes/picos_europa_land01.svg',
               fit: BoxFit.cover,
               semanticLabel: 'Paisaje de montaña de España',
             ),
