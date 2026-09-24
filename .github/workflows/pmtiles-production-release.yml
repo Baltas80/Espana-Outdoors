@@ -10,7 +10,6 @@ on:
       osm_url:
         description: Immutable/versioned Geofabrik OSM PBF URL
         required: true
-        default: https://download.geofabrik.de/europe/spain-latest.osm.pbf
         type: string
 
 permissions:
@@ -91,8 +90,8 @@ jobs:
           export AWS_DEFAULT_REGION=auto
           endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           prefix="basemap/spain/${VERSION}"
-          aws s3 cp build/maps/spain.pmtiles "${endpoint}/${R2_BUCKET}/${prefix}/spain.pmtiles" --endpoint-url "${endpoint}"
-          aws s3 cp build/maps/spain.pmtiles.sha256 "${endpoint}/${R2_BUCKET}/${prefix}/spain.pmtiles.sha256" --endpoint-url "${endpoint}"
+          aws s3 cp build/maps/spain.pmtiles "s3://${R2_BUCKET}/${prefix}/spain.pmtiles" --endpoint-url "${endpoint}" --content-type application/octet-stream
+          aws s3 cp build/maps/spain.pmtiles.sha256 "s3://${R2_BUCKET}/${prefix}/spain.pmtiles.sha256" --endpoint-url "${endpoint}" --content-type text/plain
 
       - name: Publish immutable catalog entry
         shell: bash
