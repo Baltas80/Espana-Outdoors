@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in .env}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
@@ -36,6 +36,36 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
 
+  source-gateway:
+    build:
+      context: ../services/source-gateway
+    restart: unless-stopped
+    environment:
+      OIDC_ISSUER: ${OIDC_ISSUER:?set in .env}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:?set in .env}
+      AEMET_API_KEY: ${AEMET_API_KEY:?set in .env}
+      AEMET_API_KEY_EXPIRES_AT: ${AEMET_API_KEY_EXPIRES_AT:?set in .env}
+      AEMET_BASE_URL: ${AEMET_BASE_URL:-https://opendata.aemet.es/opendata/api}
+      PORT: 8080
+      CACHE_FRESH_TTL: ${CACHE_FRESH_TTL:-10m}
+      CACHE_AGING_TTL: ${CACHE_AGING_TTL:-10m}
+      CACHE_STALE_TTL: ${CACHE_STALE_TTL:-40m}
+      RATE_LIMIT_RPS: ${RATE_LIMIT_RPS:-2}
+      RATE_LIMIT_BURST: ${RATE_LIMIT_BURST:-10}
+      ALLOW_HTTP_DEV: "false"
+    depends_on:
+      keycloak:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8081:8080"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+
   rescue-link:
     build:
       context: ../services/rescue-link
@@ -44,7 +74,7 @@ services:
       DATABASE_URL: postgresql://espana:${POSTGRES_PASSWORD}@postgres:5432/espana_outdoor?sslmode=disable
       OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8080/realms/espana-outdoor}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-espana-outdoors-mobile}
-      PUBLIC_SHARE_BASE_URL: ${PUBLIC_SHARE_BASE_URL:-http://localhost:8090}
+      PUBLIC_SHARE_BASE_URL: ${PUBLIC_SHARE_BASE_URL:?set in .env}
       LOCATION_ENCRYPTION_KEY: ${LOCATION_ENCRYPTION_KEY:?set in .env}
       RESCUE_MAX_TTL: ${RESCUE_MAX_TTL:-15m}
       RESCUE_RETENTION: ${RESCUE_RETENTION:-24h}
@@ -52,8 +82,8 @@ services:
       RESCUE_MAX_RESPONDERS: ${RESCUE_MAX_RESPONDERS:-5}
       RESCUE_RATE_LIMIT_RPS: ${RESCUE_RATE_LIMIT_RPS:-2}
       RESCUE_RATE_LIMIT_BURST: ${RESCUE_RATE_LIMIT_BURST:-10}
-      ENABLE_HSTS: ${ENABLE_HSTS:-false}
-      ALLOW_HTTP_DEV: ${ALLOW_HTTP_DEV:-true}
+      ENABLE_HSTS: "true"
+      ALLOW_HTTP_DEV: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,6 +91,10 @@ services:
         condition: service_started
     ports:
       - "127.0.0.1:8090:8080"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   martin:
     image: ghcr.io/maplibre/martin:1.16.1
@@ -71,29 +105,48 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - ../data/tiles:/data/tiles:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
 
   valhalla:
-    image: ghcr.io/valhalla/valhalla:latest
+    image: ghcr.io/valhalla/valhalla:3.9.0
     restart: unless-stopped
     environment:
       tile_urls: ${VALHALLA_TILE_URLS:-}
     ports:
-      - "8002:8002"
+      - "127.0.0.1:8002:8002"
     volumes:
       - ../data/valhalla:/data/valhalla
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8002/status >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   nats:
     image: nats:2.11-alpine
     restart: unless-stopped
     command: ["-js"]
     ports:
-      - "4222:4222"
-      - "8222:8222"
+      - "127.0.0.1:4222:4222"
+      - "127.0.0.1:8222:8222"
     volumes:
       - nats_data:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   prometheus:
     image: prom/prometheus:v3.5.0
