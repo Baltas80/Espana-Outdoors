@@ -7,6 +7,13 @@
 - `assets/landscapes/pirineos_land02.svg` — LAND-02
 - `assets/landscapes/sierra_nevada_land03.svg` — LAND-03
 - `assets/landscapes/ordesa_land04.svg` — LAND-04
+- `assets/landscapes/cazorla_land05.svg` — LAND-05
+- `assets/landscapes/teide_land06.svg` — LAND-06
+- `assets/landscapes/donana_land07.svg` — LAND-07
+
+### Flora/fauna starter library
+- `assets/flora_fauna/fauna/iberian_ibex.svg` — fauna / cabra montés
+- `assets/flora_fauna/flora/spanish_juniper.svg` — flora / enebro mediterráneo
 
 ### Background pack
 - `assets/backgrounds/bg_home.svg`
@@ -20,7 +27,7 @@
 
 ## Home integration
 
-The Home hero now references `LAND-01` directly:
+The Home hero references `LAND-01` directly:
 
 `assets/landscapes/picos_europa_land01.svg`
 
@@ -44,4 +51,4 @@ BG-01 remains the fixed Home background direction: a natural outdoor scene commu
 
 ## Next visual work
 
-Continue with LAND-05 onward, then the dedicated flora/fauna/editorial library. Binary photographic assets are only considered repository-ready after being physically committed and verified on `master`.
+Continue with LAND-08 onward and expand the flora/fauna/editorial library. Binary photographic assets are only considered repository-ready after being physically committed and verified on `master`.
