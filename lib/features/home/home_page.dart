@@ -46,6 +46,8 @@ class HomePage extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 18),
+                    const _HomeHero(),
                     const SizedBox(height: 24),
                     Text('Hola, explorador', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 6),
@@ -132,6 +134,58 @@ class HomePage extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.shield_outlined), selectedIcon: Icon(Icons.shield), label: 'Seguridad'),
           NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
         ],
+      ),
+    );
+  }
+}
+
+class _HomeHero extends StatelessWidget {
+  const _HomeHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(24);
+    return ClipRRect(
+      borderRadius: radius,
+      child: AspectRatio(
+        aspectRatio: 1.65,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/landscapes/picos_europa.jpg',
+              fit: BoxFit.cover,
+              semanticLabel: 'Paisaje de montaña de España',
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.35, 1],
+                  colors: [
+                    Colors.transparent,
+                    Theme.of(context).colorScheme.scrim.withValues(alpha: 0.72),
+                  ],
+                ),
+              ),
+            ),
+            const Positioned(
+              left: 18,
+              right: 18,
+              bottom: 16,
+              child: Text(
+                'Descubre España a pie, con tu gente y con tu compañero de aventura.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  height: 1.15,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

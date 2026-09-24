@@ -1,0 +1,132 @@
+name: Release candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  APP_ENV: production
+  MAP_PMTILES_URL: ${{ secrets.MAP_PMTILES_URL }}
+  VALHALLA_BASE_URL: ${{ secrets.VALHALLA_BASE_URL }}
+  SOURCE_GATEWAY_BASE_URL: ${{ secrets.SOURCE_GATEWAY_BASE_URL }}
+  RESCUE_LINK_BASE_URL: ${{ secrets.RESCUE_LINK_BASE_URL }}
+
+jobs:
+  android-release-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check production endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in MAP_PMTILES_URL VALHALLA_BASE_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL; do
+            value="${!name:-}"
+            if [[ -z "$value" ]]; then
+              echo "Missing required production secret: $name"
+              exit 1
+            fi
+            if [[ "$value" != https://* ]]; then
+              echo "$name must use HTTPS"
+              exit 1
+            fi
+          done
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android project
+        run: flutter create . --platforms=android --org com.espanaoutdoors
+
+      - name: Apply Android native configuration
+        run: python3 tool/configure_mobile_native.py --platform android
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Analyze and test
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test --coverage
+
+      - name: Build signed-by-platform-ready Android artifacts
+        run: |
+          DART_DEFINES=(
+            --dart-define=APP_ENV="$APP_ENV"
+            --dart-define=MAP_PMTILES_URL="$MAP_PMTILES_URL"
+            --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL"
+            --dart-define=SOURCE_GATEWAY_BASE_URL="$SOURCE_GATEWAY_BASE_URL"
+            --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL"
+          )
+          flutter build apk --release "${DART_DEFINES[@]}"
+          flutter build appbundle --release "${DART_DEFINES[@]}"
+
+      - name: Upload Android candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-release-candidate
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+
+  ios-release-candidate:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check production endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in MAP_PMTILES_URL VALHALLA_BASE_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL; do
+            value="${!name:-}"
+            if [[ -z "$value" ]]; then
+              echo "Missing required production secret: $name"
+              exit 1
+            fi
+            if [[ "$value" != https://* ]]; then
+              echo "$name must use HTTPS"
+              exit 1
+            fi
+          done
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate iOS project
+        run: flutter create . --platforms=ios --org com.espanaoutdoors
+
+      - name: Apply iOS native configuration
+        run: python3 tool/configure_mobile_native.py --platform ios
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Analyze and test
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+
+      - name: Build configured iOS candidate
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=APP_ENV="$APP_ENV" \
+            --dart-define=MAP_PMTILES_URL="$MAP_PMTILES_URL" \
+            --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL" \
+            --dart-define=SOURCE_GATEWAY_BASE_URL="$SOURCE_GATEWAY_BASE_URL" \
+            --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL"
