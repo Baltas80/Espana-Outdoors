@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/brand.dart';
@@ -152,10 +153,10 @@ class _HomeHero extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
+            SvgPicture.asset(
               'assets/landscapes/picos_europa_land01.svg',
               fit: BoxFit.cover,
-              semanticLabel: 'Paisaje de montaña de España',
+              semanticsLabel: 'Paisaje de montaña de España',
             ),
             DecoratedBox(
               decoration: BoxDecoration(
