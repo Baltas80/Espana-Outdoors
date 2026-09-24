@@ -15,7 +15,7 @@ set -euo pipefail
 #   OUTPUT=<path to PMTiles output>
 
 DATA_DIR="${DATA_DIR:-$PWD/data}"
-OSM_URL="${OSM_URL:-https://download.geofabrik.de/europe/spain-latest.osm.pbf}"
+OSM_URL="${OSM_URL:-https://download.geofabrik.de/europe/spain-260923.osm.pbf}"
 OUTPUT="${OUTPUT:-$DATA_DIR/spain.pmtiles}"
 
 PLANETILER_VERSION="0.10.2"
