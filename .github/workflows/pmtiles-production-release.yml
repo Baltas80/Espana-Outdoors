@@ -7,10 +7,6 @@ on:
         description: Immutable map version (for example 2026-09-24)
         required: true
         type: string
-      planetiler_image:
-        description: Pinned Planetiler image tag or digest; never use :latest
-        required: true
-        type: string
       osm_url:
         description: Immutable/versioned Geofabrik OSM PBF URL
         required: true
@@ -33,7 +29,6 @@ jobs:
       MAPS_LICENSE_URL: ${{ vars.MAPS_LICENSE_URL }}
       MAPS_ATTRIBUTION: ${{ vars.MAPS_ATTRIBUTION }}
       VERSION: ${{ inputs.version }}
-      PLANETILER_IMAGE: ${{ inputs.planetiler_image }}
       OSM_URL: ${{ inputs.osm_url }}
     steps:
       - uses: actions/checkout@v4
@@ -49,27 +44,24 @@ jobs:
           : "${MAPS_PUBLIC_BASE_URL:?MAPS_PUBLIC_BASE_URL environment variable is required}"
           : "${MAPS_LICENSE_URL:?MAPS_LICENSE_URL environment variable is required}"
           : "${MAPS_ATTRIBUTION:?MAPS_ATTRIBUTION environment variable is required}"
-          case "${PLANETILER_IMAGE}" in
-            *:latest|ghcr.io/onthegomap/planetiler:latest) echo "Do not use Planetiler :latest"; exit 1;;
-          esac
           case "${MAPS_PUBLIC_BASE_URL}" in
             https://*) ;;
             *) echo "MAPS_PUBLIC_BASE_URL must be HTTPS"; exit 1;;
           esac
 
-      - name: Install PMTiles CLI
+      - name: Download pinned PMTiles CLI
         shell: bash
         run: |
           set -euo pipefail
-          # Keep the CLI version pinned in this workflow before enabling the
-          # production environment. This job intentionally fails closed until
-          # the approved pmtiles CLI version is recorded.
-          if [ -z "${PMTILES_CLI_VERSION:-}" ]; then
-            echo "PMTILES_CLI_VERSION is not configured; refusing unpinned production tooling."
-            exit 1
-          fi
+          version="1.31.2"
+          expected="3ed7dbf4ec2e6dfe5e25b6f70d1ffc932729f93c86db353bf514dd71010a312f"
+          url="https://github.com/protomaps/go-pmtiles/releases/download/v${version}/go-pmtiles_${version}_Linux_x86_64.tar.gz"
+          curl --fail --location --retry 5 --retry-all-errors -o /tmp/go-pmtiles.tar.gz "${url}"
+          echo "${expected}  /tmp/go-pmtiles.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/go-pmtiles.tar.gz -C /tmp
+          install -m 0755 /tmp/pmtiles ./pmtiles
 
-      - name: Download pinned/versioned OSM extract
+      - name: Download versioned OSM extract
         shell: bash
         run: |
           set -euo pipefail
@@ -77,13 +69,18 @@ jobs:
           curl --fail --location --retry 5 --retry-all-errors             --output build/maps/spain.osm.pbf "${OSM_URL}"
           sha256sum build/maps/spain.osm.pbf | tee build/maps/spain.osm.pbf.sha256
 
-      - name: Build Spain PMTiles
+      - name: Build Spain PMTiles with pinned Planetiler
         shell: bash
         run: |
           set -euo pipefail
-          docker run --rm             -e JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:--Xmx4g}"             -v "${PWD}/build/maps:/data"             "${PLANETILER_IMAGE}"             --osm-path=/data/spain.osm.pbf             --output=/data/spain.pmtiles             --force
-          test -s build/maps/spain.pmtiles
-          sha256sum build/maps/spain.pmtiles | tee build/maps/spain.pmtiles.sha256
+          bash ops/offline/build-spain-pmtiles.sh
+
+      - name: Verify PMTiles archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./pmtiles verify build/maps/spain.pmtiles
+          ./pmtiles show build/maps/spain.pmtiles | tee build/maps/spain.pmtiles.metadata.txt
 
       - name: Upload immutable PMTiles to R2
         shell: bash
@@ -138,4 +135,5 @@ jobs:
           path: |
             build/maps/spain.osm.pbf.sha256
             build/maps/spain.pmtiles.sha256
+            build/maps/spain.pmtiles.metadata.txt
             build/maps/spain.json
