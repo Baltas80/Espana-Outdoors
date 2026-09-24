@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-label="Doñana: marisma, pinos y sendero natural al atardecer">
+<defs>
+<linearGradient id="s" x2="0" y2="1"><stop stop-color="#2e6177"/><stop offset=".5" stop-color="#e5b477"/><stop offset="1" stop-color="#d77d60"/></linearGradient>
+<linearGradient id="m" x2="0" y2="1"><stop stop-color="#567b58"/><stop offset="1" stop-color="#142c20"/></linearGradient>
+<radialGradient id="sun"><stop stop-color="#fff1b5"/><stop offset="1" stop-color="#ffd078" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1080" height="1920" fill="url(#s)"/>
+<circle cx="780" cy="600" r="230" fill="url(#sun)"/><circle cx="780" cy="600" r="44" fill="#ffd78b"/>
+<g fill="#fff0d8" opacity=".3"><path d="M0 410C190 330 330 420 500 350C680 280 880 350 1080 300V520C850 540 700 500 510 560C320 610 150 570 0 610Z"/></g>
+<path d="M0 1110C190 1050 350 1090 520 1050C720 1000 900 1060 1080 1010V1320H0Z" fill="#78966f"/>
+<path d="M0 1220C180 1160 350 1200 520 1160C700 1120 900 1170 1080 1120V1510H0Z" fill="url(#m)"/>
+<g fill="#1b3b29"><path d="M70 1430l55-180 55 180z"/><path d="M210 1450l65-215 65 215z"/><path d="M850 1430l60-205 60 205z"/><path d="M970 1460l55-185 55 185z"/></g>
+<path d="M0 1430C170 1370 320 1400 470 1460C640 1530 850 1480 1080 1400V1920H0Z" fill="#172c20"/>
+<path d="M0 1510C200 1460 370 1500 520 1570C700 1650 880 1570 1080 1500V1690C860 1760 690 1770 510 1690C350 1620 180 1610 0 1650Z" fill="#6e8d68" opacity=".6"/>
+<path d="M780 1920C720 1820 660 1740 585 1680C520 1625 500 1565 535 1515C570 1465 640 1445 710 1460C630 1420 540 1440 490 1500C440 1560 455 1630 520 1700C590 1775 640 1850 660 1920Z" fill="#aa805a"/>
+<g fill="#d6b05d"><circle cx="130" cy="1660" r="8"/><circle cx="180" cy="1690" r="6"/><circle cx="900" cy="1650" r="7"/><circle cx="950" cy="1685" r="6"/></g>
+</svg>
