@@ -1,1 +1,88 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#0a1714"/><stop offset=".62" stop-color="#3e8f5a"/><stop offset="1" stop-color="#07110f"/></linearGradient><linearGradient id="h" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5c56b" stop-opacity=".9"/><stop offset="1" stop-color="#f5c56b" stop-opacity="0"/></linearGradient></defs><rect width="1080" height="1920" fill="url(#g)"/><circle cx="780" cy="390" r="150" fill="url(#h)"/><path d="M0 1210 L170 790 330 1130 510 620 700 1140 860 820 1080 1170 V1920 H0Z" fill="#183b35"/><path d="M0 1380 L240 1050 410 1350 620 920 820 1360 1080 1100 V1920 H0Z" fill="#0b211d"/><rect y="1500" width="1080" height="420" fill="#06100e" opacity=".22"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-label="España Outdoor: excursionista y perro contemplando un paisaje de montaña">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop stop-color="#071c25"/>
+    <stop offset=".42" stop-color="#245a62"/>
+    <stop offset=".72" stop-color="#d28a55"/>
+    <stop offset="1" stop-color="#102a25"/>
+  </linearGradient>
+  <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+    <stop stop-color="#ffd27a" stop-opacity=".95"/>
+    <stop offset="1" stop-color="#ffd27a" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+    <stop stop-color="#6b9fa0" stop-opacity=".8"/>
+    <stop offset="1" stop-color="#123b3a"/>
+  </linearGradient>
+  <linearGradient id="foreground" x1="0" y1="0" x2="0" y2="1">
+    <stop stop-color="#173a32"/>
+    <stop offset="1" stop-color="#06110e"/>
+  </linearGradient>
+  <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+</defs>
+
+<rect width="1080" height="1920" fill="url(#sky)"/>
+<circle cx="210" cy="520" r="190" fill="url(#glow)" filter="url(#soft)"/>
+<circle cx="210" cy="520" r="62" fill="#ffd27a" opacity=".9"/>
+
+<!-- distant Spanish mountain layers -->
+<path d="M0 760 L125 650 215 735 335 525 455 735 585 565 690 710 820 470 965 700 1080 580 V1120 H0Z" fill="#365d61" opacity=".75"/>
+<path d="M0 900 L150 720 250 835 410 610 535 835 690 655 820 820 950 600 1080 770 V1230 H0Z" fill="#234b4b"/>
+<path d="M0 1060 L170 850 310 1020 470 760 610 1030 780 820 920 1010 1080 850 V1340 H0Z" fill="#163d38"/>
+
+<!-- valley and reservoir -->
+<path d="M340 1040 C430 970 535 950 630 1020 C690 1065 720 1130 675 1200 C620 1280 500 1310 405 1260 C350 1230 305 1130 340 1040Z" fill="url(#lake)" opacity=".9"/>
+<path d="M455 1050 C520 1025 590 1040 645 1090 C600 1080 555 1090 510 1120 C475 1142 445 1128 420 1100Z" fill="#b9d5c6" opacity=".28"/>
+
+<!-- pine forest -->
+<g fill="#0a2721" opacity=".95">
+  <path d="M30 1370 l70 -170 70 170z M55 1285 l45 -125 45 125z"/>
+  <path d="M160 1400 l85 -205 85 205z M195 1290 l50 -145 50 145z"/>
+  <path d="M760 1390 l85 -205 85 205z M795 1280 l50 -145 50 145z"/>
+  <path d="M900 1370 l70 -170 70 170z M925 1280 l45 -125 45 125z"/>
+</g>
+
+<!-- winding trail -->
+<path d="M540 1920 C515 1730 610 1580 670 1450 C710 1360 675 1290 620 1220 C595 1188 610 1160 650 1140 C720 1175 785 1250 785 1350 C785 1500 675 1660 735 1920Z" fill="#b58a62" opacity=".92"/>
+<path d="M585 1920 C565 1750 645 1580 700 1450 C735 1365 710 1300 665 1235" fill="none" stroke="#d7b487" stroke-width="12" opacity=".55"/>
+
+<!-- foreground -->
+<path d="M0 1410 C180 1320 330 1410 470 1510 C590 1595 720 1535 835 1460 C935 1395 1005 1410 1080 1450 V1920 H0Z" fill="url(#foreground)"/>
+
+<!-- seated hiker, viewed from behind -->
+<g fill="#08110f" stroke="#07100e" stroke-linejoin="round">
+  <!-- backpack -->
+  <path d="M742 1370 C775 1310 865 1310 905 1360 L940 1580 C900 1620 795 1620 755 1580Z" stroke-width="8"/>
+  <path d="M775 1360 Q820 1320 870 1360 L900 1560 L785 1560Z" fill="#18322f" stroke="#274d47" stroke-width="7"/>
+  <!-- torso -->
+  <path d="M675 1400 Q720 1350 775 1390 L820 1540 L735 1590 L660 1530Z" fill="#10201d" stroke-width="8"/>
+  <!-- head -->
+  <circle cx="710" cy="1325" r="48" fill="#111715"/>
+  <path d="M670 1310 Q710 1260 752 1308 L748 1325 L675 1335Z" fill="#07100e"/>
+  <!-- arm -->
+  <path d="M700 1430 Q650 1460 625 1515 L650 1535 Q690 1490 730 1470Z" fill="#101e1b" stroke-width="7"/>
+  <!-- legs -->
+  <path d="M735 1550 Q700 1640 635 1700 L680 1730 Q755 1670 790 1580Z" fill="#0c1715" stroke-width="8"/>
+  <path d="M790 1560 Q820 1640 875 1685 L900 1655 Q855 1580 835 1535Z" fill="#0c1715" stroke-width="8"/>
+  <path d="M620 1695 L685 1715 L665 1750 L605 1730Z" fill="#050b0a" stroke-width="6"/>
+  <path d="M870 1675 L910 1645 L935 1680 L895 1710Z" fill="#050b0a" stroke-width="6"/>
+</g>
+
+<!-- dog sitting beside hiker -->
+<g fill="#141b18" stroke="#07100e" stroke-width="7" stroke-linejoin="round">
+  <path d="M470 1550 Q420 1485 455 1405 Q480 1340 555 1370 Q615 1395 620 1480 L600 1600 Q555 1645 500 1600Z"/>
+  <path d="M475 1415 L445 1330 L500 1375Z" fill="#101613"/>
+  <path d="M555 1390 L600 1315 L610 1435Z" fill="#101613"/>
+  <ellipse cx="520" cy="1465" rx="35" ry="45" fill="#24312c" stroke-width="5"/>
+  <circle cx="500" cy="1455" r="6" fill="#d5e0d5" stroke="none"/>
+  <circle cx="540" cy="1455" r="6" fill="#d5e0d5" stroke="none"/>
+  <path d="M505 1485 Q520 1495 535 1485" fill="none" stroke="#d5e0d5" stroke-width="5"/>
+  <path d="M480 1570 Q445 1640 405 1680" fill="none" stroke="#111916" stroke-width="28"/>
+  <path d="M585 1570 Q620 1635 650 1680" fill="none" stroke="#111916" stroke-width="28"/>
+  <path d="M478 1420 Q520 1400 565 1420" fill="none" stroke="#3c5b4d" stroke-width="9"/>
+</g>
+
+<!-- subtle dark overlay for UI readability -->
+<rect y="0" width="1080" height="1920" fill="#03100d" opacity=".18"/>
+<rect y="1040" width="1080" height="880" fill="#04110e" opacity=".22"/>
+</svg>
