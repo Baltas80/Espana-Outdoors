@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-label="Pirineos: paisaje alpino con lagos, bosque y cumbres nevadas">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#143b6b"/>
+    <stop offset=".45" stop-color="#3f7eaa"/>
+    <stop offset=".72" stop-color="#e59a64"/>
+    <stop offset="1" stop-color="#f3c986"/>
+  </linearGradient>
+  <linearGradient id="range" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4b6874"/>
+    <stop offset="1" stop-color="#1c3034"/>
+  </linearGradient>
+  <linearGradient id="forest" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4f7b58"/>
+    <stop offset="1" stop-color="#0c261e"/>
+  </linearGradient>
+  <linearGradient id="lake" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#86c6ca"/>
+    <stop offset=".55" stop-color="#3e777d"/>
+    <stop offset="1" stop-color="#173e46"/>
+  </linearGradient>
+  <linearGradient id="trail" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#b89069"/>
+    <stop offset="1" stop-color="#6f4c37"/>
+  </linearGradient>
+  <radialGradient id="sun">
+    <stop offset="0" stop-color="#fff3c8" stop-opacity=".98"/>
+    <stop offset=".45" stop-color="#ffd27c" stop-opacity=".75"/>
+    <stop offset="1" stop-color="#ffd27c" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="soft"><feGaussianBlur stdDeviation="20"/></filter>
+</defs>
+
+<rect width="1080" height="1920" fill="url(#sky)"/>
+<circle cx="870" cy="590" r="250" fill="url(#sun)" filter="url(#soft)"/>
+<circle cx="870" cy="590" r="48" fill="#ffd57e"/>
+
+<g fill="#fff0da" opacity=".42" filter="url(#soft)">
+  <path d="M0 330 C210 270 330 330 500 255 C700 170 850 250 1080 180 L1080 420 C870 500 650 420 465 485 C285 545 150 490 0 520Z"/>
+</g>
+
+<!-- distant Pyrenean range -->
+<path d="M0 980 L100 820 205 900 330 640 455 850 575 520 700 835 825 605 940 820 1080 690 V1110 H0Z" fill="url(#range)"/>
+<path d="M0 1080 L140 900 255 985 385 760 500 965 640 690 770 950 895 760 1080 905 V1220 H0Z" fill="#29464d"/>
+
+<!-- snow fields -->
+<g fill="#f2f4ed" opacity=".92">
+  <path d="M330 650 L365 720 398 775 430 852 400 830 370 790 348 745 325 710 300 748 275 775 288 728Z"/>
+  <path d="M575 530 L615 625 650 705 690 838 660 804 630 750 604 700 580 660 548 706 522 730 535 680Z"/>
+  <path d="M825 610 L856 675 895 760 940 820 907 804 872 760 845 720 820 680 792 720 770 742 780 695Z"/>
+</g>
+
+<!-- rock faces -->
+<g fill="#334b50">
+  <path d="M250 900 L330 640 405 835 350 930Z"/>
+  <path d="M505 920 L575 520 690 835 620 945Z"/>
+  <path d="M760 935 L825 605 940 820 875 965Z"/>
+</g>
+
+<!-- alpine forest -->
+<path d="M0 1180 C170 1100 320 1160 470 1095 C650 1015 820 1115 1080 1030 V1455 H0Z" fill="url(#forest)"/>
+<g fill="#173e31">
+  <path d="M35 1380 l58 -168 58 168z"/>
+  <path d="M150 1425 l70 -202 70 202z"/>
+  <path d="M300 1360 l60 -173 60 173z"/>
+  <path d="M835 1390 l68 -192 68 192z"/>
+  <path d="M960 1435 l62 -182 62 182z"/>
+</g>
+
+<!-- alpine lakes -->
+<path d="M280 1160 C365 1110 470 1110 560 1145 C650 1180 720 1225 785 1270 C710 1320 625 1345 540 1338 C430 1330 340 1285 285 1225 C265 1202 260 1178 280 1160Z" fill="url(#lake)"/>
+<path d="M580 1265 C700 1215 835 1225 955 1280 C900 1330 805 1350 710 1340 C650 1335 612 1310 580 1265Z" fill="#2f6670" opacity=".9"/>
+<path d="M325 1190 C440 1165 555 1185 655 1230" fill="none" stroke="#d7eeea" stroke-width="11" opacity=".28"/>
+<path d="M615 1300 C730 1260 850 1280 920 1310" fill="none" stroke="#d7eeea" stroke-width="9" opacity=".2"/>
+
+<!-- foreground valley -->
+<path d="M0 1390 C180 1310 350 1360 490 1460 C625 1555 770 1510 910 1420 C1000 1365 1050 1380 1080 1410 V1920 H0Z" fill="#122a22"/>
+<path d="M0 1530 C170 1445 340 1495 500 1595 C650 1690 820 1630 1080 1515 V1920 H0Z" fill="#081411"/>
+
+<!-- trail -->
+<path d="M170 1920 C300 1775 415 1640 470 1510 C505 1428 485 1360 425 1300 C395 1270 407 1240 448 1218 C530 1270 575 1350 566 1440 C548 1575 440 1715 390 1920Z" fill="url(#trail)" opacity=".95"/>
+<path d="M260 1920 C365 1770 465 1630 505 1510 C536 1418 515 1350 465 1298" fill="none" stroke="#d8b48a" stroke-width="10" opacity=".38"/>
+
+<!-- rocks and alpine flowers -->
+<g fill="#4a554e">
+  <ellipse cx="110" cy="1760" rx="135" ry="58"/>
+  <ellipse cx="365" cy="1825" rx="165" ry="68"/>
+  <ellipse cx="720" cy="1760" rx="150" ry="62"/>
+  <ellipse cx="960" cy="1860" rx="170" ry="72"/>
+</g>
+<g fill="#c77c8f" opacity=".8">
+  <circle cx="105" cy="1660" r="8"/><circle cx="145" cy="1690" r="6"/><circle cx="208" cy="1730" r="7"/>
+  <circle cx="760" cy="1655" r="7"/><circle cx="810" cy="1680" r="6"/><circle cx="885" cy="1715" r="7"/>
+</g>
+<g fill="#d7aa6a" opacity=".8">
+  <circle cx="170" cy="1710" r="6"/><circle cx="740" cy="1705" r="6"/><circle cx="920" cy="1750" r="5"/>
+</g>
+</svg>
