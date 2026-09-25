@@ -70,6 +70,29 @@ jobs:
           flutter build apk --release
           flutter build appbundle --release
 
+      - name: Generate Android release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find build/app/outputs/flutter-apk -maxdepth 1 -type f -name '*.apk' | head -n 1)"
+          aab="$(find build/app/outputs/bundle/release -maxdepth 1 -type f -name '*.aab' | head -n 1)"
+          test -n "$apk"
+          test -n "$aab"
+          flutter_version="$(flutter --version | head -n 1)"
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+            echo "workflow=${GITHUB_WORKFLOW}"
+            echo "created_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "flutter=${flutter_version}"
+            echo "apk_file=$(basename "$apk")"
+            echo "apk_size_bytes=$(stat -c '%s' "$apk")"
+            echo "apk_sha256=$(sha256sum "$apk" | cut -d ' ' -f1)"
+            echo "aab_file=$(basename "$aab")"
+            echo "aab_size_bytes=$(stat -c '%s' "$aab")"
+            echo "aab_sha256=$(sha256sum "$aab" | cut -d ' ' -f1)"
+          } > build/android-release-manifest.txt
+
       - name: Upload Android build artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -77,6 +100,7 @@ jobs:
           path: |
             build/app/outputs/flutter-apk/*.apk
             build/app/outputs/bundle/release/*.aab
+            build/android-release-manifest.txt
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
