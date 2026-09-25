@@ -106,8 +106,8 @@ jobs:
           export AWS_DEFAULT_REGION=auto
           endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           prefix="basemap/spain/${VERSION}"
-          checksum="${$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)}"
-          size="${$(stat -c '%s' build/maps/spain.pmtiles)}"
+          checksum="$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)"
+          size="$(stat -c '%s' build/maps/spain.pmtiles)"
 
           aws s3 cp build/maps/spain.pmtiles "s3://${R2_BUCKET}/${prefix}/spain.pmtiles" \
             --endpoint-url "${endpoint}" \
@@ -139,8 +139,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          export MAP_SHA256="${$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)}"
-          export MAP_SIZE_BYTES="${$(stat -c '%s' build/maps/spain.pmtiles)}"
+          export MAP_SHA256="$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)"
+          export MAP_SIZE_BYTES="$(stat -c '%s' build/maps/spain.pmtiles)"
 
           python3 - <<'PY'
           import json
