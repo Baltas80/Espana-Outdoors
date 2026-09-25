@@ -50,4 +50,5 @@ flutter:
     - assets/map/
     - assets/backgrounds/
     - assets/landscapes/
-    - assets/flora_fauna/
+    - assets/flora_fauna/flora/
+    - assets/flora_fauna/fauna/
