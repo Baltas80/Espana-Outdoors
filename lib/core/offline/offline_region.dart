@@ -75,6 +75,8 @@ class OfflineRegion {
     final normalizedProviderId = providerId.trim();
     final normalizedAttribution = attribution.trim();
     if (normalizedId.isEmpty ||
+        !RegExp(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$')
+            .hasMatch(normalizedId) ||
         normalizedName.isEmpty ||
         normalizedProviderId.isEmpty ||
         normalizedAttribution.isEmpty ||
