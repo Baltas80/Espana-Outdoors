@@ -118,19 +118,19 @@ jobs:
             --endpoint-url "${endpoint}" \
             --content-type text/plain
 
-          remote_size="${$(aws s3api head-object \
+          remote_size="$(aws s3api head-object \
             --bucket "${R2_BUCKET}" \
             --key "${prefix}/spain.pmtiles" \
             --endpoint-url "${endpoint}" \
             --query ContentLength \
-            --output text)}"
+            --output text)"
 
-          remote_sha="${$(aws s3api head-object \
+          remote_sha="$(aws s3api head-object \
             --bucket "${R2_BUCKET}" \
             --key "${prefix}/spain.pmtiles" \
             --endpoint-url "${endpoint}" \
             --query Metadata.sha256 \
-            --output text)}"
+            --output text)"
 
           test "${remote_size}" = "${size}"
           test "${remote_sha}" = "${checksum}"
