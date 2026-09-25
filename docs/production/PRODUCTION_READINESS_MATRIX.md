@@ -2,19 +2,39 @@
 
 This document separates repository-complete work from dependencies that require external infrastructure, credentials, contracts, or physical devices.
 
-| Area | Repository | External / physical | Release gate |
+Status vocabulary:
+- **HECHO**: backed by repository/CI/artifact/test evidence.
+- **PREPARADO**: repository implementation is ready but external evidence is missing.
+- **PENDIENTE**: technical work remains in the repository.
+- **BLOQUEADO**: requires an external owner action, credential, account, contract, domain, or physical device.
+
+| Area | Repository / CI status | External / physical | Release gate |
 |---|---|---|---|
-| CI | READY | — | GREEN CI required |
-| Android release | READY | Physical Android QA | Device test required |
-| iOS release | READY | Physical iOS QA + Apple account | Device/store validation required |
-| LAND visual pack | LAND-01..04 present | Remaining pack | Asset integration + QA |
-| PMTiles | Integration ready | R2/HTTPS + real Spain PMTiles | Range + online/offline test |
-| Offline catalog | Release variable wired | Real catalog endpoint | Endpoint health + offline test |
-| Valhalla | Integration ready | Production routing host | E2E routing test |
-| Live Data | Gateway ready | Provider credentials/API | Live-data smoke test |
-| Rescue Link | Integration/CI ready | Production deployment/domain | E2E safety test without real 112 call |
-| Contracts | Matrix documented | Accounts/contracts must exist | Evidence recorded before production |
-| Stores | Build pipeline ready | Google Play / Apple Developer | Final QA + signing + submission |
+| CI | **HECHO** — CI run 36084587261 succeeded on commit `18aa5080b3f7245c59c22e29b5e460972929dd8a` | — | Keep CI green |
+| Android release | **HECHO** — release APK/AAB build and release manifest completed in the successful CI run | **BLOQUEADO** for physical validation until a device is available | Install and execute physical Android QA |
+| Android artifacts | **HECHO** — `android-release` artifact exists; manifest contains APK/AAB metadata and SHA-256 values | — | Verify artifact against intended release candidate |
+| iOS release | **HECHO** — iOS release build job completed successfully in CI | **BLOQUEADO** for physical/store validation until device + Apple account evidence exists | Physical iOS QA and signing/store validation |
+| LAND visual pack | **HECHO** — LAND-01..07 plus flora/fauna visual assets are present in repository history | Physical/device visual QA remains | Verify rendering in release artifact |
+| PMTiles | **PREPARADO** — application integration and production publication runbook exist | **BLOQUEADO** until real R2/HTTPS publication and real Spain PMTiles exist | Range requests, HTTP 206/Content-Range, checksum, online/offline verification |
+| Offline catalog | **PREPARADO** — production endpoint is release-gated in repository | **BLOQUEADO** until real catalog endpoint exists | Endpoint health + regional download + offline test |
+| Valhalla | **PREPARADO** — routing/elevation integration and CI tests exist | **BLOQUEADO** until a production HTTPS routing host with real tiles exists | Status + routing smoke test + elevation smoke test + E2E |
+| Live Data | **PREPARADO** — source gateway integration and CI tests exist | **BLOQUEADO** until provider credentials/API and production gateway exist | Auth, rate limit, cache, observability and live-data smoke test |
+| Rescue Link | **PREPARADO** — service integration and CI tests exist | **BLOQUEADO** until production deployment/domain exists | E2E safety test without a real 112 call |
+| Security | **HECHO** at CI baseline level; repository security workflow is green for the latest commit | Production secret/configuration evidence still required | Dependency/secret/configuration gates plus release review |
+| Contracts | **PREPARADO** — requirements/matrix documented | **BLOQUEADO** until required accounts/contracts are actually obtained | Evidence recorded before production |
+| Stores | **PREPARADO** — mobile build pipeline exists | **BLOQUEADO** until Google Play / Apple Developer access, signing and store metadata are available | Final QA, signing and submission |
+
+## Current verified CI evidence
+
+Latest verified push CI:
+- Workflow run: `36084587261`
+- Commit: `18aa5080b3f7245c59c22e29b5e460972929dd8a`
+- Result: `success`
+- Android artifact: `android-release`
+- Android artifact digest: `sha256:f949c8bcce3924b68fef6d35dbf957b45b5b4ce70da4a7e619787ae340a97815`
+- Coverage artifact: `coverage`
+
+A successful CI run is not physical-device validation and is not proof of production infrastructure.
 
 ## Rules
 
@@ -23,6 +43,7 @@ This document separates repository-complete work from dependencies that require 
 3. Never perform a real 112 emergency call for testing; use controlled mocks/sandboxes.
 4. A release candidate must contain only production configuration supplied through the release environment.
 5. Physical Android/iOS validation remains a separate gate from CI.
+6. Repository assets and APK/AAB inclusion are separate claims and must be verified independently.
 
 ## Visual asset rule
 
