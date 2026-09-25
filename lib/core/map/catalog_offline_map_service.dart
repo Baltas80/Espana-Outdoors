@@ -92,7 +92,7 @@ final class CatalogOfflineMapService implements MapService {
     }
 
     final directory = await _offlineDirectory();
-    final prefix = '\${regionId}-';
+    final prefix = '${regionId}-';
     if (!await directory.exists()) return;
 
     await for (final entity in directory.list()) {
@@ -113,19 +113,19 @@ final class CatalogOfflineMapService implements MapService {
       if (entry.id != id) continue;
       if (entry.providerId != _providerId) {
         throw StateError(
-          'Offline region "\${id}" declares an unsupported provider: \${entry.providerId}.',
+          'Offline region "${id}" declares an unsupported provider: ${entry.providerId}.',
         );
       }
       return entry;
     }
     throw StateError(
-      'Offline region "\$id" is not present in the approved catalog.',
+      'Offline region "$id" is not present in the approved catalog.',
     );
   }
 
   Future<Directory> _offlineDirectory() async {
     final support = await getApplicationSupportDirectory();
-    final directory = Directory('\${support.path}/offline_regions');
+    final directory = Directory('${support.path}/offline_regions');
     await directory.create(recursive: true);
     return directory;
   }
@@ -135,7 +135,7 @@ final class CatalogOfflineMapService implements MapService {
     required File keep,
   }) async {
     final directory = await _offlineDirectory();
-    final prefix = '\${entry.id}-';
+    final prefix = '${entry.id}-';
     await for (final entity in directory.list()) {
       if (entity is File &&
           entity.path.endsWith('.pmtiles') &&
