@@ -20,15 +20,15 @@ jobs:
     runs-on: ubuntu-24.04
     environment: maps-production
     env:
-      R2_ACCOUNT_ID: ${secrets.R2_ACCOUNT_ID}}
-      R2_ACCESS_KEY_ID: ${secrets.R2_ACCESS_KEY_ID}}
-      R2_SECRET_ACCESS_KEY: ${secrets.R2_SECRET_ACCESS_KEY}}
-      R2_BUCKET: ${vars.R2_BUCKET}}
-      MAPS_PUBLIC_BASE_URL: ${vars.MAPS_PUBLIC_BASE_URL}}
-      MAPS_LICENSE_URL: ${vars.MAPS_LICENSE_URL}}
-      MAPS_ATTRIBUTION: ${vars.MAPS_ATTRIBUTION}}
-      VERSION: ${inputs.version}}
-      OSM_URL: ${inputs.osm_url}}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID}}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID}}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY}}
+      R2_BUCKET: ${{ vars.R2_BUCKET}}
+      MAPS_PUBLIC_BASE_URL: ${{ vars.MAPS_PUBLIC_BASE_URL}}
+      MAPS_LICENSE_URL: ${{ vars.MAPS_LICENSE_URL}}
+      MAPS_ATTRIBUTION: ${{ vars.MAPS_ATTRIBUTION}}
+      VERSION: ${{ inputs.version}}
+      OSM_URL: ${{ inputs.osm_url}}
     steps:
       - uses: actions/checkout@v4
 
@@ -70,7 +70,7 @@ jobs:
           expected="3ed7dbf4ec2e6dfe5e25b6f70d1ffc932729f93c86db353bf514dd71010a312f"
           url="https://github.com/protomaps/go-pmtiles/releases/download/v${version}/go-pmtiles_${version}_Linux_x86_64.tar.gz"
           curl --fail --location --retry 5 --retry-all-errors -o /tmp/go-pmtiles.tar.gz "${url}"
-          echo "${expected  /tmp/go-pmtiles.tar.gz" | sha256sum -c -
+          echo "${expected}  /tmp/go-pmtiles.tar.gz" | sha256sum -c -
           tar -xzf /tmp/go-pmtiles.tar.gz -C /tmp
           install -m 0755 /tmp/pmtiles ./pmtiles
 
@@ -106,8 +106,8 @@ jobs:
           export AWS_DEFAULT_REGION=auto
           endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           prefix="basemap/spain/${VERSION}"
-          checksum="$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)"
-          size="$(stat -c '%s' build/maps/spain.pmtiles)"
+          checksum="${$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)}"
+          size="${$(stat -c '%s' build/maps/spain.pmtiles)}"
 
           aws s3 cp build/maps/spain.pmtiles "s3://${R2_BUCKET}/${prefix}/spain.pmtiles" \
             --endpoint-url "${endpoint}" \
@@ -118,19 +118,19 @@ jobs:
             --endpoint-url "${endpoint}" \
             --content-type text/plain
 
-          remote_size="$(aws s3api head-object \
+          remote_size="${$(aws s3api head-object \
             --bucket "${R2_BUCKET}" \
             --key "${prefix}/spain.pmtiles" \
             --endpoint-url "${endpoint}" \
             --query ContentLength \
-            --output text)"
+            --output text)}"
 
-          remote_sha="$(aws s3api head-object \
+          remote_sha="${$(aws s3api head-object \
             --bucket "${R2_BUCKET}" \
             --key "${prefix}/spain.pmtiles" \
             --endpoint-url "${endpoint}" \
             --query Metadata.sha256 \
-            --output text)"
+            --output text)}"
 
           test "${remote_size}" = "${size}"
           test "${remote_sha}" = "${checksum}"
@@ -139,9 +139,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          checksum="$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)"
-          size="$(stat -c '%s' build/maps/spain.pmtiles)"
-          url="${MAPS_PUBLIC_BASE_URL%/}/basemap/spain/${VERSION}/spain.pmtiles"
+          export MAP_SHA256="${$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)}"
+          export MAP_SIZE_BYTES="${$(stat -c '%s' build/maps/spain.pmtiles)}"
 
           python3 - <<'PY'
           import json
@@ -156,10 +155,12 @@ jobs:
               "providerId": "approved-pmtiles-catalog",
               "licenseUrl": os.environ["MAPS_LICENSE_URL"],
               "attribution": os.environ["MAPS_ATTRIBUTION"],
-              "downloadUrl": os.environ["MAPS_PUBLIC_BASE_URL"].rstrip("/")
+              "downloadUrl": (
+                  os.environ["MAPS_PUBLIC_BASE_URL"].rstrip("/")
                   + "/basemap/spain/"
                   + os.environ["VERSION"]
-                  + "/spain.pmtiles",
+                  + "/spain.pmtiles"
+              ),
               "sizeBytes": int(os.environ["MAP_SIZE_BYTES"]),
               "updatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "sha256": os.environ["MAP_SHA256"],
@@ -185,21 +186,18 @@ jobs:
             --bucket "${R2_BUCKET}" \
             --key catalog/spain.json \
             --endpoint-url "${endpoint}" >/dev/null
-        env:
-          MAP_SHA256: ${{{ '$(cut -d' ' -f1 build/maps/spain.pmtiles.sha256)' }}}
-          MAP_SIZE_BYTES: ${{{ '$(stat -c '%s' build/maps/spain.pmtiles)' }}}
 
       - name: Verify HTTPS and byte range
         shell: bash
         env:
-          MAP_PMTILES_URL: ${vars.MAPS_PUBLIC_BASE_URL }}/basemap/spain/${inputs.version }}/spain.pmtiles
+          MAP_PMTILES_URL: ${{ vars.MAPS_PUBLIC_BASE_URL}}/basemap/spain/${{ inputs.version}}/spain.pmtiles
         run: |
           bash ops/offline/verify-pmtiles-http.sh
 
       - name: Upload release evidence
         uses: actions/upload-artifact@v4
         with:
-          name: pmtiles-release-evidence-${inputs.version }}
+          name: pmtiles-release-evidence-${{ inputs.version}}
           path: |
             build/maps/spain.osm.pbf.sha256
             build/maps/spain.pmtiles.sha256
