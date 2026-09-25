@@ -71,45 +71,45 @@ Las versiones se mantienen deliberadamente en rangos compatibles y deben revisar
 
 ## Configuración de routing
 
-El cliente no contiene una URL de routing fija. En desarrollo o release se inyecta:
+El cliente no contiene una URL de routing fija. En desarrollo o release se inyecta mediante la variable segura/configurada por entorno:
 
 ```bash
-flutter run --dart-define=VALHALLA_BASE_URL=https://routing.example.com/
+flutter run --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL"
 ```
 
 Si no se configura, el routing permanece deshabilitado de forma explícita en lugar de utilizar un proveedor no verificado.
 
 ## Configuración cartográfica
 
-Producción requiere un proveedor contratado/operado y sus obligaciones de atribución:
+Producción requiere un proveedor contratado/operado y sus obligaciones de atribución. Los valores reales deben proceder exclusivamente de la configuración del entorno de producción:
 
 ```bash
 flutter run \
   --dart-define=APP_ENV=production \
-  --dart-define=MAP_PMTILES_URL=https://maps.example.com/spain.pmtiles \
-  --dart-define=MAP_ATTRIBUTION="Proveedor cartográfico"
+  --dart-define=MAP_PMTILES_URL="$MAP_PMTILES_URL" \
+  --dart-define=MAP_ATTRIBUTION="$MAP_ATTRIBUTION"
 ```
 
-Durante desarrollo, si no se configura un proveedor, se permite un fallback online de OpenStreetMap para facilitar pruebas. Ese fallback no se usa en producción ni para descargas offline/bulk.
+No se debe introducir una URL de ejemplo en un release. Durante desarrollo, si no se configura un proveedor, se permite un fallback online de OpenStreetMap para facilitar pruebas. Ese fallback no se usa en producción ni para descargas offline/bulk.
 
 ## Configuración del catálogo offline
 
-El catálogo se inyecta con:
+El catálogo se inyecta mediante configuración de entorno:
 
 ```bash
-flutter run --dart-define=OFFLINE_CATALOG_URL=https://api.example.com/v1/offline/regions
+flutter run --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL"
 ```
 
 El endpoint debe devolver un array JSON con `id`, `name`, `description`, `providerId`, `licenseUrl`, `attribution`, `downloadUrl`, `sizeBytes`, `updatedAt` y `sha256`. Todos los paquetes deben declarar una licencia HTTPS, atribución y SHA-256 válidos; no se deben publicar URLs ni paquetes ficticios.
 
 ## Identidad OIDC / Keycloak
 
-La aplicación no implementa autenticación casera. La configuración se inyecta:
+La aplicación no implementa autenticación casera. La configuración se inyecta desde el entorno aprobado:
 
 ```bash
---dart-define=OIDC_ISSUER=https://auth.example.com/realms/espana-outdoor
---dart-define=OIDC_CLIENT_ID=espana-outdoor-public
---dart-define=OIDC_REDIRECT_URI=espanaoutdoor://callback
+--dart-define=OIDC_ISSUER="$OIDC_ISSUER"
+--dart-define=OIDC_CLIENT_ID="$OIDC_CLIENT_ID"
+--dart-define=OIDC_REDIRECT_URI="$OIDC_REDIRECT_URI"
 ```
 
 El flujo objetivo es Authorization Code + PKCE con almacenamiento seguro gestionado por el componente OIDC maduro. Los secretos de clientes confidenciales permanecen exclusivamente en backend/infraestructura.
@@ -130,7 +130,7 @@ Sentry se habilita únicamente cuando se inyecta `SENTRY_DSN`:
 
 ```bash
 --dart-define=APP_ENV=production \
---dart-define=SENTRY_DSN=https://example@sentry.example/123
+--dart-define=SENTRY_DSN="$SENTRY_DSN"
 ```
 
 `sendDefaultPii` permanece desactivado. No se deben registrar coordenadas de emergencia, ubicaciones sensibles de fauna, tokens ni secretos en eventos de observabilidad.
@@ -158,56 +158,4 @@ lib/
   features/     funcionalidades de producto
   infrastructure/ adaptadores externos: routing, auth, billing y fuentes
   main.dart
-
-docs/           arquitectura, privacidad, datos, seguridad y Design System
-assets/         identidad visual y recursos reutilizables
-ops/            infraestructura local/producción no sensible
-.github/        CI y automatización
-scripts/        bootstrap local
 ```
-
-## Arranque local móvil
-
-Requiere Flutter estable y toolchains de Android/iOS.
-
-```bash
-flutter create . --platforms=android,ios
-flutter pub get
-flutter analyze
-flutter test
-flutter devices
-```
-
-Para iOS se requiere macOS/Xcode para compilar, firmar y distribuir. Android puede compilarse con el SDK de Android correspondiente.
-
-## Principios
-
-1. No inventar datos de seguridad.
-2. No presentar estimaciones de IA como hechos oficiales.
-3. No exponer coordenadas sensibles de fauna.
-4. No recopilar ubicación más tiempo del necesario.
-5. SOS debe tener el mínimo número de pasos razonable.
-6. Rescue Link nunca sustituye a los servicios profesionales de emergencia.
-7. Toda fuente dinámica debe tener frescura y procedencia.
-8. Ningún secreto entra en Git.
-9. No usar `tile.openstreetmap.org` para descargas offline o prefetched bulk.
-10. Las decisiones de proveedor deben considerar licencia, capacidad, coste, lock-in y rendimiento.
-11. El código y los activos propios de España Outdoor son propietarios salvo indicación expresa.
-12. Cada componente de terceros conserva su licencia y obligaciones originales.
-13. La confianza del motor de riesgo mide calidad/completitud de datos, nunca seguridad absoluta.
-14. Las funciones críticas de emergencia no dependen de billing, analytics ni conectividad continua.
-15. Android e iOS/iPadOS son las únicas plataformas de producto soportadas actualmente.
-16. Web, Windows, macOS y Linux no forman parte del alcance activo y no deben recibir trabajo específico salvo nueva decisión de producto.
-
-## Documentación clave
-
-- `docs/brand_system.md` — identidad visual y Design System.
-- `docs/architecture/ADR-0001-maps-and-offline.md` — estrategia de cartografía, proveedores y offline.
-- `docs/architecture/ADR-0003-valhalla-routing.md` — decisión y despliegue de routing.
-- `docs/THIRD_PARTY_LICENSES.md` — registro de software de terceros y alternativas maduras.
-- `docs/production-readiness.md` — variables de despliegue y gates de producción.
-- `LICENSE.md` — licencia propietaria de España Outdoor.
-
-## Licencia
-
-El código, diseño y activos propios de España Outdoor están bajo **licencia propietaria**. El repositorio público no concede por sí mismo derechos de reutilización, redistribución, modificación o creación de productos derivados. Los componentes y datos de terceros se rigen por sus respectivas licencias y condiciones.
