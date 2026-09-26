@@ -5,6 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -210,7 +211,6 @@ jobs:
 
       - name: Container build
         run: docker build -t espana-outdoors-rescue-link:ci .
-
 
   source-gateway:
     runs-on: ubuntu-latest
