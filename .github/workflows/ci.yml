@@ -182,6 +182,31 @@ jobs:
       - name: iOS release build
         run: flutter build ios --release --no-codesign
 
+      - name: Generate iOS build manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="build/ios/iphoneos/Runner.app"
+          test -d "$app"
+          flutter_version="$(flutter --version | head -n 1)"
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+            echo "workflow=${GITHUB_WORKFLOW}"
+            echo "created_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "flutter=${flutter_version}"
+            echo "artifact_type=unsigned_ios_app_bundle"
+            echo "app_path=${app}"
+          } > build/ios-release-manifest.txt
+
+      - name: Upload iOS build evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-release-evidence
+          path: |
+            build/ios/iphoneos/Runner.app
+            build/ios-release-manifest.txt
+
   rescue-link:
     runs-on: ubuntu-latest
     defaults:
