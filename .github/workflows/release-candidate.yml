@@ -34,6 +34,12 @@ jobs:
               echo "$name must use HTTPS"
               exit 1
             fi
+            case "$value" in
+              *example.com*|*example.org*|*example.net*|*localhost*|*127.0.0.1*|*::1*|*.local/*|*.local)
+                echo "$name contains a placeholder or local endpoint: $value"
+                exit 1
+                ;;
+            esac
           done
 
       - name: Setup Java 21
@@ -102,6 +108,12 @@ jobs:
               echo "$name must use HTTPS"
               exit 1
             fi
+            case "$value" in
+              *example.com*|*example.org*|*example.net*|*localhost*|*127.0.0.1*|*::1*|*.local/*|*.local)
+                echo "$name contains a placeholder or local endpoint: $value"
+                exit 1
+                ;;
+            esac
           done
 
       - name: Setup Flutter
