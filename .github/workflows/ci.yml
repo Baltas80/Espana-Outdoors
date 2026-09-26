@@ -13,6 +13,8 @@ permissions:
 jobs:
   flutter:
     runs-on: ubuntu-latest
+    env:
+      APP_ENV: ci
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -26,6 +28,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.47.5'
           channel: stable
           cache: true
 
@@ -34,6 +37,12 @@ jobs:
 
       - name: Apply Android native configuration
         run: python3 tool/configure_mobile_native.py --platform android
+
+      - name: Verify Android native configuration
+        run: python3 tool/verify_mobile_native.py --platform android
+
+      - name: Verify CI build profile
+        run: python3 tool/verify_build_profile.py --profile ci
 
       - name: Dependencies
         run: flutter pub get
@@ -68,8 +77,8 @@ jobs:
 
       - name: Android release build
         run: |
-          flutter build apk --release
-          flutter build appbundle --release
+          flutter build apk --release --dart-define=APP_ENV=ci
+          flutter build appbundle --release --dart-define=APP_ENV=ci
 
       - name: Verify Android release assets
         shell: bash
@@ -90,7 +99,10 @@ jobs:
           test -n "$apk"
           test -n "$aab"
           flutter_version="$(flutter --version | head -n 1)"
+          app_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n 1)"
           {
+            echo "profile=ci"
+            echo "app_version=${app_version}"
             echo "commit=${GITHUB_SHA}"
             echo "workflow_run=${GITHUB_RUN_ID}"
             echo "workflow=${GITHUB_WORKFLOW}"
@@ -121,6 +133,8 @@ jobs:
 
   ios-build:
     runs-on: macos-latest
+    env:
+      APP_ENV: ci
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -128,6 +142,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.47.5'
           channel: stable
           cache: true
 
@@ -136,6 +151,12 @@ jobs:
 
       - name: Apply iOS native configuration
         run: python3 tool/configure_mobile_native.py --platform ios
+
+      - name: Verify iOS native configuration
+        run: python3 tool/verify_mobile_native.py --platform ios
+
+      - name: Verify CI build profile
+        run: python3 tool/verify_build_profile.py --profile ci
 
       - name: Dependencies
         run: flutter pub get
@@ -180,7 +201,7 @@ jobs:
           PY
 
       - name: iOS release build
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --dart-define=APP_ENV=ci
 
       - name: Generate iOS build manifest
         shell: bash
@@ -189,7 +210,10 @@ jobs:
           app="build/ios/iphoneos/Runner.app"
           test -d "$app"
           flutter_version="$(flutter --version | head -n 1)"
+          app_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n 1)"
           {
+            echo "profile=ci"
+            echo "app_version=${app_version}"
             echo "commit=${GITHUB_SHA}"
             echo "workflow_run=${GITHUB_RUN_ID}"
             echo "workflow=${GITHUB_WORKFLOW}"
