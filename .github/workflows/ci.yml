@@ -133,6 +133,8 @@ jobs:
 
   ios-build:
     runs-on: macos-latest
+    env:
+      APP_ENV: ci
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -140,6 +142,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.47.5'
           channel: stable
           cache: true
 
@@ -198,7 +201,7 @@ jobs:
           PY
 
       - name: iOS release build
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --dart-define=APP_ENV=ci
 
       - name: Generate iOS build manifest
         shell: bash
