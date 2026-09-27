@@ -17,4 +17,10 @@ final class MapProviderConfig {
     attribution: '© OpenStreetMap contributors',
     userAgent: 'EspanaOutdoor/0.1 (+https://github.com/Baltas80/Espana-Outdoors)',
   );
+
+  /// Production-only guard for externally supplied MapLibre style JSON.
+  /// The public OSM tile endpoint is intentionally centralized here so
+  /// application/provider code cannot accidentally depend on it.
+  static bool styleDependsOnPublicOpenStreetMapTiles(String json) =>
+      json.toLowerCase().contains('tile.openstreetmap.org');
 }
