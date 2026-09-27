@@ -9,6 +9,25 @@ import 'package:latlong2/latlong.dart';
 import 'maplibre_style_provider_io.dart';
 import '../../features/map/map_provider_config.dart';
 
+final class MapProductionPolicy {
+  const MapProductionPolicy._();
+
+  static void validateEndpoint(Uri endpoint, {required String name}) {
+    if (endpoint.scheme != 'https' || endpoint.host.isEmpty) {
+      throw StateError('$name must be an HTTPS URL in production.');
+    }
+  }
+
+  static void validateStyleJson(String json) {
+    final lower = json.toLowerCase();
+    if (lower.contains('tile.openstreetmap.org')) {
+      throw StateError(
+        'Production map styles must not depend on the public OpenStreetMap tile server.',
+      );
+    }
+  }
+}
+
 class MapLibreStyleProvider {
   const MapLibreStyleProvider();
 
@@ -54,6 +73,24 @@ class MapLibreStyleProvider {
       throw StateError(
         'MAP_PMTILES_URL is not configured. Configure an España Outdoor-owned or approved PMTiles endpoint before starting the map.',
       );
+    }
+
+    if (const String.fromEnvironment('APP_ENV') == 'production') {
+      MapProductionPolicy.validateStyleJson(json);
+
+      if (styleUrl.isNotEmpty) {
+        MapProductionPolicy.validateEndpoint(
+          Uri.tryParse(styleUrl) ?? Uri(),
+          name: 'MAP_STYLE_URL',
+        );
+      }
+
+      if (pmtilesUrl.isNotEmpty) {
+        MapProductionPolicy.validateEndpoint(
+          Uri.tryParse(pmtilesUrl) ?? Uri(),
+          name: 'MAP_PMTILES_URL',
+        );
+      }
     }
 
     final decoded = jsonDecode(json);
