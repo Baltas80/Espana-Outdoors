@@ -77,7 +77,7 @@ jobs:
           test/source_gateway_config_test.dart
 
       - name: Full test suite
-        run: flutter test --coverage
+        run: flutter test --coverage --concurrency=1
 
       - name: Android release build
         run: |
