@@ -113,15 +113,15 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 16),
           const _Section(title: 'Privacidad', items: [
-            _Item(icon: Icons.location_on_outlined, title: 'Permisos de ubicación', subtitle: 'Controla cuándo puede acceder la app.'),
-            _Item(icon: Icons.lock_outline, title: 'Datos y seguridad', subtitle: 'Minimización, almacenamiento y eliminación.'),
-            _Item(icon: Icons.download_outlined, title: 'Exportar mis datos', subtitle: 'Preparado para portabilidad.'),
+            _Item(asset: 'assets/visuals/icons/location.svg', title: 'Permisos de ubicación', subtitle: 'Controla cuándo puede acceder la app.'),
+            _Item(asset: 'assets/visuals/icons/privacy.svg', title: 'Datos y seguridad', subtitle: 'Minimización, almacenamiento y eliminación.'),
+            _Item(asset: 'assets/visuals/icons/export.svg', title: 'Exportar mis datos', subtitle: 'Preparado para portabilidad.'),
           ]),
           const SizedBox(height: 16),
           _Section(title: 'Aventura', items: [
-            _Item(icon: Icons.pets_outlined, title: 'Mis mascotas', subtitle: 'Preferencias para rutas y riesgos.', onTap: () => context.go('/pets')),
-            _Item(icon: Icons.offline_bolt_outlined, title: 'Contenido offline', subtitle: 'Gestiona mapas y datos descargados.', onTap: () => context.go('/offline')),
-            _Item(icon: Icons.eco_outlined, title: 'NATURA PROTECT', subtitle: 'Conservación y navegación responsable.', onTap: () => context.go('/natura')),
+            _Item(asset: 'assets/visuals/icons/pets.svg', title: 'Mis mascotas', subtitle: 'Preferencias para rutas y riesgos.', onTap: () => context.go('/pets')),
+            _Item(asset: 'assets/visuals/icons/offline.svg', title: 'Contenido offline', subtitle: 'Gestiona mapas y datos descargados.', onTap: () => context.go('/offline')),
+            _Item(asset: 'assets/visuals/icons/natura.svg', title: 'NATURA PROTECT', subtitle: 'Conservación y navegación responsable.', onTap: () => context.go('/natura')),
           ]),
         ],
       ),
@@ -146,8 +146,8 @@ class _Section extends StatelessWidget {
 }
 
 class _Item extends StatelessWidget {
-  const _Item({required this.icon, required this.title, required this.subtitle, this.onTap});
-  final IconData icon;
+  const _Item({required this.asset, required this.title, required this.subtitle, this.onTap});
+  final String asset;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
@@ -156,7 +156,7 @@ class _Item extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-        leading: Icon(icon),
+        leading: OutdoorAssetIcon(asset: asset, size: 34),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
