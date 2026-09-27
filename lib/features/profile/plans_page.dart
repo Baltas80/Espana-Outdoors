@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../../domain/subscriptions/entitlements.dart';
@@ -71,6 +72,8 @@ class _PlansPageState extends State<PlansPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
+          OutdoorVisualHero(asset: 'assets/visuals/hero_plans.svg', title: 'Planes', subtitle: 'Capacidades claras para cada forma de explorar.'),
+          const SizedBox(height: 18),
           Text('Elige cómo quieres explorar',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
@@ -79,7 +82,7 @@ class _PlansPageState extends State<PlansPage> {
           const Text('Las capacidades se controlan mediante entitlements, no mediante comprobaciones dispersas en la interfaz.'),
           FilledButton.icon(
             onPressed: _openPremium,
-            icon: const Icon(Icons.workspace_premium_outlined),
+            icon: const OutdoorAssetIcon(asset: 'assets/visuals/icons/plans.svg', size: 38),
             label: const Text('Ver opciones de suscripción'),
           ),
           const SizedBox(height: 8),
