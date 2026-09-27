@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/domain/outdoor_models.dart';
@@ -72,6 +73,8 @@ class _SafetyPageState extends State<SafetyPage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          OutdoorVisualHero(asset: 'assets/visuals/hero_safety.svg', title: 'Seguridad', subtitle: 'Prepárate antes de salir y actúa con seguridad.'),
+          const SizedBox(height: 18),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
