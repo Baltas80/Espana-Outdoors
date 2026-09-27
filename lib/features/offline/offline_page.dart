@@ -1,6 +1,7 @@
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 
 import '../../core/offline/offline_region.dart';
 import '../../core/offline/offline_region_catalog.dart';
@@ -84,7 +85,7 @@ class _OfflinePageState extends State<OfflinePage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.cloud_download_outlined, size: 30),
+                    OutdoorAssetIcon(asset: 'assets/visuals/icons/offline.svg', size: 46),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Text(
