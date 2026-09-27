@@ -1,5 +1,9 @@
 name: CI
 
+concurrency:
+  group: espana-outdoors-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [master]
