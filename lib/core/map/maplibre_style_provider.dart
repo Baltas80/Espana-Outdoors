@@ -19,8 +19,7 @@ final class MapProductionPolicy {
   }
 
   static void validateStyleJson(String json) {
-    final lower = json.toLowerCase();
-    if (lower.contains('tile.openstreetmap.org')) {
+    if (MapProviderConfig.styleDependsOnPublicOpenStreetMapTiles(json)) {
       throw StateError(
         'Production map styles must not depend on the public OpenStreetMap tile server.',
       );
