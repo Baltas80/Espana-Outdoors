@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/gpx/gpx_import_service.dart';
@@ -56,6 +57,8 @@ class _RoutesPageState extends State<RoutesPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          OutdoorVisualHero(asset: 'assets/visuals/hero_routes.svg', title: 'Planifica tu próxima salida', subtitle: 'Rutas con contexto y preparación offline.'),
+          const SizedBox(height: 18),
           Text(
             'Planifica tu próxima salida',
             style: Theme.of(context)
