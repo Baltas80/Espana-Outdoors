@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 
 import '../../core/domain/outdoor_models.dart';
 import 'pet_safety.dart';
@@ -37,6 +38,10 @@ class _PetsPageState extends State<PetsPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          OutdoorVisualHero(asset: 'assets/visuals/hero_pets.svg', title: 'Preparación para mascotas', subtitle: 'Planifica la salida pensando en tu compañero.'),
+          const SizedBox(height: 18),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [OutdoorAssetIcon(asset: 'assets/visuals/icons/pets.svg', size: 64)]),
+          const SizedBox(height: 16),
           Text(
             'Preparación para mascotas',
             style: Theme.of(context)
