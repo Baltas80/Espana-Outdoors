@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 
 import '../../core/sources/source_gateway_config.dart';
 import '../../infrastructure/sources/remote_source_gateway.dart';
@@ -47,13 +48,15 @@ class _AlertsPageState extends State<AlertsPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
+          OutdoorVisualHero(asset: 'assets/visuals/hero_alerts.svg', title: 'Alertas y riesgos', subtitle: 'Información procedente de fuentes verificables.'),
+          const SizedBox(height: 18),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.shield_outlined, size: 32, color: Theme.of(context).colorScheme.primary),
+                  OutdoorAssetIcon(asset: 'assets/visuals/icons/alerts.svg', size: 46),
                   const SizedBox(height: 12),
                   Text('Información verificable', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
