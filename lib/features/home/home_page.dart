@@ -130,64 +130,11 @@ class HomePage extends StatelessWidget {
           if (index == 3) context.go('/profile');
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore), label: 'Inicio'),
-          NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Mapa'),
-          NavigationDestination(icon: Icon(Icons.shield_outlined), selectedIcon: Icon(Icons.shield), label: 'Seguridad'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
+          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/home.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/home.svg', size: 28), label: 'Inicio'),
+          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/map.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/map.svg', size: 28), label: 'Mapa'),
+          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/safety.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/safety.svg', size: 28), label: 'Seguridad'),
+          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/profile.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/profile.svg', size: 28), label: 'Perfil'),
         ],
-      ),
-    );
-  }
-}
-
-/* Legacy hero retained as a fallback reference; the new visual hero is used above. */
-class _HomeHero extends StatelessWidget {
-  const _HomeHero();
-
-  @override
-  Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(24);
-    return ClipRRect(
-      borderRadius: radius,
-      child: AspectRatio(
-        aspectRatio: 1.65,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            SvgPicture.asset(
-              'assets/landscapes/picos_europa_land01.svg',
-              fit: BoxFit.cover,
-              semanticsLabel: 'Paisaje de montaña de España',
-            ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.35, 1],
-                  colors: [
-                    Colors.transparent,
-                    Theme.of(context).colorScheme.scrim.withValues(alpha: 0.72),
-                  ],
-                ),
-              ),
-            ),
-            const Positioned(
-              left: 18,
-              right: 18,
-              bottom: 16,
-              child: Text(
-                'Descubre España a pie, con tu gente y con tu compañero de aventura.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
