@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/oidc_config.dart';
@@ -82,6 +83,8 @@ class _ProfilePageState extends State<ProfilePage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          OutdoorVisualHero(asset: 'assets/visuals/hero_profile.svg', title: 'Perfil', subtitle: 'Privacidad, identidad y preparación de tu aventura.'),
+          const SizedBox(height: 18),
           Card(
             child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person_outline)),
@@ -102,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Card(
             child: ListTile(
               onTap: () => context.go('/plans'),
-              leading: const Icon(Icons.workspace_premium_outlined),
+              leading: const OutdoorAssetIcon(asset: 'assets/visuals/icons/plans.svg', size: 38),
               title: const Text('Free · Premium · Professional', style: TextStyle(fontWeight: FontWeight.w800)),
               subtitle: const Text('Consulta las capacidades de cada plan.'),
               trailing: const Icon(Icons.chevron_right),
