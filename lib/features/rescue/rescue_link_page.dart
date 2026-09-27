@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../app/outdoor_visuals.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -156,6 +157,8 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
+          OutdoorVisualHero(asset: 'assets/visuals/hero_rescue.svg', title: 'Rescue Link', subtitle: 'Ayuda cercana, con controles de seguridad y privacidad.'),
+          const SizedBox(height: 18),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
