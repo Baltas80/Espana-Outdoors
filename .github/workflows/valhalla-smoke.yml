@@ -1,0 +1,30 @@
+name: Valhalla production smoke test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    environment: routing-production
+    env:
+      VALHALLA_BASE_URL: ${{ vars.VALHALLA_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate production endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${VALHALLA_BASE_URL:?VALHALLA_BASE_URL is required in routing-production}"
+          case "${VALHALLA_BASE_URL}" in
+            https://*) ;;
+            *) echo "VALHALLA_BASE_URL must use HTTPS"; exit 1 ;;
+          esac
+
+      - name: Run Valhalla status/routing/elevation smoke tests
+        shell: bash
+        run: bash ops/valhalla/smoke-test.sh

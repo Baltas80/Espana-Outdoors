@@ -1,40 +1,51 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${VALHALLA_BASE_URL:-http://127.0.0.1:8002}"
-BASE_URL="${BASE_URL%/}"
+: "${VALHALLA_BASE_URL:?Set VALHALLA_BASE_URL to the real production HTTPS Valhalla endpoint}"
 
-status="$(curl --fail --silent --show-error "${BASE_URL}/status")"
-STATUS_JSON="$status" python3 - <<'PY'
-import json
-import os
+case "${VALHALLA_BASE_URL}" in
+  https://*) ;;
+  *) echo "ERROR: VALHALLA_BASE_URL must use HTTPS." >&2; exit 1 ;;
+esac
 
-payload = json.loads(os.environ["STATUS_JSON"])
-if not isinstance(payload, dict):
+BASE="${VALHALLA_BASE_URL%/}"
+
+echo "Checking Valhalla status..."
+status_headers="$(curl --fail --silent --show-error --location   --connect-timeout 5 --max-time 15   -D - -o /tmp/valhalla-status.json   "${BASE}/status")"
+printf '%s
+' "${status_headers}"
+grep -qi '^HTTP/.* 200' <<<"${status_headers}"
+STATUS_JSON="$(cat /tmp/valhalla-status.json)" python3 - <<'PY'
+import json, os
+payload=json.loads(os.environ["STATUS_JSON"])
+if not isinstance(payload,dict):
     raise SystemExit("Valhalla /status did not return a JSON object.")
+print("status_json=valid")
 PY
 
-response="$(curl --fail --silent --show-error   --request POST "${BASE_URL}/route"   --header 'content-type: application/json'   --data '{
-    "locations": [
-      {"lat": 40.4168, "lon": -3.7038},
-      {"lat": 40.4184, "lon": -3.7049}
-    ],
-    "costing": "pedestrian",
-    "units": "kilometers",
-    "shape_format": "geojson",
-    "directions_options": {"units": "kilometers", "language": "es-ES"}
-  }')"
-
-RESPONSE_JSON="$response" python3 - <<'PY'
+echo "Running routing smoke test..."
+curl --fail --silent --show-error --location   --connect-timeout 5 --max-time 30   -H 'content-type: application/json'   --data '{"locations":[{"lat":40.4168,"lon":-3.7038},{"lat":40.4185,"lon":-3.6921}],"costing":"pedestrian","units":"kilometers","shape_format":"geojson","directions_options":{"units":"kilometers","language":"es-ES"}}'   "${BASE}/route" > /tmp/valhalla-route.json
+python3 - <<'PY'
 import json
-import os
-
-payload = json.loads(os.environ["RESPONSE_JSON"])
-trip = payload.get("trip")
-if not isinstance(trip, dict):
-    raise SystemExit("Valhalla smoke route did not return trip data.")
-legs = trip.get("legs")
-if not isinstance(legs, list) or not legs:
-    raise SystemExit("Valhalla smoke route returned no legs.")
-print("Valhalla smoke test: OK")
+from pathlib import Path
+payload=json.loads(Path('/tmp/valhalla-route.json').read_text())
+trip=payload.get("trip")
+legs=trip.get("legs") if isinstance(trip,dict) else None
+if not isinstance(trip,dict) or not isinstance(legs,list) or not legs:
+    raise SystemExit("Valhalla routing smoke test returned no usable trip/legs.")
+print("routing_smoke=valid")
 PY
+
+echo "Running elevation smoke test..."
+curl --fail --silent --show-error --location   --connect-timeout 5 --max-time 30   -H 'content-type: application/json'   --data '{"range":true,"shape":[{"lat":40.4168,"lon":-3.7038},{"lat":40.4185,"lon":-3.6921}]}'   "${BASE}/height" > /tmp/valhalla-height.json
+python3 - <<'PY'
+import json
+from pathlib import Path
+payload=json.loads(Path('/tmp/valhalla-height.json').read_text())
+heights=payload.get("range_height")
+if not isinstance(heights,list) or not heights:
+    raise SystemExit("Valhalla elevation smoke test returned no range_height data.")
+print("elevation_smoke=valid")
+PY
+
+echo "Valhalla production smoke gate: PASS"
