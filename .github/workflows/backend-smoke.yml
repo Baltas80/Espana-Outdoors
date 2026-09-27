@@ -1,0 +1,44 @@
+name: Backend production smoke tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-gateway:
+    runs-on: ubuntu-24.04
+    environment: backend-production
+    env:
+      SOURCE_GATEWAY_BASE_URL: ${{ vars.SOURCE_GATEWAY_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Source Gateway endpoint
+        run: |
+          set -euo pipefail
+          : "${SOURCE_GATEWAY_BASE_URL:?SOURCE_GATEWAY_BASE_URL is required}"
+          case "${SOURCE_GATEWAY_BASE_URL}" in
+            https://*) ;;
+            *) echo "SOURCE_GATEWAY_BASE_URL must use HTTPS"; exit 1 ;;
+          esac
+      - name: Smoke test Source Gateway
+        run: bash ops/backend/source-gateway-smoke.sh
+
+  rescue-link:
+    runs-on: ubuntu-24.04
+    environment: backend-production
+    env:
+      RESCUE_LINK_BASE_URL: ${{ vars.RESCUE_LINK_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Rescue Link endpoint
+        run: |
+          set -euo pipefail
+          : "${RESCUE_LINK_BASE_URL:?RESCUE_LINK_BASE_URL is required}"
+          case "${RESCUE_LINK_BASE_URL}" in
+            https://*) ;;
+            *) echo "RESCUE_LINK_BASE_URL must use HTTPS"; exit 1 ;;
+          esac
+      - name: Smoke test Rescue Link
+        run: bash ops/backend/rescue-link-smoke.sh
