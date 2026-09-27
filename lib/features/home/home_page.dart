@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../../app/outdoor_visuals.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/brand.dart';
@@ -48,7 +48,7 @@ class HomePage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    const _HomeHero(),
+                    const OutdoorVisualHero(asset: 'assets/visuals/hero_routes.svg', title: 'Explora España', subtitle: 'Rutas, naturaleza y seguridad en una sola experiencia.'),
                     const SizedBox(height: 24),
                     Text('Hola, explorador', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 6),
@@ -56,29 +56,29 @@ class HomePage extends StatelessWidget {
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        Expanded(child: _QuickAction(icon: Icons.route_outlined, label: 'Rutas', onTap: () => context.go('/routes'))),
+                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/routes.svg', label: 'Rutas', onTap: () => context.go('/routes'))),
                         const SizedBox(width: 12),
-                        Expanded(child: _QuickAction(icon: Icons.map_outlined, label: 'Mapa', onTap: () => context.go('/map'))),
+                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/map.svg', label: 'Mapa', onTap: () => context.go('/map'))),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _QuickAction(icon: Icons.pets_outlined, label: 'Mascotas', onTap: () => context.go('/pets'))),
+                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/pets.svg', label: 'Mascotas', onTap: () => context.go('/pets'))),
                         const SizedBox(width: 12),
-                        Expanded(child: _QuickAction(icon: Icons.forest_outlined, label: 'Fauna', onTap: () => context.go('/wildlife'))),
+                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/wildlife.svg', label: 'Fauna', onTap: () => context.go('/wildlife'))),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _QuickAction(icon: Icons.campaign_outlined, label: 'Alertas', onTap: () => context.go('/alerts'))),
+                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/alerts.svg', label: 'Alertas', onTap: () => context.go('/alerts'))),
                         const SizedBox(width: 12),
-                        Expanded(child: _QuickAction(icon: Icons.eco_outlined, label: 'Natura', onTap: () => context.go('/natura'))),
+                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/natura.svg', label: 'Natura', onTap: () => context.go('/natura'))),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _QuickAction(icon: Icons.link_outlined, label: 'Rescue Link', onTap: () => context.go('/rescue')),
+                    _QuickAction(asset: 'assets/visuals/icons/rescue.svg', label: 'Rescue Link', onTap: () => context.go('/rescue')),
                     const SizedBox(height: 24),
                     Card(
                       child: InkWell(
@@ -92,7 +92,7 @@ class HomePage extends StatelessWidget {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(color: Theme.of(context).colorScheme.errorContainer, borderRadius: BorderRadius.circular(14)),
-                                child: Icon(Icons.shield_outlined, color: Theme.of(context).colorScheme.onErrorContainer),
+                                child: const OutdoorAssetIcon(asset: 'assets/visuals/icons/safety.svg', size: 44),
                               ),
                               const SizedBox(width: 14),
                               const Expanded(
@@ -140,6 +140,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
+/* Legacy hero retained as a fallback reference; the new visual hero is used above. */
 class _HomeHero extends StatelessWidget {
   const _HomeHero();
 
@@ -193,8 +194,8 @@ class _HomeHero extends StatelessWidget {
 }
 
 class _QuickAction extends StatelessWidget {
-  const _QuickAction({required this.icon, required this.label, required this.onTap});
-  final IconData icon;
+  const _QuickAction({required this.asset, required this.label, required this.onTap});
+  final String asset;
   final String label;
   final VoidCallback onTap;
 
@@ -208,7 +209,7 @@ class _QuickAction extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 25),
+                OutdoorAssetIcon(asset: asset, size: 32),
                 const SizedBox(width: 9),
                 Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
               ],
@@ -229,11 +230,11 @@ class _ReadinessCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: Column(
             children: [
-              _ReadinessRow(icon: Icons.map_outlined, label: 'Mapa offline', value: 'Preparar', onTap: onOffline),
+              _ReadinessRow(asset: 'assets/visuals/icons/offline.svg', label: 'Mapa offline', value: 'Preparar', onTap: onOffline),
               const Divider(height: 24),
-              const _ReadinessRow(icon: Icons.location_on_outlined, label: 'Ubicación', value: 'Al iniciar'),
+              const _ReadinessRow(asset: 'assets/visuals/icons/map.svg', label: 'Ubicación', value: 'Al iniciar'),
               const Divider(height: 24),
-              _ReadinessRow(icon: Icons.contact_emergency_outlined, label: 'Contacto de confianza', value: 'Configurar', onTap: onContacts),
+              _ReadinessRow(asset: 'assets/visuals/icons/safety.svg', label: 'Contacto de confianza', value: 'Configurar', onTap: onContacts),
             ],
           ),
         ),
@@ -241,8 +242,8 @@ class _ReadinessCard extends StatelessWidget {
 }
 
 class _ReadinessRow extends StatelessWidget {
-  const _ReadinessRow({required this.icon, required this.label, required this.value, this.onTap});
-  final IconData icon;
+  const _ReadinessRow({required this.asset, required this.label, required this.value, this.onTap});
+  final String asset;
   final String label;
   final String value;
   final VoidCallback? onTap;
@@ -255,7 +256,7 @@ class _ReadinessRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 2),
           child: Row(
             children: [
-              Icon(icon),
+              OutdoorAssetIcon(asset: asset, size: 32),
               const SizedBox(width: 12),
               Expanded(child: Text(label)),
               Text(value, style: Theme.of(context).textTheme.labelLarge),
