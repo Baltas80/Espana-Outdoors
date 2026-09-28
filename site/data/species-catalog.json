@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "last_verified": "2026-09-28",
   "scope": "curated-editorial-catalog",
-  "note": "Catálogo editorial ampliado de referencia. La taxonomía maestra se incorporará progresivamente desde EIDOS/MITECO y fuentes especializadas con licencia compatible.",
+  "note": "Catálogo editorial ampliado de referencia. Las imágenes de Wikimedia se sirven preferentemente mediante miniaturas para evitar descargar los originales de varios MB en el navegador.",
   "sources": [
     {
       "id": "miteco-eidos",
@@ -31,9 +31,10 @@
       "habitat": "Bosques mediterráneos",
       "zone": "Centro y sur peninsular",
       "tag": "Estrategia de conservación MITECO",
-      "image": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Male%20Iberian%20Lynx%20%28Lynx%20pardinus%29%2C%20La%20Lancha%2C%20Parque%20natural%20de%20la%20Sierra%20de%20And%C3%BAjar%2C%20Espa%C3%B1a%20%2832609200053%29.jpg",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Male_Iberian_Lynx_%28Lynx_pardinus%29%2C_La_Lancha%2C_Parque_natural_de_la_Sierra_de_And%C3%BAjar%2C_Espa%C3%B1a_%2832609200053%29.jpg/640px-Male_Iberian_Lynx_%28Lynx_pardinus%29%2C_La_Lancha%2C_Parque_natural_de_la_Sierra_de_And%C3%BAjar%2C_Espa%C3%B1a_%2832609200053%29.jpg",
       "credit": "Frank Vassen · CC BY 2.0",
-      "source_url": "https://commons.wikimedia.org/wiki/File:Male_Iberian_Lynx_(Lynx_pardinus),_La_Lancha,_Parque_natural_de_la_Sierra_de_Andújar,_España_(32609200053).jpg"
+      "source_url": "https://commons.wikimedia.org/wiki/File:Male_Iberian_Lynx_(Lynx_pardinus),_La_Lancha,_Parque_natural_de_la_Sierra_de_Andújar,_España_(32609200053).jpg",
+      "image_large": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Male_Iberian_Lynx_%28Lynx_pardinus%29%2C_La_Lancha%2C_Parque_natural_de_la_Sierra_de_And%C3%BAjar%2C_Espa%C3%B1a_%2832609200053%29.jpg/960px-Male_Iberian_Lynx_%28Lynx_pardinus%29%2C_La_Lancha%2C_Parque_natural_de_la_Sierra_de_And%C3%BAjar%2C_Espa%C3%B1a_%2832609200053%29.jpg"
     },
     {
       "id": "canis-lupus-signatus",
@@ -115,9 +116,10 @@
       "habitat": "Sierras y roquedos",
       "zone": "Cordilleras peninsulares",
       "tag": "Fauna de montaña",
-      "image": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Capra%20pyrenaica%2C%20La%20Pedriza%2C%20Madrid%2C%20Espa%C3%B1a%2C%202016%2011.JPG",
-      "credit": "Benjamín Núñez González · CC BY-SA 4.0",
-      "source_url": "https://commons.wikimedia.org/wiki/File:Capra_pyrenaica,_La_Pedriza,_Madrid,_España,_2016_11.JPG"
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Capra_pyrenaica_hispanica.jpg/601px-Capra_pyrenaica_hispanica.jpg",
+      "credit": "Rodric valls · CC BY-SA 4.0",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Capra_pyrenaica_hispanica.jpg",
+      "image_large": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Capra_pyrenaica_hispanica.jpg/962px-Capra_pyrenaica_hispanica.jpg"
     },
     {
       "id": "phoenicopterus-roseus",
