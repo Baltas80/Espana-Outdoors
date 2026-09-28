@@ -13,6 +13,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  administration: write
 
 concurrency:
   group: "pages"
@@ -27,6 +28,39 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Create or configure GitHub Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          endpoint="https://api.github.com/repos/${GITHUB_REPOSITORY}/pages"
+
+          code="$(curl -sS -o /tmp/pages.json -w "%{http_code}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "${endpoint}")"
+
+          if [ "${code}" = "404" ]; then
+            curl -sS -f -X POST "${endpoint}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              -H "Content-Type: application/json" \
+              -d '{"build_type":"workflow","source":{"branch":"master","path":"/"}}'
+          elif [ "${code}" != "200" ]; then
+            echo "GitHub Pages lookup failed with HTTP ${code}"
+            cat /tmp/pages.json
+            exit 1
+          fi
+
+          curl -sS -f -X PUT "${endpoint}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -H "Content-Type: application/json" \
+            -d '{"build_type":"workflow","source":{"branch":"master","path":"/"},"cname":"espanaoutdoor.es","https_enforced":true}'
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
