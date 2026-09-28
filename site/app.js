@@ -27,3 +27,22 @@ menu?.addEventListener('click', () => {
 });
 
 if (year) year.textContent = new Date().getFullYear();
+
+const bioTabs = document.querySelectorAll('[data-bio-filter]');
+const bioSearch = document.querySelector('[data-bio-search]');
+const bioCards = [...document.querySelectorAll('[data-bio-type]')];
+let activeBioFilter = 'all';
+const renderBio = () => {
+  const term = (bioSearch?.value || '').trim().toLowerCase();
+  bioCards.forEach((card) => {
+    const typeOk = activeBioFilter === 'all' || card.dataset.bioType === activeBioFilter;
+    const haystack = card.textContent.toLowerCase();
+    card.hidden = !(typeOk && (!term || haystack.includes(term)));
+  });
+};
+bioTabs.forEach((tab) => tab.addEventListener('click', () => {
+  activeBioFilter = tab.dataset.bioFilter;
+  bioTabs.forEach((t) => { t.classList.toggle('is-active', t === tab); });
+  renderBio();
+}));
+bioSearch?.addEventListener('input', renderBio);
