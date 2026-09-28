@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#071511">
+  <meta name="description" content="Ficha de ruta de España Outdoor con fuente oficial, tipo, recorrido y acceso al recurso geográfico.">
+  <meta property="og:title" content="España Outdoor — Ruta">
+  <meta property="og:description" content="Ficha de ruta y acceso a la fuente oficial del recorrido.">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://espanaoutdoor.es/assets/backgrounds/bg_home.svg">
+  <link rel="canonical" href="https://espanaoutdoor.es/ruta.html">
+  <link rel="icon" href="./assets/brand/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>España Outdoor — Ruta</title>
+</head>
+<body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="site-header" data-header>
+  <div class="shell header-inner">
+    <a class="brand" href="./index.html" aria-label="España Outdoor">
+      <img src="./assets/brand/mark.svg" alt="" width="48" height="48">
+      <span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span>
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" data-menu>
+      <span></span><span></span><span></span><span class="sr-only">Abrir menú</span>
+    </button>
+    <nav id="main-nav" class="main-nav" aria-label="Principal">
+      <a href="./index.html">Inicio</a><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a>
+      <a href="./naturaleza.html">Naturaleza</a><a href="./flora-fauna.html">Flora y Fauna</a>
+      <a href="./seguridad.html">Seguridad</a><a href="./app.html">App</a><a href="./blog.html">Blog</a>
+      <a href="./contacto.html">Contacto</a><a class="nav-download" href="./app.html">Descargar App</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido" class="page-main">
+  <section class="page-hero">
+    <img class="page-hero-photo" src="https://images.unsplash.com/photo-1618655327618-158670e68739?auto=format&fit=crop&w=2000&q=88" alt="" fetchpriority="high">
+    <div class="shell page-hero-inner">
+      <div class="page-hero-copy">
+        <p class="kicker kicker-light">Ficha de ruta</p>
+        <h1><span data-route-code>Ruta</span><br><em data-route-name>Cargando…</em></h1>
+        <p data-route-location>Preparando la ficha oficial.</p>
+        <div class="page-hero-actions">
+          <a class="button button-gold" href="./rutas.html">Volver a Rutas</a>
+          <a class="button button-outline" data-route-source-link href="#" target="_blank" rel="noopener noreferrer">Fuente oficial ↗</a>
+        </div>
+      </div>
+      <div class="page-hero-visual">
+        <div class="page-art-card route-detail-hero-card">
+          <div class="route-detail-symbol" aria-hidden="true">↗</div>
+          <div class="page-art-caption"><strong data-route-type-label>Ruta oficial</strong><span data-route-source-name>Fuente oficial</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="page-intro-grid">
+        <h2>La información.<br><span>Sin inventar datos.</span></h2>
+        <p>Cuando el índice oficial no publica distancia, desnivel o duración en la capa consultada, España Outdoor no los rellena con estimaciones. La ficha conserva la procedencia y prepara el registro para la futura geometría normalizada.</p>
+      </div>
+
+      <div class="route-detail-metrics" data-route-metrics aria-live="polite"></div>
+
+      <div class="page-cta">
+        <div>
+          <h2>Recorrido oficial.</h2>
+          <p>Consulta el recurso original y descarga el KML cuando esté disponible en la fuente.</p>
+        </div>
+        <div class="hero-actions route-detail-actions">
+          <a class="button button-gold" data-route-source-link href="#" target="_blank" rel="noopener noreferrer">Abrir fuente oficial ↗</a>
+          <a class="button button-outline-dark" data-route-download href="#" target="_blank" rel="noopener noreferrer" hidden>Descargar KML ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="shell footer-inner">
+    <div class="brand footer-brand"><img src="./assets/brand/mark.svg" alt="" width="40"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></div>
+    <div class="footer-links"><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./flora-fauna.html">Flora y Fauna</a><a href="./seguridad.html">Seguridad</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a></div>
+    <div class="footer-copy">© <span data-year></span> España Outdoor</div>
+  </div>
+</footer>
+<script src="./app.js" defer></script>
+<script src="./route-detail.js" defer></script>
+</body>
+</html>
