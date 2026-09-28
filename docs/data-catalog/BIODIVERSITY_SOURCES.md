@@ -55,3 +55,13 @@ Búsqueda por especie, localidad, ecosistema, parque, ruta y comunidad autónoma
 - MITECO IEET: https://www.miteco.gob.es/es/biodiversidad/temas/inventarios-nacionales/inventario-especies-terrestres.html
 - GBIF-Spain flora vascular: https://ipt.gbif.es/resource?r=taxonesfloraespanola
 - SECEM mammals: https://ipt.gbif.es/resource?r=secem-checklist-mammal-es
+
+## Integración API MITECO
+El sitio web mantiene una capa de sincronización de metadatos mediante la API CKAN oficial del Portal de Datos Abiertos MITECO:
+- API base: https://catalogo.datosabiertos.miteco.gob.es/catalogo/api/3/action
+- Descubrimiento: `package_search` para localizar datasets relevantes.
+- Fichas: `package_show` para obtener recursos, formatos y URLs.
+- El despliegue de GitHub Pages genera `site/data/miteco-catalog.json` para que el frontend consulte una copia local rápida y resiliente.
+- La cartografía EIDOS se mantiene como fuente espacial oficial mediante sus servicios WMS/WFS.
+
+La capa web no realiza consultas directas a MITECO en cada visita: se sincroniza durante el despliegue para evitar dependencia de latencia o disponibilidad externa en tiempo de navegación.
