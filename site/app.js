@@ -35,9 +35,11 @@ let activeBioFilter = 'all';
 const renderBio = () => {
   const term = (bioSearch?.value || '').trim().toLowerCase();
   bioCards.forEach((card) => {
-    const typeOk = activeBioFilter === 'all' || card.dataset.bioType === activeBioFilter;
+    const groupOk = ['mammals','birds','plants'].includes(activeBioFilter)
+      ? card.dataset.bioGroup === activeBioFilter
+      : activeBioFilter === 'all' || card.dataset.bioType === activeBioFilter;
     const haystack = card.textContent.toLowerCase();
-    card.hidden = !(typeOk && (!term || haystack.includes(term)));
+    card.hidden = !(groupOk && (!term || haystack.includes(term)));
   });
 };
 bioTabs.forEach((tab) => tab.addEventListener('click', () => {
