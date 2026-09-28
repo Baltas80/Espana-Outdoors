@@ -26,3 +26,5 @@ Los recursos visuales se mantienen dentro de `site/assets` para que la web no de
 4. Conectar enlaces oficiales de descarga de la aplicación cuando las publicaciones sean definitivas.
 
 <!-- Deployment trigger: GitHub Pages deployment verification. -->
+
+- Sección pública: `flora-fauna.html` con catálogo inicial de biodiversidad.
