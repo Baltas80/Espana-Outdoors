@@ -35,7 +35,6 @@ a{color:inherit;text-decoration:none}
 .main-nav a{opacity:.92}
 .main-nav a:hover{opacity:1}
 .nav-download{display:inline-flex;align-items:center;gap:9px;background:var(--gold);color:#111;border-radius:12px;padding:12px 18px;box-shadow:0 7px 22px rgba(245,181,27,.22)}
-.android-mark{font-size:18px}
 .menu-toggle{display:none;border:0;background:transparent;color:#fff}
 
 .hero-redesign{position:relative;min-height:750px;height:86vh;max-height:880px;background:#0a1713;color:#fff;overflow:visible}
@@ -450,3 +449,12 @@ a{color:inherit;text-decoration:none}
 .bio-tab{white-space:nowrap}
 @media(max-width:820px){.bio-source-panel{width:min(100% - 28px,1380px);grid-template-columns:1fr;padding:30px 24px;margin-top:50px}}
 @media(max-width:560px){.bio-tabs{overflow:auto;flex-wrap:nowrap;padding-bottom:3px}.bio-tab{font-size:11px;padding:9px 13px}}
+
+/* Audit refinements — biodiversity + route discovery */
+.bio-count-line{margin:12px 0 0;color:#66736d;font-size:13px}.bio-count-line strong{color:#145a43;font-size:18px}
+.bio-empty span{display:block;margin-top:8px}
+.bio-tab:focus-visible,.bio-search:focus-visible,.route-search-panel input:focus-visible,.route-search-panel select:focus-visible,.route-search-panel button:focus-visible{outline:3px solid rgba(245,181,27,.75);outline-offset:3px}
+.route-result-meta{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(12,25,21,.07);color:#7a847f;font-size:10px}
+.route-result-footer{flex-wrap:wrap}
+.route-result-footer a{white-space:nowrap}
+@media(max-width:560px){.route-result-meta{flex-direction:column;gap:5px}.route-result-footer{align-items:flex-start;flex-direction:column}}
