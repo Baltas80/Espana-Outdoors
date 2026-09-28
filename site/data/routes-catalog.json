@@ -1,0 +1,127 @@
+{
+  "version": "0.1.0",
+  "scope": "reference-catalog",
+  "last_verified": "2026-09-28",
+  "note": "Muestra inicial de rutas reales verificadas en Mi Senda FEDME. El catálogo completo se cargará desde CNIG/FEDME en la fase de ingesta.",
+  "sources": [
+    {
+      "id": "fedme-search",
+      "name": "Mi Senda FEDME",
+      "url": "https://misendafedme.es/buscador-de-senderos/"
+    },
+    {
+      "id": "cnig-fedme",
+      "name": "CNIG — Senderos FEDME",
+      "url": "https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme"
+    },
+    {
+      "id": "cnig-caminos",
+      "name": "CNIG — Caminos Naturales",
+      "url": "https://centrodedescargas.cnig.es/CentroDescargas/caminos-naturales"
+    }
+  ],
+  "routes": [
+    {
+      "id": "pr-mu-57",
+      "code": "PR-MU 57",
+      "name": "Sendero del Valle de Leiva la Collado Mangueta",
+      "locality": "Sierra Espuña",
+      "province": "Murcia",
+      "community": "Región de Murcia",
+      "type": "PR",
+      "loop": "lineal",
+      "distance_km": 7.8,
+      "duration": "2 h 30 min",
+      "ascent_m": 910,
+      "descent_m": 282,
+      "source_name": "Mi Senda FEDME",
+      "source_url": "https://misendafedme.es/buscador-de-senderos/etapa/pr-mu-57-sendero-del-valle-de-leiva-la-collado-mangueta",
+      "catalog_url": "https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme"
+    },
+    {
+      "id": "sl-mu-27",
+      "code": "SL-MU 27",
+      "name": "Sendero de la Contraparada",
+      "locality": "Murcia",
+      "province": "Murcia",
+      "community": "Región de Murcia",
+      "type": "SL",
+      "loop": "circular",
+      "distance_km": 2.1,
+      "duration": "1 h 30 min",
+      "ascent_m": 44,
+      "descent_m": 38,
+      "source_name": "Mi Senda FEDME",
+      "source_url": "https://misendafedme.es/buscador-de-senderos/etapa/sl-mu-27-sendero-de-la-contraparada-murcia",
+      "catalog_url": "https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme"
+    },
+    {
+      "id": "pr-mu-49",
+      "code": "PR-MU 49",
+      "name": "Sendero a la Cresta del Gallo por la Tana",
+      "locality": "Murcia",
+      "province": "Murcia",
+      "community": "Región de Murcia",
+      "type": "PR",
+      "loop": "lineal",
+      "distance_km": 3.7,
+      "duration": "1 h 45 min",
+      "ascent_m": 328,
+      "descent_m": 21,
+      "source_name": "Mi Senda FEDME",
+      "source_url": "https://misendafedme.es/buscador-de-senderos/etapa/pr-mu-49-sendero-a-la-cresta-del-gallo-por-la-tana",
+      "catalog_url": "https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme"
+    },
+    {
+      "id": "pr-mu-37",
+      "code": "PR-MU 37",
+      "name": "Sendero de los Castillos de Monteagudo",
+      "locality": "Murcia",
+      "province": "Murcia",
+      "community": "Región de Murcia",
+      "type": "PR",
+      "loop": "circular",
+      "distance_km": 6.3,
+      "duration": "2 h 15 min",
+      "ascent_m": 249,
+      "descent_m": 225,
+      "source_name": "Mi Senda FEDME",
+      "source_url": "https://misendafedme.es/buscador-de-senderos/etapa/pr-mu-37-sendero-de-los-castillos-de-monteagudo",
+      "catalog_url": "https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme"
+    },
+    {
+      "id": "gr-48-03",
+      "code": "GR 48 · Etapa 03",
+      "name": "Cumbres de San Bartolomé — Cumbres Mayores",
+      "locality": "Cumbres de San Bartolomé",
+      "province": "Huelva",
+      "community": "Andalucía",
+      "type": "GR",
+      "loop": "lineal",
+      "distance_km": 10.8,
+      "duration": "3 h 30 min",
+      "ascent_m": 426,
+      "descent_m": 320,
+      "source_name": "Mi Senda FEDME",
+      "source_url": "https://misendafedme.es/buscador-de-senderos/etapa/gr-48-etapa-03-cumbres-de-san-bartolome-cumbres-mayores",
+      "catalog_url": "https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme"
+    },
+    {
+      "id": "gr-1-18",
+      "code": "GR 1 · Etapa 18",
+      "name": "Cambrils (Odén) — Oliana",
+      "locality": "Odén",
+      "province": "Lleida",
+      "community": "Cataluña",
+      "type": "GR",
+      "loop": "lineal",
+      "distance_km": 12.8,
+      "duration": "3 h 10 min",
+      "ascent_m": 410,
+      "descent_m": 1090,
+      "source_name": "Mi Senda FEDME",
+      "source_url": "https://misendafedme.es/buscador-de-senderos/etapa/gr-1-etapa-18-cambrils-oden-oliana",
+      "catalog_url": "https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme"
+    }
+  ]
+}
