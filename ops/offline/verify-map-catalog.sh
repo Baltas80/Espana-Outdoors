@@ -44,7 +44,11 @@ if not isinstance(size, int) or size <= 0:
     raise SystemExit("Catalog spain sizeBytes must be a positive integer.")
 
 download = spain["downloadUrl"]
-request = urllib.request.Request(download, method="HEAD")
+request = urllib.request.Request(
+    download,
+    method="HEAD",
+    headers={"User-Agent": "Espana-Outdoor-Catalog-Smoke/1.0"},
+)
 with urllib.request.urlopen(request, timeout=15) as response:
     if response.status != 200:
         raise SystemExit(f"PMTiles HEAD returned HTTP {response.status}.")
