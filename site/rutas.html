@@ -5,24 +5,35 @@
   <div class="shell">
     <div class="route-catalog-head">
       <div>
-        <p class="kicker">Catálogo de rutas</p>
-        <h2>Busca por localidad.<br><span>Elige tu ruta.</span></h2>
+        <p class="kicker">Catálogo nacional</p>
+        <h2>Encuentra una ruta.<br><span>Desde tu localidad.</span></h2>
       </div>
-      <p class="route-catalog-intro">La interfaz queda preparada para incorporar el catálogo completo de rutas oficiales. La primera capa utiliza registros de referencia reales y mantiene la procedencia de cada recorrido.</p>
+      <p class="route-catalog-intro">España Outdoor empieza a integrar el índice oficial de recorridos de CNIG. La ficha conserva la fuente, el tipo y el enlace de descarga; la geometría normalizada y la navegación llegarán en la siguiente capa de datos.</p>
     </div>
 
     <div class="route-search-panel">
       <div class="route-search-main">
-        <label for="route-place">Localidad</label>
-        <input id="route-place" type="search" placeholder="Ej. Murcia, Llíria, Odén..." data-route-place>
+        <label for="route-place">Localidad, provincia o ruta</label>
+        <input id="route-place" type="search" placeholder="Ej. Murcia, Odén, Cares..." data-route-place>
       </div>
       <div>
-        <label for="route-type">Sendero</label>
+        <label for="route-source">Fuente</label>
+        <select id="route-source" data-route-source>
+          <option value="all">Todas</option>
+          <option value="fedme">Senderos FEDME</option>
+          <option value="caminos-naturales">Caminos Naturales</option>
+          <option value="parques-nacionales">Parques Nacionales</option>
+        </select>
+      </div>
+      <div>
+        <label for="route-type">Tipo</label>
         <select id="route-type" data-route-type>
           <option value="all">Todos</option>
-          <option value="GR">GR — Gran Recorrido</option>
-          <option value="PR">PR — Pequeño Recorrido</option>
-          <option value="SL">SL — Sendero Local</option>
+          <option value="GR">GR</option>
+          <option value="PR">PR</option>
+          <option value="SL">SL</option>
+          <option value="CN">Camino Natural</option>
+          <option value="PN">Parque Nacional</option>
         </select>
       </div>
       <div>
@@ -40,29 +51,31 @@
     </div>
 
     <div class="route-results-bar">
-      <div><strong data-route-count>0</strong> rutas de referencia</div>
-      <a href="https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme" target="_blank" rel="noopener noreferrer">Catálogo oficial CNIG / FEDME ↗</a>
+      <div><strong data-route-count>0</strong> <span data-route-count-label>rutas disponibles</span></div>
+      <a href="https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme" target="_blank" rel="noopener noreferrer">Abrir CNIG / FEDME ↗</a>
     </div>
 
-    <div class="route-results-grid" data-route-results aria-live="polite"></div>
+    <div class="route-results-grid" data-route-results aria-live="polite">
+      <div class="route-empty"><strong>Cargando catálogo…</strong><span>Sincronizando el índice oficial.</span></div>
+    </div>
 
     <div class="route-sources">
       <div class="route-source">
         <span class="route-source-number">01</span>
-        <div><strong>Senderos FEDME</strong><span>6.923 ficheros visibles actualmente en el CNIG, con GR, PR y SL homologados.</span><a href="https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme" target="_blank" rel="noopener noreferrer">Ver datos y descargas →</a></div>
+        <div><strong>Senderos FEDME</strong><span>GR, PR y SL homologados por FEDME y publicados por el CNIG.</span><a href="https://centrodedescargas.cnig.es/CentroDescargas/senderos-fedme" target="_blank" rel="noopener noreferrer">Ver datos y descargas →</a></div>
       </div>
       <div class="route-source">
         <span class="route-source-number">02</span>
-        <div><strong>Mi Senda FEDME</strong><span>Buscador por localidad, comunidad, tipo de sendero, recorrido, distancia, desnivel y tiempo.</span><a href="https://misendafedme.es/buscador-de-senderos/" target="_blank" rel="noopener noreferrer">Abrir buscador →</a></div>
+        <div><strong>Caminos Naturales</strong><span>Red del programa del MAPA con ficheros geográficos oficiales disponibles en el CNIG.</span><a href="https://centrodedescargas.cnig.es/CentroDescargas/caminos-naturales" target="_blank" rel="noopener noreferrer">Ver catálogo →</a></div>
       </div>
       <div class="route-source">
         <span class="route-source-number">03</span>
-        <div><strong>Caminos Naturales</strong><span>Más de 10.600 km del programa del MAPA y 1.483 ficheros visibles en el CNIG.</span><a href="https://centrodedescargas.cnig.es/CentroDescargas/caminos-naturales" target="_blank" rel="noopener noreferrer">Ver catálogo →</a></div>
+        <div><strong>Parques Nacionales</strong><span>Recorridos publicados por el CNIG para los espacios de la Red de Parques Nacionales.</span><a href="https://centrodedescargas.cnig.es/CentroDescargas/loadParquesNac" target="_blank" rel="noopener noreferrer">Ver catálogo →</a></div>
       </div>
     </div>
 
     <div class="route-data-note">
-      <strong>Arquitectura de datos.</strong> El catálogo completo se incorporará mediante ingesta de fuentes oficiales y conservará para cada ruta su origen, identificador, licencia, fecha, geometría y formato original. En esta fase no se mezclan rutas con el módulo Flora y Fauna.
+      <strong>Datos y navegación.</strong> El índice se construye a partir de fuentes oficiales. En esta primera integración no se inventan distancias, desniveles ni dificultades cuando la fuente de índice no los proporciona; la siguiente fase convertirá los KML/GPX a geometría normalizada, perfil y navegación.
     </div>
   </div>
 </section><div class="page-cta"><div><h2>Primero la ruta. Luego la tecnología.</h2><p>Conoce las capacidades de cartografía y navegación que la sostienen.</p></div><a class="button button-gold" href="./mapa.html">Explorar Mapa →</a></div></div></section></main><footer class="site-footer"><div class="shell footer-inner"><div class="brand footer-brand"><img src="./assets/brand/mark.svg" alt="" width="40"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></div><div class="footer-links"><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./flora-fauna.html">Flora y Fauna</a><a href="./seguridad.html">Seguridad</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a></div><div class="footer-copy">© <span data-year></span> España Outdoor<br><small>Fotografía y recursos visuales con sus créditos indicados en cada implementación.</small></div></div></footer><script src="./app.js" defer></script><script src="./route-catalog.js" defer></script></body></html>
