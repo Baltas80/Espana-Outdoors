@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "site" / "data" / "miteco-catalog.json"
 
-API_BASE = "https://catalogo.datosabiertos.miteco.gob.es/catalogo/api/3/action"
+API_BASE = "https://catalogo.datosabiertos.miteco.gob.es/catalogo/es/api/3/action"
 USER_AGENT = "EspanaOutdoorMitecoCatalog/1.0 (+https://espanaoutdoor.es/)"
 TIMEOUT = 25
 
