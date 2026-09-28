@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-label="Picos de Europa: lago de montaña, bosque y cumbres">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1b5e93"/>
+    <stop offset=".42" stop-color="#71b6ce"/>
+    <stop offset=".72" stop-color="#f3c77c"/>
+    <stop offset="1" stop-color="#e99b57"/>
+  </linearGradient>
+  <linearGradient id="lake" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#8fd3dd"/>
+    <stop offset=".5" stop-color="#3d8a96"/>
+    <stop offset="1" stop-color="#154e5b"/>
+  </linearGradient>
+  <linearGradient id="forest" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3d7454"/>
+    <stop offset="1" stop-color="#0b2a21"/>
+  </linearGradient>
+  <linearGradient id="foreground" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2a4e3d"/>
+    <stop offset="1" stop-color="#07110e"/>
+  </linearGradient>
+  <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#fff4c8" stop-opacity=".98"/>
+    <stop offset=".35" stop-color="#ffd078" stop-opacity=".85"/>
+    <stop offset="1" stop-color="#ffd078" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+</defs>
+
+<rect width="1080" height="1920" fill="url(#sky)"/>
+<circle cx="135" cy="690" r="230" fill="url(#sun)" filter="url(#soft)"/>
+<circle cx="135" cy="690" r="54" fill="#ffd37c"/>
+
+<!-- clouds -->
+<g fill="#fff5dd" opacity=".45" filter="url(#soft)">
+  <path d="M0 360 C170 290 315 330 450 270 C600 205 760 250 1080 170 L1080 410 C835 475 610 405 420 470 C240 530 120 490 0 520Z"/>
+  <path d="M460 520 C580 470 690 500 760 460 C850 408 970 435 1080 410 L1080 610 C930 630 785 600 680 640 C590 675 510 640 460 610Z"/>
+</g>
+
+<!-- distant ranges -->
+<path d="M0 930 L120 780 210 860 335 655 470 845 600 610 750 850 900 650 1080 820 V1120 H0Z" fill="#54777e"/>
+<path d="M0 1030 L150 830 260 930 405 700 530 905 700 690 820 930 960 760 1080 890 V1210 H0Z" fill="#385c63"/>
+<path d="M0 1140 L160 900 290 1050 430 820 575 1045 710 800 855 1060 1000 885 1080 990 V1300 H0Z" fill="#24484a"/>
+
+<!-- snow caps -->
+<g fill="#eef4ef" opacity=".9">
+  <path d="M405 704 L448 774 477 834 530 904 498 888 455 840 430 805 405 780 382 818 350 850 372 808Z"/>
+  <path d="M700 695 L732 755 770 825 816 930 782 901 750 850 720 812 699 780 670 822 646 846 662 800Z"/>
+  <path d="M900 654 L936 713 980 780 1040 878 1004 850 968 798 940 770 914 724 886 760 864 782 876 730Z"/>
+</g>
+
+<!-- mountain face -->
+<g fill="#2f4b4d">
+  <path d="M350 820 L405 700 455 815 420 850 365 895Z"/>
+  <path d="M585 805 L700 690 762 830 690 910 630 905Z"/>
+  <path d="M830 765 L900 650 1010 835 948 915 885 850Z"/>
+</g>
+
+<!-- foothill forest -->
+<path d="M0 1180 C180 1090 340 1120 470 1080 C640 1025 820 1100 1080 1020 V1450 H0Z" fill="url(#forest)"/>
+<g fill="#173e30">
+  <path d="M70 1330 l55 -150 55 150z M100 1235 l25 -80 25 80z"/>
+  <path d="M205 1370 l65 -180 65 180z M245 1250 l25 -95 25 95z"/>
+  <path d="M855 1350 l60 -170 60 170z M895 1235 l20 -80 20 80z"/>
+  <path d="M970 1410 l58 -165 52 165z M1000 1290 l23 -88 23 88z"/>
+</g>
+
+<!-- lake -->
+<path d="M320 1110 C425 1060 555 1075 680 1115 C775 1145 860 1185 930 1240 C840 1295 730 1320 620 1315 C515 1310 410 1265 320 1190 C292 1165 290 1130 320 1110Z" fill="url(#lake)"/>
+<path d="M350 1160 C470 1120 610 1135 735 1180 C790 1200 840 1225 880 1250" fill="none" stroke="#e2f2ef" stroke-width="13" opacity=".28"/>
+<path d="M430 1215 C550 1185 690 1200 820 1240" fill="none" stroke="#cde8e6" stroke-width="8" opacity=".22"/>
+
+<!-- foreground shore -->
+<path d="M0 1390 C160 1320 320 1350 455 1420 C615 1500 780 1480 930 1385 C1005 1340 1045 1345 1080 1370 V1920 H0Z" fill="url(#foreground)"/>
+<g fill="#315947">
+  <path d="M30 1560 l65 -185 65 185z"/>
+  <path d="M165 1665 l72 -210 72 210z"/>
+  <path d="M865 1600 l70 -205 70 205z"/>
+  <path d="M965 1700 l60 -175 60 175z"/>
+</g>
+
+<!-- rocks -->
+<g fill="#3b4e49">
+  <ellipse cx="150" cy="1740" rx="145" ry="66"/>
+  <ellipse cx="410" cy="1820" rx="170" ry="74"/>
+  <ellipse cx="720" cy="1770" rx="150" ry="70"/>
+  <ellipse cx="940" cy="1870" rx="175" ry="82"/>
+</g>
+<g fill="#6b7569" opacity=".45">
+  <ellipse cx="126" cy="1722" rx="72" ry="24"/>
+  <ellipse cx="380" cy="1798" rx="85" ry="28"/>
+  <ellipse cx="695" cy="1750" rx="75" ry="25"/>
+</g>
+
+<!-- wildflowers -->
+<g fill="#e8a46c">
+  <circle cx="86" cy="1600" r="8"/><circle cx="118" cy="1630" r="6"/><circle cx="145" cy="1585" r="7"/>
+  <circle cx="230" cy="1710" r="7"/><circle cx="265" cy="1685" r="5"/><circle cx="785" cy="1620" r="8"/>
+</g>
+</svg>

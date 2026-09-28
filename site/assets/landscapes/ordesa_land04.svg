@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-label="Ordesa y Monte Perdido: valle pirenaico, bosque y pared rocosa">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1f5273"/>
+    <stop offset=".42" stop-color="#76aeb7"/>
+    <stop offset=".72" stop-color="#d7a16e"/>
+    <stop offset="1" stop-color="#efc27e"/>
+  </linearGradient>
+  <linearGradient id="rock" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#6a756f"/>
+    <stop offset=".55" stop-color="#3d4b47"/>
+    <stop offset="1" stop-color="#1b2725"/>
+  </linearGradient>
+  <linearGradient id="forest" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4e7958"/>
+    <stop offset="1" stop-color="#102b20"/>
+  </linearGradient>
+  <linearGradient id="valley" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#507d61"/>
+    <stop offset="1" stop-color="#11281f"/>
+  </linearGradient>
+  <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#fff2c4" stop-opacity=".95"/>
+    <stop offset=".42" stop-color="#f7c56f" stop-opacity=".72"/>
+    <stop offset="1" stop-color="#f7c56f" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="soft"><feGaussianBlur stdDeviation="20"/></filter>
+</defs>
+
+<rect width="1080" height="1920" fill="url(#sky)"/>
+<circle cx="190" cy="650" r="250" fill="url(#sun)" filter="url(#soft)"/>
+<circle cx="190" cy="650" r="48" fill="#ffd37e"/>
+
+<g fill="#fff3df" opacity=".34" filter="url(#soft)">
+  <path d="M0 330 C190 260 350 340 510 280 C700 210 900 250 1080 200 L1080 430 C850 470 670 430 490 480 C280 540 150 500 0 525Z"/>
+</g>
+
+<!-- Ordesa walls -->
+<path d="M0 1060 L170 730 260 815 355 560 470 810 565 460 690 790 770 620 875 820 970 515 1080 720 V1120 H0Z" fill="url(#rock)"/>
+<path d="M0 1130 L145 875 265 950 370 735 490 965 580 650 715 930 830 760 960 960 1080 820 V1230 H0Z" fill="#34443f"/>
+
+<!-- pale strata -->
+<g fill="#8f9a8d" opacity=".42">
+  <path d="M350 600 L382 690 455 805 420 790 380 735 348 670Z"/>
+  <path d="M540 500 L590 650 665 790 628 760 580 690 552 610Z"/>
+  <path d="M958 560 L995 690 1050 730 1010 755 970 710 935 650Z"/>
+</g>
+
+<!-- waterfall -->
+<path d="M620 710 C630 830 625 940 650 1060 C665 1130 670 1170 690 1205 C705 1160 708 1115 698 1050 C682 930 684 825 670 710Z" fill="#cbe3df" opacity=".78"/>
+<path d="M652 745 C655 850 656 955 676 1060" fill="none" stroke="#ffffff" stroke-width="10" opacity=".45"/>
+
+<!-- valley forest -->
+<path d="M0 1190 C170 1110 350 1145 500 1090 C690 1020 850 1120 1080 1035 V1460 H0Z" fill="url(#forest)"/>
+<g fill="#173c2c">
+  <path d="M35 1390 l55 -165 55 165z"/>
+  <path d="M155 1430 l70 -205 70 205z"/>
+  <path d="M300 1375 l58 -173 58 173z"/>
+  <path d="M820 1410 l70 -200 70 200z"/>
+  <path d="M955 1440 l62 -185 62 185z"/>
+</g>
+
+<!-- river through valley -->
+<path d="M410 1140 C485 1190 525 1260 510 1350 C490 1470 400 1560 335 1670 C308 1715 292 1760 280 1815 L420 1815 C438 1730 485 1640 550 1540 C615 1440 650 1330 620 1240 C590 1160 545 1110 490 1075Z" fill="#78b8b5" opacity=".78"/>
+<path d="M470 1165 C525 1250 540 1320 515 1400 C485 1490 420 1580 370 1690" fill="none" stroke="#d6efeb" stroke-width="11" opacity=".28"/>
+
+<!-- meadow -->
+<path d="M0 1440 C180 1365 350 1430 505 1495 C670 1565 850 1530 1080 1440 V1920 H0Z" fill="url(#valley)"/>
+<path d="M0 1580 C175 1510 335 1540 500 1610 C700 1690 865 1630 1080 1530 V1920 H0Z" fill="#0b1b15"/>
+
+<!-- trail -->
+<path d="M825 1920 C770 1810 695 1715 595 1635 C525 1580 490 1515 515 1450 C540 1385 615 1350 700 1355 C620 1325 530 1345 475 1415 C425 1480 440 1560 515 1640 C600 1730 695 1820 730 1920Z" fill="#9b7755" opacity=".96"/>
+<path d="M700 1890 C660 1805 585 1718 520 1650" fill="none" stroke="#d5b28a" stroke-width="9" opacity=".35"/>
+
+<!-- foreground boulders -->
+<g fill="#45514a">
+  <ellipse cx="120" cy="1760" rx="145" ry="62"/>
+  <ellipse cx="380" cy="1850" rx="175" ry="70"/>
+  <ellipse cx="805" cy="1790" rx="155" ry="64"/>
+  <ellipse cx="1010" cy="1880" rx="150" ry="68"/>
+</g>
+
+<!-- alpine flowers -->
+<g fill="#d18a93" opacity=".85">
+  <circle cx="160" cy="1665" r="7"/><circle cx="205" cy="1695" r="6"/><circle cx="270" cy="1730" r="7"/>
+  <circle cx="835" cy="1660" r="7"/><circle cx="885" cy="1690" r="6"/><circle cx="945" cy="1722" r="7"/>
+</g>
+</svg>

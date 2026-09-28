@@ -159,3 +159,6 @@ lib/
   infrastructure/ adaptadores externos: routing, auth, billing y fuentes
   main.dart
 ```
+## Web pública
+
+La carpeta `site/` contiene la web pública de España Outdoor, independiente de la aplicación Flutter. Está preparada para hosting estático y para `espanaoutdoor.es`. El sitio reutiliza la identidad visual del proyecto, mantiene sus recursos dentro de `site/assets` y puede desplegarse con Cloudflare Pages u otro proveedor estático.

@@ -1,0 +1,17 @@
+{
+  "name": "España Outdoor",
+  "short_name": "España Outdoor",
+  "lang": "es",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A1713",
+  "theme_color": "#0A1713",
+  "icons": [
+    {
+      "src": "/assets/brand/mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
