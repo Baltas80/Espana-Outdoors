@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-label="Sierra de Cazorla: bosque mediterráneo, valle y sendero">
+<defs>
+<linearGradient id="s" x2="0" y2="1"><stop stop-color="#3e7890"/><stop offset=".55" stop-color="#d9b77b"/><stop offset="1" stop-color="#e69b63"/></linearGradient>
+<linearGradient id="m" x2="0" y2="1"><stop stop-color="#536f68"/><stop offset="1" stop-color="#233c31"/></linearGradient>
+<linearGradient id="f" x2="0" y2="1"><stop stop-color="#456b4a"/><stop offset="1" stop-color="#10261b"/></linearGradient>
+<radialGradient id="sun"><stop stop-color="#fff1b0" stop-opacity=".95"/><stop offset="1" stop-color="#ffd070" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1080" height="1920" fill="url(#s)"/>
+<circle cx="850" cy="470" r="220" fill="url(#sun)"/><circle cx="850" cy="470" r="45" fill="#ffd98a"/>
+<g fill="#fff0d5" opacity=".32"><path d="M0 430 C180 350 330 430 500 360 C700 280 900 350 1080 290V500C870 520 700 480 520 540C320 600 150 550 0 590Z"/></g>
+<path d="M0 1030 170 760 285 880 430 610 560 855 720 650 865 875 980 700 1080 820V1250H0Z" fill="url(#m)"/>
+<path d="M0 1190C170 1080 340 1110 500 1050C690 980 860 1080 1080 1000V1510H0Z" fill="url(#f)"/>
+<g fill="#183827"><path d="M70 1460l55-190 55 190z"/><path d="M190 1510l70-235 70 235z"/><path d="M840 1490l65-220 65 220z"/><path d="M960 1540l60-205 60 205z"/></g>
+<path d="M540 1090C610 1160 635 1250 610 1340C580 1450 500 1540 455 1640C425 1710 420 1810 430 1920H650C620 1810 605 1730 625 1660C650 1560 735 1470 750 1370C770 1240 690 1130 600 1060Z" fill="#82b7ad" opacity=".7"/>
+<path d="M0 1500C180 1430 350 1480 500 1550C690 1640 880 1570 1080 1480V1920H0Z" fill="#0b1c14"/>
+<path d="M890 1920C810 1800 725 1710 630 1640C550 1580 520 1510 550 1450C580 1390 655 1360 740 1370C650 1335 560 1360 505 1435C455 1505 475 1590 555 1670C650 1760 730 1850 755 1920Z" fill="#a27b56"/>
+<g fill="#d49b75"><circle cx="150" cy="1690" r="7"/><circle cx="215" cy="1730" r="6"/><circle cx="900" cy="1690" r="7"/><circle cx="960" cy="1730" r="6"/></g>
+</svg>
