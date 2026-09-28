@@ -106,6 +106,16 @@ def build_source(source: dict) -> list[dict]:
     links = extract_links(page, source["listing_url"])
     routes: list[dict] = []
 
+    if not links:
+        # Some CNIG versions render the KML names as text without a direct href.
+        # Keep the catalog usable by indexing those filenames and linking back
+        # to the official listing page.
+        names = sorted(set(re.findall(r"(?i)[A-Za-z0-9][A-Za-z0-9_.-]{4,}\.kml", page)))
+        links = [
+            {"url": None, "filename": name, "label": name}
+            for name in names
+        ]
+
     for item in links:
         filename = clean_filename(item["filename"])
         name = clean_filename(item["label"]) if item["label"] else filename
@@ -137,7 +147,7 @@ def build_source(source: dict) -> list[dict]:
                 "source_name": source["name"],
                 "source_url": source["listing_url"],
                 "catalog_url": source["catalog_url"],
-                "download_url": item["url"],
+                "download_url": item.get("url"),
                 "license": source["license"],
                 "geometry_status": "catalog-only",
             }
