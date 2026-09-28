@@ -6,6 +6,7 @@
   const updated = panel.querySelector('[data-miteco-updated]');
   const datasetList = panel.querySelector('[data-miteco-datasets]');
   const apiLink = panel.querySelector('[data-miteco-api]');
+  const dot = panel.querySelector('.miteco-status-dot');
 
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"]/g, (char) => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'
@@ -20,6 +21,7 @@
         ? 'Conectado a la API CKAN de MITECO'
         : 'Última sincronización disponible; modo de respaldo';
       status.dataset.state = live ? 'live' : 'fallback';
+      if (dot) dot.dataset.state = live ? 'live' : 'fallback';
     }
 
     if (updated) {
@@ -60,6 +62,7 @@
       if (status) {
         status.textContent = 'Datos oficiales MITECO disponibles mediante las fichas de fuente';
         status.dataset.state = 'fallback';
+        if (dot) dot.dataset.state = 'fallback';
       }
     });
 })();
