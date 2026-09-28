@@ -66,8 +66,9 @@
         </div>
         <div class="route-result-meta"><span>\${escapeHtml(loopText)}</span><span>\${escapeHtml(sourceText)}</span></div>
         <div class="route-result-footer">
-          <a href="\${escapeHtml(route.catalog_url || route.source_url || '#')}" target="_blank" rel="noopener noreferrer">Ver ficha oficial →</a>
-          \${route.download_url ? \`<a href="\${escapeHtml(route.download_url)}" target="_blank" rel="noopener noreferrer">Descargar KML ↗</a>\` : ''}
+          <a href="./ruta.html?id=\${encodeURIComponent(route.id)}">Abrir ficha →</a>
+          <a href="\${escapeHtml(route.catalog_url || route.source_url || '#')}" target="_blank" rel="noopener noreferrer">Fuente oficial ↗</a>
+          \${route.download_url ? \`<a href="\${escapeHtml(route.download_url)}" target="_blank" rel="noopener noreferrer">KML ↗</a>\` : ''}
         </div>
       </article>\`;
     }).join('') : '<div class="route-empty"><strong>No hay coincidencias.</strong><span>Prueba otra localidad o cambia los filtros.</span></div>';
