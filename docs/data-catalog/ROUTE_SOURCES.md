@@ -25,6 +25,11 @@ https://centrodedescargas.cnig.es/CentroDescargas/caminos-naturales
 - Licencia indicada por CNIG: CC BY 4.0 MAPA.
 Visor oficial: https://www.mapa.gob.es/caminos-naturales/
 
+## Fuente complementaria: Parques Nacionales
+CNIG — Rutas de Parques Nacionales: https://centrodedescargas.cnig.es/CentroDescargas/loadParquesNac
+- Catálogo oficial de rutas de la Red de Parques Nacionales.
+- Recursos geográficos KML/GPX publicados por el CNIG.
+
 ## Fuentes autonómicas
 Usar datos.gob.es y los portales de datos abiertos de las comunidades y diputaciones para completar rutas locales y municipales.
 Ejemplo verificado: Gipuzkoa publica rutas de senderismo en GPX.
