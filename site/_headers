@@ -3,4 +3,4 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; img-src 'self' data: https://images.unsplash.com https://commons.wikimedia.org; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: https://images.unsplash.com https://commons.wikimedia.org https://upload.wikimedia.org; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
