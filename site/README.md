@@ -24,3 +24,5 @@ Los recursos visuales se mantienen dentro de `site/assets` para que la web no de
 2. Añadir contenidos territoriales indexables.
 3. Integrar métricas respetuosas con privacidad, solo si se decide producto.
 4. Conectar enlaces oficiales de descarga de la aplicación cuando las publicaciones sean definitivas.
+
+<!-- Deployment trigger: GitHub Pages deployment verification. -->
