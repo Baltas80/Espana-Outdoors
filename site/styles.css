@@ -506,7 +506,7 @@ a{color:inherit;text-decoration:none}
 .miteco-live-status>span:not(.miteco-status-dot){display:block;margin-top:6px;color:rgba(255,255,255,.52);font-size:10px}
 .miteco-live-status a{display:inline-block;margin-top:15px;color:#f5b51b;font-size:10px;font-weight:900}
 .miteco-status-dot{display:inline-block;width:9px;height:9px;margin-right:7px;border-radius:50%;background:#87918b;box-shadow:0 0 0 5px rgba(135,145,139,.08)}
-.miteco-status-dot:has(+ strong[data-state="live"]),[data-miteco-status][data-state="live"]~.miteco-status-dot{background:#3fc77b}
+.miteco-status-dot[data-state="live"]{background:#3fc77b;box-shadow:0 0 0 5px rgba(63,199,123,.08)}
 .miteco-datasets{display:grid;gap:10px;margin-top:24px}
 .miteco-dataset{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:17px 19px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.025)}
 .miteco-dataset strong{display:block;font-size:14px}
