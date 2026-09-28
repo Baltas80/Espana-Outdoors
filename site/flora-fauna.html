@@ -23,9 +23,22 @@
   </div>
 </header><main id="contenido" class="biodiversity-page page-main">
 <section class="biodiversity-hero"><div class="shell biodiversity-hero-grid"><div><p class="kicker kicker-light">Biodiversidad de España</p><h1>Flora y<br><em>fauna.</em></h1><p>Las especies son parte del territorio. Aquí empezamos a construir una biblioteca visual de animales y plantas de España, con fotografías reales, descripción, hábitat y contexto geográfico.</p></div><div class="biodiversity-hero-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Male%20Iberian%20Lynx%20%28Lynx%20pardinus%29%2C%20La%20Lancha%2C%20Parque%20natural%20de%20la%20Sierra%20de%20And%C3%BAjar%2C%20Espa%C3%B1a%20%2832609200053%29.jpg" alt="Lince ibérico en Sierra de Andújar" fetchpriority="high"></div></div></section>
-<section class="biodiversity-controls"><div class="shell bio-controls-inner"><div class="bio-tabs"><button class="bio-tab is-active" type="button" data-bio-filter="all">Todo</button><button class="bio-tab" type="button" data-bio-filter="fauna">Fauna</button><button class="bio-tab" type="button" data-bio-filter="flora">Flora</button></div><label class="sr-only" for="bio-search">Buscar especie</label><input id="bio-search" class="bio-search" type="search" placeholder="Buscar especie, hábitat o zona…" data-bio-search></div></section>
+
+<section class="bio-source-panel">
+  <div>
+    <p class="kicker">Fuentes maestras</p>
+    <h2>El catálogo visual crece sobre datos oficiales.</h2>
+    <p>No vamos a inventar una lista cerrada de especies. España Outdoor utilizará EIDOS/MITECO como referencia oficial y complementará los grupos taxonómicos con fuentes especializadas y datos abiertos con licencia compatible.</p>
+  </div>
+  <div class="bio-source-grid">
+    <a href="https://www.miteco.gob.es/es/biodiversidad/servicios/banco-datos-naturaleza/eidos_acceso.html" target="_blank" rel="noopener noreferrer"><strong>EIDOS / MITECO</strong><span>Base oficial de flora y fauna silvestre de España.</span><small>Fuente maestra →</small></a>
+    <a href="https://ipt.gbif.es/resource?r=taxonesfloraespanola" target="_blank" rel="noopener noreferrer"><strong>GBIF-Spain</strong><span>Flora vascular española; 10.489 registros en la versión publicada en 2025.</span><small>Ver datos →</small></a>
+    <a href="https://catalogo.datosabiertos.miteco.gob.es/catalogo/es/dataset/fc21c1a5-4c02-4157-9d2f-9a2cd200f908" target="_blank" rel="noopener noreferrer"><strong>Distribución EIDOS</strong><span>Cartografía oficial de distribución de especies.</span><small>Ver servicio →</small></a>
+  </div>
+</section>
+<section class="biodiversity-controls"><div class="shell bio-controls-inner"><div class="bio-tabs"><button class="bio-tab is-active" type="button" data-bio-filter="all">Todo</button><button class="bio-tab" type="button" data-bio-filter="fauna">Fauna</button><button class="bio-tab" type="button" data-bio-filter="flora">Flora</button><button class="bio-tab" type="button" data-bio-filter="mammals">Mamíferos</button><button class="bio-tab" type="button" data-bio-filter="birds">Aves</button><button class="bio-tab" type="button" data-bio-filter="plants">Flora vascular</button></div><label class="sr-only" for="bio-search">Buscar especie</label><input id="bio-search" class="bio-search" type="search" placeholder="Buscar especie, hábitat o zona…" data-bio-search></div></section>
 <section class="bio-section"><div class="shell"><div class="bio-section-head"><div><p class="kicker">Catálogo inicial</p><h2>Especies que cuentan<br>la historia del paisaje.</h2></div><p>Esta primera edición combina especies emblemáticas de distintos ecosistemas españoles. El catálogo puede crecer por comunidades autónomas, parques y rutas.</p></div><div class="bio-grid">
-<article class="bio-card" data-bio-type="fauna">
+<article class="bio-card" data-bio-type="fauna" data-bio-group="mammals">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Male%20Iberian%20Lynx%20%28Lynx%20pardinus%29%2C%20La%20Lancha%2C%20Parque%20natural%20de%20la%20Sierra%20de%20And%C3%BAjar%2C%20Espa%C3%B1a%20%2832609200053%29.jpg" alt="Lince ibérico — Lynx pardinus" loading="lazy"><span class="bio-badge">Fauna</span></div>
   <div class="bio-body">
     <h2>Lince ibérico</h2><span class="bio-scientific">Lynx pardinus</span>
@@ -35,7 +48,7 @@
     <div class="bio-source">Fotografía: Frank Vassen · CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Male_Iberian_Lynx_(Lynx_pardinus),_La_Lancha,_Parque_natural_de_la_Sierra_de_And%C3%BAjar,_Espa%C3%B1a_(32609200053).jpg" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="fauna">
+<article class="bio-card" data-bio-type="fauna" data-bio-group="birds">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Lobo%20ib%C3%A9rico%20%28Canis%20lupus%20signatus%29.jpg" alt="Lobo ibérico — Canis lupus signatus" loading="lazy"><span class="bio-badge">Fauna</span></div>
   <div class="bio-body">
     <h2>Lobo ibérico</h2><span class="bio-scientific">Canis lupus signatus</span>
@@ -45,7 +58,7 @@
     <div class="bio-source">Fotografía: Jose Miguel Pintor Ortego · CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Lobo_ibérico_(Canis_lupus_signatus).jpg" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="fauna">
+<article class="bio-card" data-bio-type="fauna" data-bio-group="birds">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Adalberti.jpg" alt="Águila imperial ibérica — Aquila adalberti" loading="lazy"><span class="bio-badge">Fauna</span></div>
   <div class="bio-body">
     <h2>Águila imperial ibérica</h2><span class="bio-scientific">Aquila adalberti</span>
@@ -55,7 +68,7 @@
     <div class="bio-source">Fotografía: Juan Lacruz · CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Adalberti.jpg" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="fauna">
+<article class="bio-card" data-bio-type="fauna" data-bio-group="mammals">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Cantabrian%20brown%20bear.jpg" alt="Oso pardo cantábrico — Ursus arctos" loading="lazy"><span class="bio-badge">Fauna</span></div>
   <div class="bio-body">
     <h2>Oso pardo cantábrico</h2><span class="bio-scientific">Ursus arctos</span>
@@ -65,7 +78,7 @@
     <div class="bio-source">Fotografía: neusitas · CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Cantabrian_brown_bear.jpg" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="fauna">
+<article class="bio-card" data-bio-type="fauna" data-bio-group="birds">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Bearded%20Vulture%20with%20bone%20-%20Catalan%20Pyrenees%20-%20Spain.jpg" alt="Quebrantahuesos — Gypaetus barbatus" loading="lazy"><span class="bio-badge">Fauna</span></div>
   <div class="bio-body">
     <h2>Quebrantahuesos</h2><span class="bio-scientific">Gypaetus barbatus</span>
@@ -75,7 +88,7 @@
     <div class="bio-source">Fotografía: Francesco Veronesi · CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Bearded_Vulture_with_bone_-_Catalan_Pyrenees_-_Spain.jpg" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="fauna">
+<article class="bio-card" data-bio-type="fauna" data-bio-group="birds">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Aegypius%20monachus%20%28RPS%2027-08-2023%29%20buitre%20negro.png" alt="Buitre negro — Aegypius monachus" loading="lazy"><span class="bio-badge">Fauna</span></div>
   <div class="bio-body">
     <h2>Buitre negro</h2><span class="bio-scientific">Aegypius monachus</span>
@@ -85,7 +98,7 @@
     <div class="bio-source">Fotografía: Raimundo Pastor · CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Aegypius_monachus_(RPS_27-08-2023)_buitre_negro.png" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="flora">
+<article class="bio-card" data-bio-type="flora" data-bio-group="plants">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Holm%20oak%20Andalusia.JPG" alt="Encina — Quercus ilex" loading="lazy"><span class="bio-badge">Flora</span></div>
   <div class="bio-body">
     <h2>Encina</h2><span class="bio-scientific">Quercus ilex</span>
@@ -95,7 +108,7 @@
     <div class="bio-source">Fotografía: Alfonso San Miguel · CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Holm_oak_Andalusia.JPG" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="flora">
+<article class="bio-card" data-bio-type="flora" data-bio-group="plants">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Quercus%20suber.001%20-%20Monfrague.JPG" alt="Alcornoque — Quercus suber" loading="lazy"><span class="bio-badge">Flora</span></div>
   <div class="bio-body">
     <h2>Alcornoque</h2><span class="bio-scientific">Quercus suber</span>
@@ -105,7 +118,7 @@
     <div class="bio-source">Fotografía: Wikimedia Commons · licencia indicada en la fuente. <a href="https://commons.wikimedia.org/wiki/File:Quercus_suber.001_-_Monfrague.JPG" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="flora">
+<article class="bio-card" data-bio-type="flora" data-bio-group="plants">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Bosque%20de%20Abies%20pinsapo%20-%20Parque%20Natural%20de%20la%20Sierra%20de%20Grazalema.jpg" alt="Pinsapo — Abies pinsapo" loading="lazy"><span class="bio-badge">Flora</span></div>
   <div class="bio-body">
     <h2>Pinsapo</h2><span class="bio-scientific">Abies pinsapo</span>
@@ -115,7 +128,7 @@
     <div class="bio-source">Fotografía: Ángel Regatero · CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Bosque_de_Abies_pinsapo_-_Parque_Natural_de_la_Sierra_de_Grazalema.jpg" target="_blank" rel="noopener noreferrer">Ver fuente y licencia →</a></div>
   </div>
 </article>
-<article class="bio-card" data-bio-type="flora">
+<article class="bio-card" data-bio-type="flora" data-bio-group="plants">
   <div class="bio-photo"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Pinus%20canariensis%20-%20Jard%C3%ADn%20Bot%C3%A1nico%20Canario%20Viera%20y%20Clavijo%20-%20Gran%20Canaria.jpg" alt="Pino canario — Pinus canariensis" loading="lazy"><span class="bio-badge">Flora</span></div>
   <div class="bio-body">
     <h2>Pino canario</h2><span class="bio-scientific">Pinus canariensis</span>
