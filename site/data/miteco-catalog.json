@@ -3,7 +3,7 @@
   "generated_at": "2026-09-28",
   "status": "seed",
   "source": "MITECO CKAN API",
-  "api_base": "https://catalogo.datosabiertos.miteco.gob.es/catalogo/api/3/action",
+  "api_base": "https://catalogo.datosabiertos.miteco.gob.es/catalogo/es/api/3/action",
   "queries": [
     "Distribución de especies EIDOS",
     "Atlas de los Paisajes de España",
