@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-09-28",
+  "status": "seed",
+  "source": "MITECO CKAN API",
+  "api_base": "https://catalogo.datosabiertos.miteco.gob.es/catalogo/api/3/action",
+  "queries": [
+    "Distribución de especies EIDOS",
+    "Atlas de los Paisajes de España",
+    "Espacios Naturales Protegidos"
+  ],
+  "errors": [],
+  "datasets": [
+    {
+      "id": "fc21c1a5-4c02-4157-9d2f-9a2cd200f908",
+      "title": "Distribución de especies",
+      "notes": "Cartografía de distribución de especies silvestres terrestres y marinas presentes en España de acuerdo con EIDOS/MITECO.",
+      "catalog_url": "https://catalogo.datosabiertos.miteco.gob.es/catalogo/es/dataset/fc21c1a5-4c02-4157-9d2f-9a2cd200f908",
+      "organization": "Subdirección General de Biodiversidad Terrestre y Marina",
+      "resources": [
+        {
+          "name": "Servicio WMS Distribución de especies",
+          "format": "WMS",
+          "url": "https://wms.mapama.gob.es/sig/Biodiversidad/SD_EIDOS"
+        }
+      ]
+    }
+  ]
+}
