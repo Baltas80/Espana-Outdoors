@@ -1,38 +1,84 @@
-# España Outdoor — plan unificado de datos geográficos y biodiversidad
+# España Outdoor — plan de datos: rutas y biodiversidad
 
-## Decisión
-No depender de una única web externa. Construir una capa de datos propia alimentada por fuentes oficiales y abiertas, guardando en cada registro origen, identificador, fecha, licencia, versión y URL de fuente.
+## Principio de arquitectura
 
-## Catálogo biodiversidad
-EIDOS / MITECO → autoridad base para taxonomía, descripción, distribución y conservación.
-GBIF-Spain → checklists especializadas, especialmente flora vascular y otros grupos.
-Fuentes autonómicas → completar detalle territorial cuando exista información más reciente o precisa.
+Rutas y Flora/Fauna son **dos módulos independientes** en esta fase.
 
-## Catálogo rutas
-CNIG/FEDME → senderos homologados y tracks GPX/KML/SHP.
-CNIG/MAPA Caminos Naturales → red de Caminos Naturales y etapas.
-Datos abiertos autonómicos → rutas locales oficiales.
-OpenStreetMap → cobertura complementaria y rutas locales.
+- No comparten tablas.
+- No comparten lógica de ingestión.
+- No se crea una relación ruta-especie.
+- No se afirma que una ruta determine la presencia de una especie.
+- Cada módulo tendrá sus propias fuentes, actualizaciones y modelo de datos.
 
-## Unión clave
-localidad → ruta → geometría → espacio natural → especies potencialmente presentes → puntos de interés.
-La relación especie-ruta debe ser espacial/ecológica; nunca afirmar que una especie está garantizado que vaya a verse.
+## Módulo 1 — Rutas
 
-## Tablas de producto
-Localidad: municipio, provincia, comunidad, coordenadas, comarca, espacios naturales próximos.
-Ruta: nombre, código, tipo, distancia, desnivel, duración, dificultad, geometría, GPX, operador, estado y fuente.
-Especie: nombre común, nombre científico, taxonomía, descripción, hábitat, distribución, conservación, fotografía y licencia.
-Relación ruta-especie: route_id, taxon_id, relationship, source, confidence, seasonality, notes.
+### Objetivo
 
-relationship puede ser: documented_nearby, habitat_suitable u official_distribution_overlap.
+Permitir:
 
-## Alcance
-No existe una única lista estática que pueda llamarse literalmente todas las especies de España con el mismo nivel de actualización en todos los grupos. EIDOS es la base oficial integrada, pero MITECO reconoce que el detalle puede variar por grupo y que las comunidades autónomas pueden disponer de información adicional.
+**Comunidad → Provincia → Localidad → rutas disponibles → filtros → ficha → mapa → GPX → navegación.**
 
-## Fases
-Fase A: importar rutas FEDME y Caminos Naturales, normalizar localidades, crear taxonomía maestra e índice espacial.
-Fase B: selector localidad, lista de rutas, ficha, mapa, perfil de elevación, GPX y flora/fauna del entorno.
-Fase C: PMTiles, geometrías offline, índice local, fichas de especies, imágenes optimizadas y sincronización incremental.
+### Fuentes prioritarias
 
-## Resultado
-La web será el catálogo editorial. La app será el producto operativo. La base geográfica será común a ambos.
+1. CNIG / Senderos FEDME.
+2. CNIG / Caminos Naturales.
+3. Datos abiertos autonómicos.
+4. OpenStreetMap como complemento.
+
+### Modelo
+
+`route`
+`route_segment`
+`route_place`
+
+Cada registro conserva fuente, identificador de origen, licencia, fecha y versión.
+
+### Resultado
+
+El sistema de rutas será consumido por el mapa, GPX y posteriormente Valhalla.
+
+## Módulo 2 — Flora y Fauna
+
+### Objetivo
+
+Construir un catálogo independiente de biodiversidad:
+
+**Fauna / Flora → grupo → especie → ficha → fotografía → hábitat → distribución → conservación.**
+
+### Fuentes prioritarias
+
+1. EIDOS / MITECO como base oficial.
+2. GBIF-Spain para checklists especializadas.
+3. Fuentes autonómicas cuando aporten información oficial adicional.
+
+### Modelo
+
+`taxon`
+`species_profile`
+`species_distribution`
+`species_media`
+
+Cada registro conserva fuente, identificador, licencia, fecha y versión.
+
+### Resultado
+
+El catálogo de biodiversidad será consumido por la sección Flora y Fauna de la web y, posteriormente, por la aplicación como catálogo independiente.
+
+## No hacer en esta fase
+
+- No cruzar rutas con especies.
+- No mostrar especies asociadas automáticamente a una ruta.
+- No introducir filtros de biodiversidad dentro del buscador de rutas.
+- No crear tablas puente `route_species`.
+
+## Evolución futura
+
+En una fase posterior se podrá estudiar una integración contextual entre módulos, pero solo después de tener ambos catálogos completos, normalizados y validados de forma independiente.
+
+## Resultado de producto
+
+### Rutas
+**Localidad → Ruta → Mapa → GPX → Navegación.**
+
+### Flora y Fauna
+**Especie → Fotografía → Descripción → Hábitat → Distribución → Conservación.**
