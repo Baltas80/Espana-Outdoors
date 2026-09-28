@@ -25,7 +25,7 @@
     results.innerHTML = filtered.length ? filtered.map((item) => `
       <article class="bio-card">
         <div class="bio-photo">
-          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.common_name)} — ${escapeHtml(item.scientific_name)}" loading="lazy" decoding="async">
+          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.common_name)} — ${escapeHtml(item.scientific_name)}" loading="lazy" decoding="async"${item.image_large ? ` srcset="${escapeHtml(item.image)} 640w, ${escapeHtml(item.image_large)} 960w" sizes="(max-width: 560px) 100vw, (max-width: 1000px) 50vw, 33vw"` : ''}>
           <span class="bio-badge">${escapeHtml(item.type === 'flora' ? 'Flora' : 'Fauna')}</span>
         </div>
         <div class="bio-body">
