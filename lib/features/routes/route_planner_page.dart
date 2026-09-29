@@ -50,12 +50,14 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
     }
   }
 
-  Future<void> _onMapClick(math.Point<double> _, ml.LatLng coordinates) async {
+  Future<void> _selectDestination(ml.LatLng coordinates) async {
+    final destination = LatLng(coordinates.latitude, coordinates.longitude);
     setState(() {
-      _destination = LatLng(coordinates.latitude, coordinates.longitude);
+      _destination = destination;
       _route = null;
       _error = null;
     });
+
     final controller = _controller;
     if (controller != null && _styleReady) {
       await controller.clearCircles();
@@ -71,25 +73,32 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
     }
   }
 
+  Future<void> _onMapClick(math.Point<double> _, ml.LatLng coordinates) =>
+      _selectDestination(coordinates);
+
+  Future<void> _onMapLongClick(math.Point<double> _, ml.LatLng coordinates) =>
+      _selectDestination(coordinates);
+
   Future<void> _calculate() async {
     final destination = _destination;
     if (destination == null) {
-      _show('Toca el mapa para elegir un destino.');
+      _show('Selecciona primero un destino tocando el mapa.');
       return;
     }
-    final location = ref.read(locationControllerProvider).position;
+
+    var location = ref.read(locationControllerProvider).position;
     if (location == null) {
       await ref.read(locationControllerProvider.notifier).locate();
+      location = ref.read(locationControllerProvider).position;
     }
-    final position = ref.read(locationControllerProvider).position;
-    if (position == null) {
+    if (location == null) {
       _show('Necesitamos tu ubicación para calcular la ruta.');
       return;
     }
 
     final config = RoutingConfig.fromEnvironment();
     if (!config.isConfigured) {
-      _show('Routing no está configurado en este entorno.');
+      _show('Routing no está configurado en este APK.');
       return;
     }
 
@@ -99,7 +108,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       final result = await service.route(
         RouteRequest(
           points: [
-            LatLng(position.latitude, position.longitude),
+            LatLng(location!.latitude, location.longitude),
             destination,
           ],
           profile: 'hiking',
@@ -142,68 +151,97 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
         ? const ml.LatLng(40.4168, -3.7038)
         : ml.LatLng(center.latitude, center.longitude);
 
+    final destination = _destination;
+    final destinationLabel = destination == null
+        ? 'Toca el mapa para elegir destino.'
+        : 'Destino seleccionado: ${destination.latitude.toStringAsFixed(5)}, ${destination.longitude.toStringAsFixed(5)}';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Planificar ruta')),
       body: Stack(
         children: [
           Positioned.fill(
             child: _error != null
-                ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('No se pudo cargar el mapa: $_error')))
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text('No se pudo cargar el mapa: $_error'),
+                    ),
+                  )
                 : style == null
                     ? const Center(child: CircularProgressIndicator())
                     : ml.MapLibreMap(
                         styleString: style,
-                        initialCameraPosition: ml.CameraPosition(target: initial, zoom: 12),
+                        initialCameraPosition:
+                            ml.CameraPosition(target: initial, zoom: 12),
                         myLocationEnabled: true,
                         compassEnabled: true,
+                        featureTapsTriggersMapClick: true,
                         attributionButtonMargins: const math.Point(12, 12),
                         onMapCreated: (controller) => _controller = controller,
                         onMapClick: _onMapClick,
+                        onMapLongClick: _onMapLongClick,
                         onStyleLoadedCallback: () {
                           _styleReady = true;
                         },
                       ),
           ),
           Positioned(
-            left: 16, right: 16, top: 16,
+            left: 16,
+            right: 16,
+            top: 16,
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(14),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Ruta de senderismo', style: TextStyle(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 4),
-                  Text(_destination == null ? 'Toca el mapa para elegir destino.' : 'Destino seleccionado.'),
-                  if (_route != null) ...[
-                    const SizedBox(height: 6),
-                    Text('${((_route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((_route!.durationSeconds ?? 0) / 60).round()} min'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ruta de senderismo',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(destinationLabel),
+                    if (_route != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        '${((_route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((_route!.durationSeconds ?? 0) / 60).round()} min',
+                      ),
+                    ],
                   ],
-                ]),
+                ),
               ),
             ),
           ),
           Positioned(
-            left: 16, right: 16, bottom: 24,
-            child: Column(children: [
-              if (_route != null) ...[
+            left: 16,
+            right: 16,
+            bottom: 24,
+            child: Column(
+              children: [
+                if (_route != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => context.push('/navigation', extra: _route),
+                      icon: const Icon(Icons.navigation_outlined),
+                      label: const Text('Iniciar navegación'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: _busy ? null : () => context.push('/navigation', extra: _route),
-                    icon: const Icon(Icons.navigation_outlined),
-                    label: const Text('Iniciar navegación'),
+                    onPressed: _busy || destination == null ? null : _calculate,
+                    icon: const Icon(Icons.alt_route),
+                    label: Text(_busy ? 'CALCULANDO…' : 'CALCULAR RUTA'),
                   ),
                 ),
-                const SizedBox(height: 8),
               ],
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _busy ? null : _calculate,
-                  icon: const Icon(Icons.alt_route),
-                  label: Text(_busy ? 'CALCULANDO…' : 'CALCULAR RUTA'),
-                ),
-              ),
-            ]),
+            ),
           ),
         ],
       ),
