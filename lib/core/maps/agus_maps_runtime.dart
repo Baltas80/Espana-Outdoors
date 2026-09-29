@@ -12,7 +12,6 @@ final class AgusMapsRuntime {
   Future<void>? _initializing;
   agus.MwmStorage? _storage;
   String? _dataPath;
-  final List<String> _bundledBaseMaps = <String>[];
   bool _initialized = false;
   bool _surfaceReady = false;
 
@@ -34,10 +33,8 @@ final class AgusMapsRuntime {
     _dataPath = dataPath;
 
     await agus.extractMap('assets/maps/icudt75l.dat');
-    _bundledBaseMaps
-      ..clear()
-      ..add(await agus.extractMap('assets/maps/World.mwm'))
-      ..add(await agus.extractMap('assets/maps/WorldCoasts.mwm'));
+    await agus.extractMap('assets/maps/World.mwm');
+    await agus.extractMap('assets/maps/WorldCoasts.mwm');
 
     agus.initWithPaths(dataPath, dataPath);
     await _cleanupPartialDownloads(dataPath);
@@ -57,19 +54,6 @@ final class AgusMapsRuntime {
 
   Future<void> registerAllMaps() async {
     if (_storage == null || !_surfaceReady) return;
-
-    for (final path in _bundledBaseMaps) {
-      final result = agus.registerSingleMap(path);
-      final name = File(path).uri.pathSegments.last;
-      debugPrint(
-        '[AgusMapsRuntime] bundled map registration: $name result=$result',
-      );
-      if (result != 0) {
-        throw StateError(
-          'Failed to register bundled map $name (result $result).',
-        );
-      }
-    }
 
     for (final metadata in _storage!.getAll()) {
       if (metadata.isBundled) continue;
