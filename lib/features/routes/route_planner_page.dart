@@ -1,14 +1,14 @@
-import 'dart:math' as math;
+import 'dart:async';
 
+import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart' hide RoutingConfig;
 import 'package:latlong2/latlong.dart';
-import 'package:maplibre_gl/maplibre_gl.dart' as ml;
 
 import '../../core/contracts/routing_service.dart';
 import '../../core/location/location_controller.dart';
-import '../../core/map/maplibre_style_provider.dart';
+import '../../core/maps/agus_maps_runtime.dart';
 import '../../core/routing/routing_config.dart';
 import '../../infrastructure/routing/valhalla_routing_service.dart';
 
@@ -20,69 +20,102 @@ class RoutePlannerPage extends ConsumerStatefulWidget {
 }
 
 class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
-  final _styles = const MapLibreStyleProvider();
-  ml.MapLibreMapController? _controller;
-  String? _style;
-  String? _error;
+  final _controller = agus.AgusMapController();
+  late final Future<void> _runtimeFuture;
+
   LatLng? _destination;
   RouteResult? _route;
   bool _busy = false;
-  bool _styleReady = false;
 
   @override
   void initState() {
     super.initState();
-    _loadStyle();
+    _runtimeFuture = AgusMapsRuntime.instance.ensureInitialized();
   }
 
-  Future<void> _loadStyle() async {
-    try {
-      final local = await _styles.findLatestLocalRegion();
-      final style = await _styles.load(localPmtilesPath: local);
-      if (!mounted) return;
-      setState(() {
-        _style = style;
-        _error = null;
-      });
-    } on Object catch (error) {
-      if (!mounted) return;
-      setState(() => _error = error.toString());
-    }
-  }
+  Future<void> _showDestinationDialog() async {
+    final existing = _destination;
+    final latController = TextEditingController(
+      text: existing?.latitude.toStringAsFixed(6) ?? '',
+    );
+    final lonController = TextEditingController(
+      text: existing?.longitude.toStringAsFixed(6) ?? '',
+    );
 
-  Future<void> _selectDestination(ml.LatLng coordinates) async {
-    final destination = LatLng(coordinates.latitude, coordinates.longitude);
+    final destination = await showDialog<LatLng>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Destino'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Introduce las coordenadas WGS84 del destino.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: latController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
+              decoration: const InputDecoration(labelText: 'Latitud'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: lonController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
+              decoration: const InputDecoration(labelText: 'Longitud'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final lat =
+                  double.tryParse(latController.text.replaceAll(',', '.'));
+              final lon =
+                  double.tryParse(lonController.text.replaceAll(',', '.'));
+              if (lat == null ||
+                  lon == null ||
+                  lat.abs() > 90 ||
+                  lon.abs() > 180) {
+                return;
+              }
+              Navigator.pop(context, LatLng(lat, lon));
+            },
+            child: const Text('Seleccionar'),
+          ),
+        ],
+      ),
+    );
+
+    latController.dispose();
+    lonController.dispose();
+
+    if (destination == null || !mounted) return;
     setState(() {
       _destination = destination;
       _route = null;
-      _error = null;
     });
-
-    final controller = _controller;
-    if (controller != null && _styleReady) {
-      await controller.clearCircles();
-      await controller.addCircle(
-        ml.CircleOptions(
-          geometry: coordinates,
-          circleRadius: 8,
-          circleColor: '#D9A441',
-          circleStrokeColor: '#FFFFFF',
-          circleStrokeWidth: 2,
-        ),
-      );
-    }
+    _controller.moveToLocation(
+      destination.latitude,
+      destination.longitude,
+      14,
+    );
   }
-
-  Future<void> _onMapClick(math.Point<double> _, ml.LatLng coordinates) =>
-      _selectDestination(coordinates);
-
-  Future<void> _onMapLongClick(math.Point<double> _, ml.LatLng coordinates) =>
-      _selectDestination(coordinates);
 
   Future<void> _calculate() async {
     final destination = _destination;
     if (destination == null) {
-      _show('Selecciona primero un destino tocando el mapa.');
+      _show('Selecciona primero un destino.');
       return;
     }
 
@@ -116,20 +149,6 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       );
       if (!mounted) return;
       setState(() => _route = result);
-      if (_controller != null && _styleReady) {
-        await _controller!.clearLines();
-        await _controller!.addLine(
-          ml.LineOptions(
-            geometry: result.points
-                .map((point) => ml.LatLng(point.latitude, point.longitude))
-                .toList(growable: false),
-            lineWidth: 6,
-            lineOpacity: 0.95,
-            lineColor: '#2E7D32',
-            lineJoin: 'round',
-          ),
-        );
-      }
     } on Object catch (error) {
       if (mounted) _show(error.toString());
     } finally {
@@ -145,46 +164,52 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final style = _style;
-    final center = ref.watch(locationControllerProvider).position;
-    final initial = center == null
-        ? const ml.LatLng(40.4168, -3.7038)
-        : ml.LatLng(center.latitude, center.longitude);
-
+    final location = ref.watch(locationControllerProvider).position;
     final destination = _destination;
+    final center = destination ??
+        (location == null
+            ? const LatLng(40.4168, -3.7038)
+            : LatLng(location.latitude, location.longitude));
+
     final destinationLabel = destination == null
-        ? 'Toca el mapa para elegir destino.'
-        : 'Destino seleccionado: ${destination.latitude.toStringAsFixed(5)}, ${destination.longitude.toStringAsFixed(5)}';
+        ? 'Sin destino seleccionado.'
+        : 'Destino: ${destination.latitude.toStringAsFixed(5)}, ${destination.longitude.toStringAsFixed(5)}';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Planificar ruta')),
       body: Stack(
         children: [
           Positioned.fill(
-            child: _error != null
-                ? Center(
+            child: FutureBuilder<void>(
+              future: _runtimeFuture,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text('No se pudo cargar el mapa: $_error'),
-                    ),
-                  )
-                : style == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : ml.MapLibreMap(
-                        styleString: style,
-                        initialCameraPosition:
-                            ml.CameraPosition(target: initial, zoom: 12),
-                        myLocationEnabled: true,
-                        compassEnabled: true,
-                        featureTapsTriggersMapClick: true,
-                        attributionButtonMargins: const math.Point(12, 12),
-                        onMapCreated: (controller) => _controller = controller,
-                        onMapClick: _onMapClick,
-                        onMapLongClick: _onMapLongClick,
-                        onStyleLoadedCallback: () {
-                          _styleReady = true;
-                        },
+                      child: Text(
+                        'No se pudo iniciar la cartografía: ${snapshot.error}',
+                        textAlign: TextAlign.center,
                       ),
+                    ),
+                  );
+                }
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                return agus.AgusMap(
+                  controller: _controller,
+                  initialLat: center.latitude,
+                  initialLon: center.longitude,
+                  initialZoom: destination == null ? 12 : 14,
+                  onMapReady: () =>
+                      unawaited(AgusMapsRuntime.instance.onMapReady()),
+                  userScale: 1.0,
+                  isVisible: true,
+                );
+              },
+            ),
           ),
           Positioned(
             left: 16,
@@ -219,6 +244,15 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
             bottom: 24,
             child: Column(
               children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _busy ? null : _showDestinationDialog,
+                    icon: const Icon(Icons.place_outlined),
+                    label: const Text('SELECCIONAR DESTINO'),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (_route != null) ...[
                   SizedBox(
                     width: double.infinity,
@@ -235,9 +269,12 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: _busy || destination == null ? null : _calculate,
+                    onPressed:
+                        _busy || destination == null ? null : _calculate,
                     icon: const Icon(Icons.alt_route),
-                    label: Text(_busy ? 'CALCULANDO…' : 'CALCULAR RUTA'),
+                    label: Text(
+                      _busy ? 'CALCULANDO…' : 'CALCULAR RUTA',
+                    ),
                   ),
                 ),
               ],
