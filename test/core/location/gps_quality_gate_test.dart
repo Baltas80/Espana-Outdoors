@@ -1,6 +1,6 @@
-import 'package:espana_outdoor/core/location/gps_quality_gate.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:espana_outdoors/core/location/gps_quality_gate.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
 
 Position _position({
   double accuracy = 5,
