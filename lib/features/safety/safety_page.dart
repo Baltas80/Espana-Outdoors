@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/domain/outdoor_models.dart';
 import '../../core/emergency/emergency_service.dart';
+import '../../core/emergency/emergency_contact_directory.dart';
 import '../../core/emergency/emergency_share_service.dart';
 import '../../core/emergency/trusted_contact_store.dart';
 
@@ -29,10 +30,11 @@ class _SafetyPageState extends State<SafetyPage> {
       _show('No se ha podido obtener una ubicación precisa.');
       return;
     }
+    final contact = await EmergencyContactDirectory.instance.spain();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Llamar al 112'),
+        title: Text('Llamar al ' + contact.general),
         content: Text('Ubicación preparada con una precisión aproximada de ${snapshot.accuracyMeters.toStringAsFixed(0)} m.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
