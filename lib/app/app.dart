@@ -10,6 +10,7 @@ import '../features/explore/explore_page.dart';
 import '../features/home/home_page.dart';
 import '../features/instruments/instruments_page.dart';
 import '../features/map/map_page.dart';
+import '../features/map/map_navigation_smoke_page.dart';
 import '../features/navigation/backtrack_page.dart';
 import '../features/navigation/navigation_page.dart';
 import '../features/navigation/waypoints_page.dart';
@@ -41,7 +42,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       _BackNavigationScope(fallback: fallback, child: child);
 
   static final _router = GoRouter(
-    initialLocation: _mapSmokeMode ? '/map' : '/',
+    initialLocation: '/',
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (_, __, navigationShell) =>
@@ -51,7 +52,9 @@ class EspanaOutdoorApp extends StatelessWidget {
             routes: [
               GoRoute(
                 path: '/',
-                builder: (_, __) => const HomePage(),
+                builder: (_, __) => _mapSmokeMode
+                    ? const MapNavigationSmokePage()
+                    : const HomePage(),
               ),
             ],
           ),
