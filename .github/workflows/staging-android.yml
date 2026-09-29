@@ -82,7 +82,7 @@ jobs:
           sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"
           test -n "$sdk_home"
           sdk_home="${sdk_home%/android/prebuilt}"
-          test -d "$sdk_home/example/assets"
+          test -d "$sdk_home/assets" || test -d "$sdk_home/example/assets"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
           echo "Agus Maps SDK: $sdk_home"
 
