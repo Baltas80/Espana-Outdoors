@@ -33,12 +33,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="0.1.17"
+          version="0.1.18"
           archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
           root="$RUNNER_TEMP/agus-maps-sdk"
           curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 \
             "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
             -o "$archive"
+          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | sha256sum -c -
           rm -rf "$root"
           mkdir -p "$root"
           unzip -q "$archive" -d "$root"
@@ -164,4 +165,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Setup Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
 
+      - name: Download Agus Maps SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="0.1.18"
+          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
+          root="$RUNNER_TEMP/agus-maps-sdk"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 \
+            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
+            -o "$archive"
+          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | shasum -a 256 -c -
+          rm -rf "$root"
+          mkdir -p "$root"
+          unzip -q "$archive" -d "$root"
+          sdk_home="$(find "$root" -type d -path '*/ios/Frameworks/CoMaps.xcframework' -print -quit)"
+          test -n "$sdk_home"
+          sdk_home="${sdk_home%/ios/Frameworks/CoMaps.xcframework}"
+          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+
+      - name: Generate iOS project
+        run: flutter create . --platforms=ios --org com.espanaoutdoors
+
+      - name: Apply iOS native configuration
+        run: python3 tool/configure_mobile_native.py --platform ios
+
+      - name: Verify iOS native configuration
+        run: python3 tool/verify_mobile_native.py --platform ios
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test
+        run: flutter test
+
+      - name: Build configured iOS candidate
+        run: |
+          flutter build ios --release --no-codesign --dart-define=APP_ENV=ci
