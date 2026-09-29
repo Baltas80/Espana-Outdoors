@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
+import 'package:crypto/crypto.dart';
 
 final class AgusMapsRuntime {
   AgusMapsRuntime._();
@@ -34,8 +35,16 @@ final class AgusMapsRuntime {
     _dataPath = dataPath;
 
     await agus.extractMap('assets/maps/icudt75l.dat');
-    await agus.extractMap('assets/maps/World.mwm');
-    await agus.extractMap('assets/maps/WorldCoasts.mwm');
+    await _ensureBundledMap(
+      assetPath: 'assets/maps/World.mwm',
+      expectedSize: 53029018,
+      expectedSha1: '7a588f8c9d81ae26eb509b4b00ac8f790b2f5054',
+    );
+    await _ensureBundledMap(
+      assetPath: 'assets/maps/WorldCoasts.mwm',
+      expectedSize: 8505665,
+      expectedSha1: 'cfd2cce0526ca92cf03c1cc784e12d433bf590d9',
+    );
 
     agus.initWithPaths(dataPath, dataPath);
     await _cleanupPartialDownloads(dataPath);
@@ -121,6 +130,59 @@ final class AgusMapsRuntime {
     agus.invalidateMap();
 
     return result;
+  }
+
+  Future<void> _ensureBundledMap({
+    required String assetPath,
+    required int expectedSize,
+    required String expectedSha1,
+  }) async {
+    final initialPath = await agus.extractMap(assetPath);
+    final initialFile = File(initialPath);
+
+    if (await _matchesBundledMap(
+      initialFile,
+      expectedSize: expectedSize,
+      expectedSha1: expectedSha1,
+    )) {
+      return;
+    }
+
+    debugPrint(
+      '[AgusMapsRuntime] replacing stale/corrupt bundled map: ' +
+      initialFile.path,
+    );
+
+    if (await initialFile.exists()) {
+      await initialFile.delete();
+    }
+
+    final freshPath = await agus.extractMap(assetPath);
+    final freshFile = File(freshPath);
+    final valid = await _matchesBundledMap(
+      freshFile,
+      expectedSize: expectedSize,
+      expectedSha1: expectedSha1,
+    );
+    if (!valid) {
+      throw StateError(
+        'Bundled map integrity check failed for ' + assetPath,
+      );
+    }
+  }
+
+  Future<bool> _matchesBundledMap(
+    File file, {
+    required int expectedSize,
+    required String expectedSha1,
+  }) async {
+    if (!await file.exists()) return false;
+
+    final size = await file.length();
+    if (size != expectedSize) return false;
+
+    final digest = await sha1.bind(file.openRead()).first;
+    return digest.toString().toLowerCase() == expectedSha1;
   }
 
   Future<void> _cleanupPartialDownloads(String dataPath) async {
