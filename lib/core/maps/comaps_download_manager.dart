@@ -162,7 +162,6 @@ final class CoMapsDownloadManager {
       url,
       tempFile,
       onProgress: onProgress,
-      isCancelled: () => _cancelled.contains(region.id),
     );
 
     if (region.sizeBytes > 0 && received != region.sizeBytes) {
@@ -208,7 +207,6 @@ final class CoMapsDownloadManager {
         filePath: file.path,
         sha256: null,
         isBundled: false,
-        isActive: true,
       ),
     );
 
@@ -219,15 +217,8 @@ final class CoMapsDownloadManager {
   }
 
   Future<String> _sha1Base64(File file) async {
-    final output = AccumulatorSink<Digest>();
-    final input = sha1.startChunkedConversion(output);
-
-    await for (final chunk in file.openRead()) {
-      input.add(chunk);
-    }
-
-    input.close();
-    return base64Encode(output.events.single.bytes);
+    final digest = await sha1.bind(file.openRead()).first;
+    return base64Encode(digest.bytes);
   }
 
   void dispose() => _mirrors.dispose();
