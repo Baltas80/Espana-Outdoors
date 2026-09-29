@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 
 final class AgusMapsRuntime {
@@ -10,6 +12,8 @@ final class AgusMapsRuntime {
   Future<void>? _initializing;
   agus.MwmStorage? _storage;
   String? _dataPath;
+  int? _bundledVersion;
+  final List<String> _bundledMapPaths = <String>[];
   bool _surfaceReady = false;
 
   agus.MwmStorage? get storage => _storage;
@@ -19,40 +23,66 @@ final class AgusMapsRuntime {
   Future<void> ensureInitialized() => _initializing ??= _initialize();
 
   Future<void> _initialize() async {
+    if (_storage != null) return;
+
     _storage = await agus.MwmStorage.create();
+    if (await _storage!.hasOrphanedMetadata()) {
+      await _storage!.pruneOrphaned();
+    }
 
     final dataPath = await agus.extractDataFiles();
     _dataPath = dataPath;
 
-    await _copyAssetToDataPath('assets/maps/icudt75l.dat', dataPath);
+    final worldPath = await agus.extractMap('assets/maps/World.mwm');
+    final coastsPath = await agus.extractMap('assets/maps/WorldCoasts.mwm');
+    await agus.extractMap('assets/maps/icudt75l.dat');
 
+    _bundledMapPaths
+      ..clear()
+      ..addAll([worldPath, coastsPath]);
+
+    _bundledVersion = await _readBundledVersion(dataPath);
     agus.initWithPaths(dataPath, dataPath);
 
+    await _recordBundledMap('World', worldPath);
+    await _recordBundledMap('WorldCoasts', coastsPath);
     await _cleanupPartialDownloads(dataPath);
   }
 
-  Future<void> _copyAssetToDataPath(String asset, String dataPath) async {
-    final extractedPath = await agus.extractMap(asset);
-    final source = File(extractedPath);
-    final target = File(
-      dataPath + '/' + source.uri.pathSegments.last,
+  Future<void> _recordBundledMap(String name, String path) async {
+    final file = File(path);
+    if (!await file.exists()) return;
+    if (_storage!.isDownloaded(name)) return;
+
+    await _storage!.upsert(
+      agus.MwmMetadata(
+        regionName: name,
+        snapshotVersion: 'bundled',
+        fileSize: await file.length(),
+        downloadDate: DateTime.now(),
+        filePath: path,
+        isBundled: true,
+      ),
     );
-
-    if (source.path == target.path) return;
-
-    if (!await target.exists() || await source.length() != await target.length()) {
-      await source.copy(target.path);
-    }
   }
 
   Future<void> onMapReady() async {
     await ensureInitialized();
     _surfaceReady = true;
-    await registerDownloadedMaps();
+    await registerAllMaps();
   }
 
-  Future<void> registerDownloadedMaps() async {
+  Future<void> registerAllMaps() async {
     if (_storage == null || !_surfaceReady) return;
+
+    final bundledVersion = _bundledVersion;
+    for (final path in _bundledMapPaths) {
+      if (bundledVersion != null) {
+        agus.registerSingleMapWithVersion(path, bundledVersion);
+      } else {
+        agus.registerSingleMap(path);
+      }
+    }
 
     for (final metadata in _storage!.getAll()) {
       if (metadata.isBundled) continue;
@@ -90,17 +120,30 @@ final class AgusMapsRuntime {
     return result;
   }
 
+  Future<int?> _readBundledVersion(String dataPath) async {
+    try {
+      final file = File('${dataPath}/countries.txt');
+      if (!await file.exists()) return null;
+      final json = jsonDecode(await file.readAsString());
+      if (json is Map && json['v'] is num) {
+        return (json['v'] as num).toInt();
+      }
+    } catch (_) {}
+    return null;
+  }
+
   Future<void> _cleanupPartialDownloads(String dataPath) async {
     final root = Directory(dataPath);
     if (!await root.exists()) return;
 
-    await for (final entity in root.list(recursive: true, followLinks: false)) {
+    await for (final entity in root.list(
+      recursive: true,
+      followLinks: false,
+    )) {
       if (entity is File && entity.path.endsWith('.mwm.download')) {
         try {
           await entity.delete();
-        } catch (_) {
-          // Best effort cleanup.
-        }
+        } catch (_) {}
       }
     }
   }
