@@ -60,9 +60,19 @@ def verify_android() -> None:
     if not re.search(r"minSdk(?:Version\s+|\s*=\s*)24\b", content):
         raise SystemExit("Android minSdk 24 was not enforced by native configuration.")
 
+    if not re.search(
+        r'android:name="io\.flutter\.embedding\.android\.EnableImpeller"\s+'
+        r'android:value="false"',
+        text,
+    ):
+        raise SystemExit(
+            "Flutter Impeller must be disabled for the Agus Maps Android renderer."
+        )
+
     print("android_manifest=verified")
     print("android_permissions=verified")
     print("android_min_sdk=24")
+    print("android_impeller=disabled")
 
 
 def verify_ios() -> None:
