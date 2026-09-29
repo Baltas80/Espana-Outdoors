@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/material.dart';
 
 import '../../app/outdoor_visuals.dart';
@@ -19,8 +18,6 @@ class _OfflinePageState extends State<OfflinePage> {
   bool _downloading = false;
   double _progress = 0;
   String _status = 'Preparando catálogo CoMaps…';
-  int _completed = 0;
-  int _count = 0;
 
   @override
   void initState() {
@@ -39,8 +36,6 @@ class _OfflinePageState extends State<OfflinePage> {
     setState(() {
       _downloading = true;
       _progress = 0;
-      _completed = 0;
-      _count = plan.leaves.length;
       _status = 'Descargando España…';
     });
 
@@ -49,14 +44,12 @@ class _OfflinePageState extends State<OfflinePage> {
         onProgress: (region, received, total, completed, count) {
           if (!mounted) return;
           setState(() {
-            _completed = completed;
-            _count = count;
             final current = total <= 0 ? 0.0 : received / total;
             _progress = count == 0
                 ? 0.0
                 : ((completed + current) / count).clamp(0.0, 1.0);
             _status =
-                'Descargando \${region.displayName} · \${(_progress * 100).toStringAsFixed(0)}%';
+                'Descargando ${region.displayName} · ${(_progress * 100).toStringAsFixed(0)}%';
           });
         },
       );
@@ -71,7 +64,7 @@ class _OfflinePageState extends State<OfflinePage> {
       if (!mounted) return;
       setState(() {
         _downloading = false;
-        _status = 'Error: \$error';
+        _status = 'Error: $error';
       });
     }
   }
@@ -84,7 +77,7 @@ class _OfflinePageState extends State<OfflinePage> {
       value /= 1024;
       unit++;
     }
-    return '\${value.toStringAsFixed(unit == 0 ? 0 : 1)} \${units[unit]}';
+    return '${value.toStringAsFixed(unit == 0 ? 0 : 1)} ${units[unit]}';
   }
 
   @override
@@ -150,11 +143,11 @@ class _OfflinePageState extends State<OfflinePage> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '\${plan.label} · versión \${plan.snapshot.formattedDate}',
+                  '${plan.label} · versión ${plan.snapshot.formattedDate}',
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\${_size(plan.totalBytes)} · \${plan.leaves.length} archivos de región',
+                  '${_size(plan.totalBytes)} · ${plan.leaves.length} archivos de región',
                 ),
                 const SizedBox(height: 14),
                 if (_downloading || _progress > 0) ...[
