@@ -127,22 +127,7 @@ class ValhallaRoutingService implements RoutingService {
       }
 
       final shape = item['shape'];
-      if (shape is Map<String, dynamic>) {
-        final coordinates = shape['coordinates'];
-        if (coordinates is List) {
-          for (final coordinate in coordinates) {
-            if (coordinate is List &&
-                coordinate.length >= 2 &&
-                coordinate[0] is num &&
-                coordinate[1] is num) {
-              points.add(LatLng(
-                (coordinate[1] as num).toDouble(),
-                (coordinate[0] as num).toDouble(),
-              ));
-            }
-          }
-        }
-      }
+      points.addAll(_decodeShape(shape));
     }
 
     if (points.length < 2) {
@@ -157,6 +142,61 @@ class ValhallaRoutingService implements RoutingService {
     );
   }
 
+  Iterable<LatLng> _decodeShape(Object? shape) {
+    if (shape is String) {
+      return _decodePolyline6(shape);
+    }
+
+    if (shape is! Map<String, dynamic>) return const <LatLng>[];
+
+    Object? coordinates = shape['coordinates'];
+    if (coordinates is Map<String, dynamic>) {
+      coordinates = coordinates['coordinates'];
+    }
+    if (coordinates is! List) return const <LatLng>[];
+
+    return [
+      for (final coordinate in coordinates)
+        if (coordinate is List &&
+            coordinate.length >= 2 &&
+            coordinate[0] is num &&
+            coordinate[1] is num)
+          LatLng(
+            (coordinate[1] as num).toDouble(),
+            (coordinate[0] as num).toDouble(),
+          ),
+    ];
+  }
+
+  Iterable<LatLng> _decodePolyline6(String encoded) sync* {
+    var index = 0;
+    var latitude = 0;
+    var longitude = 0;
+
+    int readValue() {
+      var result = 0;
+      var shift = 0;
+      while (index < encoded.length) {
+        final byte = encoded.codeUnitAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        if (byte < 0x20) break;
+        shift += 5;
+        if (shift > 60) {
+          throw FormatException('Invalid Valhalla polyline6 shape.');
+        }
+      }
+      final delta = (result & 1) == 0
+          ? (result >> 1)
+          : ~(result >> 1);
+      return delta;
+    }
+
+    while (index < encoded.length) {
+      latitude += readValue();
+      longitude += readValue();
+      yield LatLng(latitude / 1000000.0, longitude / 1000000.0);
+    }
+  }
   static double? _number(Object? value, {double multiplier = 1}) {
     final number = value as num?;
     return number == null ? null : number.toDouble() * multiplier;
