@@ -124,6 +124,20 @@ final class AgusMapsRuntime {
         continue;
       }
 
+      final actualSha256 = await _sha256Hex(file);
+      if (metadata.sha256 == null ||
+          metadata.sha256!.toLowerCase() != actualSha256) {
+        debugPrint(
+          '[AgusMapsRuntime] refusing map with invalid SHA-256: ' +
+              metadata.regionName,
+        );
+        try {
+          await file.delete();
+        } catch (_) {}
+        await _storage!.remove(metadata.regionName);
+        continue;
+      }
+
       final version = int.tryParse(metadata.snapshotVersion);
       final result = version != null
           ? agus.registerSingleMapWithVersion(metadata.filePath, version)
@@ -314,7 +328,13 @@ final class AgusMapsRuntime {
         continue;
       }
 
-      if (metadata.fileSize > 0 && await file.length() != metadata.fileSize) {
+      final actualSize = await file.length();
+      final actualSha256 = await _sha256Hex(file);
+      final invalidSize = metadata.fileSize > 0 && actualSize != metadata.fileSize;
+      final invalidHash = metadata.sha256 == null ||
+          metadata.sha256!.toLowerCase() != actualSha256;
+
+      if (invalidSize || invalidHash) {
         debugPrint(
           '[AgusMapsRuntime] removing invalid persisted map: ' +
               metadata.regionName,
@@ -325,6 +345,11 @@ final class AgusMapsRuntime {
         await storage.remove(metadata.regionName);
       }
     }
+  }
+
+  Future<String> _sha256Hex(File file) async {
+    final digest = await sha256.bind(file.openRead()).first;
+    return digest.toString().toLowerCase();
   }
 
   Future<void> _cleanupPartialDownloads(String dataPath) async {
