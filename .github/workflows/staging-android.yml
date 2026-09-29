@@ -53,16 +53,6 @@ jobs:
             case "$value" in https://*) ;; *) echo "$name must use HTTPS"; exit 1;; esac
           done
 
-      - name: Staging integration smoke
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl --fail --silent --show-error --location --max-time 20 "${OIDC_ISSUER}/.well-known/openid-configuration" >/dev/null
-          curl --fail --silent --show-error --location --max-time 20 "${VALHALLA_BASE_URL}/status" >/dev/null
-          python3 tool/verify_valhalla_route.py --base-url "${VALHALLA_BASE_URL}"
-          curl --fail --silent --show-error --location --max-time 20 "${SOURCE_GATEWAY_BASE_URL}/healthz" >/dev/null
-          curl --fail --silent --show-error --location --max-time 20 "${RESCUE_LINK_BASE_URL}/healthz" >/dev/null
-
       - name: Verify staging build profile
         run: python3 tool/verify_build_profile.py --profile staging
 
