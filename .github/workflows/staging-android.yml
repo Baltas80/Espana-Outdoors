@@ -70,18 +70,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          archive="$RUNNER_TEMP/agus-maps-sdk.zip"
-          unpack="$RUNNER_TEMP/agus-maps-sdk-unpacked"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 \
-            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${AGUS_MAPS_VERSION}/agus-maps-sdk-v${AGUS_MAPS_VERSION}.zip" \
+          version="0.1.17"
+          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
+          root="$RUNNER_TEMP/agus-maps-sdk"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 \
+            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
             -o "$archive"
-          rm -rf "$unpack"
-          mkdir -p "$unpack"
-          unzip -q "$archive" -d "$unpack"
-          sdk_home="$(find "$unpack" -maxdepth 3 -type d -name "agus-maps-sdk-v${AGUS_MAPS_VERSION}" -print -quit)"
+          rm -rf "$root"
+          mkdir -p "$root"
+          unzip -q "$archive" -d "$root"
+          sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"
           test -n "$sdk_home"
+          sdk_home="${sdk_home%/android/prebuilt}"
           test -d "$sdk_home/example/assets"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
+          echo "Agus Maps SDK: $sdk_home"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
