@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
-import 'package:flutter/services.dart';
 
 final class AgusMapsRuntime {
   AgusMapsRuntime._();
