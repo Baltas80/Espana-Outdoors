@@ -6,11 +6,11 @@ Plataforma móvil premium para naturaleza, rutas, seguridad, mascotas, fauna, co
 
 **MVP 0.1 en construcción activa.** La base actual incluye arquitectura por capas, navegación, mapa, GPS, grabación de rutas, importación GPX, persistencia local de rutas, modo offline básico, privacidad y CI. El sistema visual premium de España Outdoor ya está incorporado en la app y documentado en `docs/brand_system.md`.
 
-## Objetivo de plataformas
+## Prioridad de plataformas
 
-España Outdoor se concentra deliberadamente en **Android y iOS/iPadOS**. Son las plataformas de producto soportadas oficialmente y reciben toda la inversión de UX, GPS, navegación, mapas offline, SOS, Rescue Link, rendimiento y QA.
+España Outdoor se concentra en **Android para el MVP**. Android recibe primero la inversión de UX, GPS, navegación, mapas offline, SOS, Rescue Link, rendimiento y QA.
 
-Web/PWA, Windows, macOS y Linux quedan fuera del alcance del producto y del MVP. No se desarrollarán adaptaciones de escritorio ni Web mientras no exista una decisión de producto posterior que justifique reabrir ese alcance. Esto reduce superficie de mantenimiento, matrices de pruebas, complejidad de distribución y código específico de plataforma.
+iOS/iPadOS queda preparado a nivel arquitectónico para una fase posterior. Web/PWA, Windows, macOS y Linux quedan fuera del alcance del MVP.
 
 La arquitectura conserva interfaces abstractas para permitir en el futuro integraciones con wearables, Garmin, GPS externos, Bluetooth y sensores sin comprometer el foco móvil actual.
 
@@ -21,8 +21,8 @@ La arquitectura conserva interfaces abstractas para permitir en el futuro integr
 - Integración del símbolo de marca en la experiencia principal.
 - Atribución visible de OpenStreetMap en el mapa.
 - ADR de cartografía/offline con decisión de no usar los servidores públicos de teselas OSM para descargas offline.
-- El proveedor cartográfico de producción ya no se fija en código: se inyecta por configuración y la aplicación evita silenciosamente usar OSM público en `production`.
-- Arquitectura preparada para sustituir proveedor cartográfico sin acoplar la UI al proveedor.
+- Agus Maps / CoMaps integrado como renderer vectorial nativo Android.
+- PMTiles desacoplado del renderer: se mantiene como distribución/validación cartográfica independiente y no como renderer Android.
 - Licencia propietaria incorporada para el código y activos propios; las dependencias de terceros conservan sus licencias.
 - Registro inicial de dependencias y alternativas maduras en `docs/THIRD_PARTY_LICENSES.md`.
 - Valhalla integrado mediante una interfaz `RoutingService`, con endpoint de producción externo al código.
@@ -38,7 +38,6 @@ La arquitectura conserva interfaces abstractas para permitir en el futuro integr
 ## Alcance MVP
 
 - Android.
-- iOS/iPadOS.
 - Offline-first para las funciones críticas.
 - Mapas y GIS desacoplados del proveedor.
 - Datos con procedencia, fecha de actualización y nivel de confianza.
@@ -54,7 +53,7 @@ La arquitectura conserva interfaces abstractas para permitir en el futuro integr
 - Riverpod para estado.
 - go_router para navegación.
 - Agus Maps / CoMaps como renderer vectorial offline Android, con MWM para la cartografía ejecutada por el motor nativo.
-- PMTiles se mantiene como distribución/validación cartográfica independiente; no se presenta como renderer del stack Agus Maps.
+- PMTiles para distribución/validación cartográfica regional independiente del renderer.
 - geolocator para ubicación.
 - connectivity_plus para estado de conectividad.
 - shared_preferences para preferencias no críticas.
@@ -62,7 +61,6 @@ La arquitectura conserva interfaces abstractas para permitir en el futuro integr
 - Hive CE para persistencia local de rutas.
 - GPX para importación/exportación.
 - Valhalla 3.9.0 para routing/map matching.
-- PMTiles para paquetes cartográficos regionales.
 - background_downloader para transferencias offline móviles.
 - RevenueCat para billing/entitlements.
 - OpenID Connect para identidad; Keycloak es el proveedor de infraestructura objetivo.
@@ -91,7 +89,7 @@ flutter run \
   --dart-define=MAP_ATTRIBUTION="$MAP_ATTRIBUTION"
 ```
 
-No se debe introducir una URL de ejemplo en un release. Durante desarrollo, si no se configura un proveedor, se permite un fallback online de OpenStreetMap para facilitar pruebas. Ese fallback no se usa en producción ni para descargas offline/bulk.
+No se debe introducir una URL de ejemplo en un release. El renderer Android de producción es Agus Maps / CoMaps; PMTiles se conserva como distribución/validación independiente.
 
 ## Configuración del catálogo offline
 
@@ -101,7 +99,7 @@ El catálogo se inyecta mediante configuración de entorno:
 flutter run --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL"
 ```
 
-El cliente acepta tanto el formato histórico de array JSON como el formato de entrada publicado actualmente para España, una entrada JSON única con su metadata. Todos los paquetes deben declarar una licencia HTTPS, atribución y SHA-256 válidos; no se deben publicar URLs ni paquetes ficticios. Todos los paquetes deben declarar una licencia HTTPS, atribución y SHA-256 válidos; no se deben publicar URLs ni paquetes ficticios.
+El cliente acepta los formatos publicados por el backend y valida procedencia, licencia HTTPS, atribución y SHA-256 antes de permitir el uso de un paquete offline. No se deben publicar URLs ni paquetes ficticios.
 
 ## Identidad OIDC / Keycloak
 
@@ -160,6 +158,7 @@ lib/
   infrastructure/ adaptadores externos: routing, auth, billing y fuentes
   main.dart
 ```
+
 ## Web pública
 
 La carpeta `site/` contiene la web pública de España Outdoor, independiente de la aplicación Flutter. Está preparada para hosting estático y para `espanaoutdoor.es`. El sitio reutiliza la identidad visual del proyecto, mantiene sus recursos dentro de `site/assets` y puede desplegarse con Cloudflare Pages u otro proveedor estático.
