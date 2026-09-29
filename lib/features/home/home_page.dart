@@ -79,6 +79,8 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     _QuickAction(asset: 'assets/visuals/icons/rescue.svg', label: 'Rescue Link', onTap: () => context.go('/rescue')),
+                    const SizedBox(height: 12),
+                    _InstrumentAction(onTap: () => context.go('/instruments')),
                     const SizedBox(height: 24),
                     Card(
                       child: InkWell(
@@ -159,6 +161,39 @@ class _QuickAction extends StatelessWidget {
                 OutdoorAssetIcon(asset: asset, size: 32),
                 const SizedBox(width: 9),
                 Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
+class _InstrumentAction extends StatelessWidget {
+  const _InstrumentAction({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+            child: Row(
+              children: [
+                Icon(Icons.explore_outlined, size: 32, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Instrumentos de campo', style: TextStyle(fontWeight: FontWeight.w800)),
+                      SizedBox(height: 3),
+                      Text('Brújula, presión y altitud del dispositivo'),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right),
               ],
             ),
           ),
