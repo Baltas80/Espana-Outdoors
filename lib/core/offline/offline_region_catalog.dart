@@ -21,16 +21,24 @@ class OfflineRegionCatalog {
       );
     }
     final decoded = jsonDecode(response.body);
-    if (decoded is! List) {
-      throw const FormatException(
-        'Offline region catalog must be a JSON array.',
-      );
+
+    if (decoded is Map) {
+      return [
+        OfflineRegion.fromJson(Map<String, Object?>.from(decoded)),
+      ];
     }
-    return [
-      for (final item in decoded)
-        if (item is Map)
-          OfflineRegion.fromJson(Map<String, Object?>.from(item)),
-    ];
+
+    if (decoded is List) {
+      return [
+        for (final item in decoded)
+          if (item is Map)
+            OfflineRegion.fromJson(Map<String, Object?>.from(item)),
+      ];
+    }
+
+    throw const FormatException(
+      'Offline region catalog must be a JSON object or array.',
+    );
   }
 
   static Uri? fromEnvironment() {
