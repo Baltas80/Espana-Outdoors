@@ -29,6 +29,8 @@ import '../features/wildlife/wildlife_page.dart';
 import 'app_shell.dart';
 import 'theme.dart';
 
+const bool _mapSmokeMode = bool.fromEnvironment('MAP_SMOKE', defaultValue: false);
+
 class EspanaOutdoorApp extends StatelessWidget {
   const EspanaOutdoorApp({super.key});
 
@@ -39,7 +41,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       _BackNavigationScope(fallback: fallback, child: child);
 
   static final _router = GoRouter(
-    initialLocation: '/',
+    initialLocation: _mapSmokeMode ? '/map' : '/',
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (_, __, navigationShell) =>
