@@ -52,17 +52,6 @@ class BacktrackService {
       target.longitude,
     );
 
-    var remaining = 0.0;
-    for (var i = targetIndex; i > 0; i--) {
-      final a = recordedPoints[i];
-      final b = recordedPoints[i - 1];
-      remaining += Geolocator.distanceBetween(
-        a.latitude,
-        a.longitude,
-        b.latitude,
-        b.longitude,
-      );
-    }
 
     return BacktrackGuidance(
       distanceMeters: nearestDistance,
