@@ -1,7 +1,7 @@
 name: espana_outdoors
 description: España Outdoor - naturaleza, rutas, seguridad, mascotas, fauna y conservación.
 publish_to: "none"
-version: 0.1.0+3
+version: 0.1.0+4
 
 environment:
   sdk: ">=3.10.0 <4.0.0"
@@ -14,9 +14,7 @@ dependencies:
     sdk: flutter
   flutter_svg: ^2.3.0
   cupertino_icons: ^1.0.8
-  flutter_map: ^8.2.0
-  flutter_map_vector_tiles: ^2.9.0
-  pmtiles: ^2.2.0
+  agus_maps_flutter: 0.1.17
   latlong2: ^0.10.1
   flutter_riverpod: ^3.4.3
   go_router: ^18.0.1
@@ -51,6 +49,8 @@ flutter:
   assets:
     - assets/brand/
     - assets/map/
+    - assets/maps/
+    - assets/comaps_data/
     - assets/backgrounds/
     - assets/visuals/
     - assets/landscapes/
