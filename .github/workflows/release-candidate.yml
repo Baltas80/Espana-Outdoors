@@ -50,12 +50,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="0.1.17"
+          version="0.1.18"
           archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
           root="$RUNNER_TEMP/agus-maps-sdk"
-          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/343726328"
+          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/344609201"
           curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 -H "Accept: application/octet-stream" -o "$archive" "$url"
-          echo "f9887e016fc2538cf37b4af01725720c018b45a3acfdd94ab6b222d7aca3e884  $archive" | sha256sum -c -
+          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | sha256sum -c -
           rm -rf "$root"
           mkdir -p "$root"
           unzip -q "$archive" -d "$root"
@@ -63,6 +63,7 @@ jobs:
           test -n "$sdk_home"
           sdk_home="${sdk_home%/android/prebuilt}"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
+
       - name: Prepare CoMaps base maps
         shell: bash
         run: |
@@ -107,7 +108,7 @@ jobs:
             --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL"
             --dart-define=SOURCE_GATEWAY_BASE_URL="$SOURCE_GATEWAY_BASE_URL"
             --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL"
-            --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL" \
+            --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL"
             --dart-define=MAP_ATTRIBUTION="$MAP_ATTRIBUTION"
           )
           flutter build apk --release "${DART_DEFINES[@]}"
@@ -192,12 +193,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="0.1.17"
+          version="0.1.18"
           archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
           root="$RUNNER_TEMP/agus-maps-sdk"
-          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/343726328"
+          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/344609201"
           curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 -H "Accept: application/octet-stream" -o "$archive" "$url"
-          echo "f9887e016fc2538cf37b4af01725720c018b45a3acfdd94ab6b222d7aca3e884  $archive" | shasum -a 256 -c
+          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | shasum -a 256 -c
           rm -rf "$root"
           mkdir -p "$root"
           unzip -q "$archive" -d "$root"
@@ -205,6 +206,7 @@ jobs:
           test -n "$sdk_home"
           sdk_home="${sdk_home%/ios/Frameworks/CoMaps.xcframework}"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
