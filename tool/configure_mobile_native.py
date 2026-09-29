@@ -16,18 +16,26 @@ def prepare_agus_maps_assets() -> None:
         print("Agus Maps SDK asset preparation skipped: AGUS_MAPS_HOME is not set.")
         return
     sdk_home = Path(sdk_home_value).expanduser()
-    sdk_assets = sdk_home / "assets"
+    sdk_assets = sdk_home / "example" / "assets"
     if not sdk_assets.exists():
-        raise SystemExit(f"AGUS_MAPS_HOME has no assets directory: {sdk_assets}")
+        raise SystemExit(f"AGUS_MAPS_HOME has no example/assets directory: {sdk_assets}")
 
-    for name in ("maps", "comaps_data"):
-        source = sdk_assets / name
-        target = ROOT / "assets" / name
-        if not source.exists():
-            raise SystemExit(f"Agus Maps SDK is missing required asset directory: {source}")
-        shutil.copytree(source, target, dirs_exist_ok=True)
+    maps_source = sdk_assets / "maps"
+    data_source = sdk_assets / "comaps_data"
+    if not maps_source.exists() or not data_source.exists():
+        raise SystemExit("Agus Maps SDK is missing example/assets/maps or example/assets/comaps_data")
+
+    maps_target = ROOT / "assets" / "maps"
+    data_target = ROOT / "assets" / "comaps_data"
+    maps_target.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(maps_source / "World.mwm", maps_target / "World.mwm")
+    shutil.copy2(maps_source / "WorldCoasts.mwm", maps_target / "WorldCoasts.mwm")
+    shutil.copy2(maps_source / "icudt75l.dat", maps_target / "icudt75l.dat")
+    shutil.copytree(data_source, data_target, dirs_exist_ok=True)
 
     required = (
+        ROOT / "assets" / "maps" / "World.mwm",
+        ROOT / "assets" / "maps" / "WorldCoasts.mwm",
         ROOT / "assets" / "maps" / "icudt75l.dat",
         ROOT / "assets" / "comaps_data" / "countries.txt",
     )
