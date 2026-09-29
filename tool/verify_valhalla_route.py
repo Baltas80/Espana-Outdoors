@@ -33,7 +33,10 @@ def main() -> int:
     request = urllib.request.Request(
         base,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"content-type": "application/json"},
+        headers={
+            "content-type": "application/json",
+            "User-Agent": "EspanaOutdoor-Routing-Smoke/1.0",
+        },
         method="POST",
     )
 
