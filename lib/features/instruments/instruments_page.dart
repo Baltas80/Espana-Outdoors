@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/photo_atlas.dart';
 import '../../core/sensors/outdoor_sensor_models.dart';
 import '../../core/sensors/outdoor_sensor_service.dart';
 
@@ -18,6 +19,8 @@ class InstrumentsPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
+          const OutdoorPhotoHero(index: 8, title: 'Instrumentos', subtitle: 'Brújula, altímetro, barómetro y coordenadas.'),
+          const SizedBox(height: 16),
           const _IntroCard(),
           const SizedBox(height: 16),
           _CompassCard(sensor: sensor),
