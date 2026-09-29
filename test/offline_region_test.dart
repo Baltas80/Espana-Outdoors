@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:espana_outdoors/core/offline/offline_region.dart';
 import 'package:espana_outdoors/core/offline/offline_region_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 
 Map<String, Object?> _validRegion() => {
       'id': 'madrid-2026-09',
@@ -14,6 +17,23 @@ Map<String, Object?> _validRegion() => {
       'updatedAt': '2026-09-23T10:00:00Z',
       'sha256': List.filled(64, 'a').join(),
     };
+
+
+class _FakeClient extends http.BaseClient {
+  _FakeClient(this.payload);
+
+  final Object payload;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    return http.StreamedResponse(
+      Stream.value(utf8.encode(jsonEncode(payload))),
+      200,
+      headers: const {'content-type': 'application/json'},
+      request: request,
+    );
+  }
+}
 
 void main() {
   test('offline region metadata is parsed and normalized', () {
@@ -67,6 +87,20 @@ void main() {
       () => OfflineRegionCatalog(endpoint: Uri.parse('http://maps.example.com/catalog')),
       throwsArgumentError,
     );
+  });
+
+  test('offline catalog accepts the published single-region object', () async {
+    final region = _validRegion();
+    final catalog = OfflineRegionCatalog(
+      endpoint: Uri.parse('https://maps.example.com/catalog/spain.json'),
+      client: _FakeClient(region),
+    );
+
+    final entries = await catalog.fetch();
+
+    expect(entries, hasLength(1));
+    expect(entries.single.id, 'madrid-2026-09');
+    expect(entries.single.sha256, region['sha256']);
   });
 
 }
