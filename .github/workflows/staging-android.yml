@@ -21,6 +21,7 @@ permissions:
 
 env:
   APP_ENV: staging
+  AGUS_MAPS_VERSION: 0.1.17
   MAP_PMTILES_URL: https://espana-outdoor-r2-uploader.espana-outdoor.workers.dev/basemap/spain/2026-09-28/spain.pmtiles
   OFFLINE_CATALOG_URL: https://espana-outdoor-r2-uploader.espana-outdoor.workers.dev/catalog/spain.json
   VALHALLA_BASE_URL: https://routing.espanaoutdoor.es
@@ -84,6 +85,22 @@ jobs:
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
           echo "Agus Maps SDK: $sdk_home"
 
+      - name: Download Agus Maps SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/agus-maps-sdk.zip"
+          unpack="$RUNNER_TEMP/agus-maps-sdk-unpacked"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 \
+            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${AGUS_MAPS_VERSION}/agus-maps-sdk-v${AGUS_MAPS_VERSION}.zip" \
+            -o "$archive"
+          rm -rf "$unpack"
+          mkdir -p "$unpack"
+          unzip -q "$archive" -d "$unpack"
+          sdk_home="$(find "$unpack" -maxdepth 3 -type d -name "agus-maps-sdk-v${AGUS_MAPS_VERSION}" -print -quit)"
+          test -n "$sdk_home"
+          test -d "$sdk_home/example/assets"
+          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
