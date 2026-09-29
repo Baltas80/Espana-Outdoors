@@ -193,7 +193,7 @@ final class CoMapsDownloadManager {
         fileSize: await file.length(),
         downloadDate: DateTime.now(),
         filePath: file.path,
-        sha256: region.sha1Base64,
+        sha256: null,
         isBundled: false,
         isActive: true,
       ),
