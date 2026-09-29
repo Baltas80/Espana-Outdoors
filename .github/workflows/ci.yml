@@ -30,8 +30,8 @@ jobs:
           version="0.1.17"
           archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
           root="$RUNNER_TEMP/agus-maps-sdk"
-          url="https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip"
-          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 900 -o "$archive" "$url"
+          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/343726328"
+          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 -H "Accept: application/octet-stream" -o "$archive" "$url"
           echo "f9887e016fc2538cf37b4af01725720c018b45a3acfdd94ab6b222d7aca3e884  $archive" | sha256sum -c -
           rm -rf "$root"
           mkdir -p "$root"
