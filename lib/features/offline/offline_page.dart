@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../app/photo_atlas.dart';
+import '../../app/outdoor_visuals.dart';
 import '../../core/maps/agus_maps_runtime.dart';
 import '../../core/maps/comaps_download_manager.dart';
 
@@ -113,6 +114,8 @@ class _OfflinePageState extends State<OfflinePage> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
+                const OutdoorPhotoHero(index: 11, title: 'Offline', subtitle: 'Mapas sin conexión y gestión de descargas.'),
+                const SizedBox(height: 16),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(18),
