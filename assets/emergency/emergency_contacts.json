@@ -74,7 +74,7 @@
   "Slovenia": {"police": "113", "ambulance": "112", "fire": "112", "general": "112"},
   "South_Africa": {"police": "10111", "ambulance": "10177", "fire": "10177", "general": "112"},
   "South_Korea": {"police": "112", "ambulance": "119", "fire": "119", "general": "112"},
-  "Spain": {"police": "091", "ambulance": "061", "fire": "080", "general": "112"},
+  "Spain": {"police": "091", "ambulance": "061", "fire": "112", "general": "112"},
   "Sri_Lanka": {"police": "119", "ambulance": "110", "fire": "110", "general": "119"},
   "Sweden": {"police": "112", "ambulance": "112", "fire": "112", "general": "112"},
   "Switzerland": {"police": "117", "ambulance": "144", "fire": "118", "general": "112"},
