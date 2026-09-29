@@ -48,7 +48,6 @@ flutter:
   generate: true
   assets:
     - assets/brand/
-    - assets/map/
     - assets/maps/
     - assets/comaps_data/
     - assets/emergency/
