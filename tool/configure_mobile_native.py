@@ -16,14 +16,15 @@ def prepare_agus_maps_assets() -> None:
         print("Agus Maps SDK asset preparation skipped: AGUS_MAPS_HOME is not set.")
         return
     sdk_home = Path(sdk_home_value).expanduser()
-    sdk_assets = sdk_home / "example" / "assets"
-    if not sdk_assets.exists():
-        raise SystemExit(f"AGUS_MAPS_HOME has no example/assets directory: {sdk_assets}")
+    sdk_asset_candidates = (sdk_home / "assets", sdk_home / "example" / "assets")
+    sdk_assets = next((path for path in sdk_asset_candidates if path.exists()), None)
+    if sdk_assets is None:
+        raise SystemExit("Agus Maps SDK has no assets directory (checked assets and example/assets).")
 
     maps_source = sdk_assets / "maps"
     data_source = sdk_assets / "comaps_data"
     if not maps_source.exists() or not data_source.exists():
-        raise SystemExit("Agus Maps SDK is missing example/assets/maps or example/assets/comaps_data")
+        raise SystemExit(f"Agus Maps SDK assets incomplete: {maps_source} / {data_source}")
 
     maps_target = ROOT / "assets" / "maps"
     data_target = ROOT / "assets" / "comaps_data"
