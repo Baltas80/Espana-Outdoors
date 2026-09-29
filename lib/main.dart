@@ -5,7 +5,6 @@ import 'package:background_downloader/background_downloader.dart';
 
 import 'app/app.dart';
 import 'core/observability/sentry_observability.dart';
-import 'core/map/agus_maps_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +16,6 @@ Future<void> main() async {
   await Hive.openBox<dynamic>('offline_sync');
 
   await FileDownloader().start(autoCleanDatabase: true);
-  await AgusMapsService.instance.initialize();
-
   await SentryObservability.run(() async {
     runApp(const ProviderScope(child: EspanaOutdoorApp()));
   });
