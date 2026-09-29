@@ -75,42 +75,162 @@ class _SafetyPageState extends State<SafetyPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Seguridad')),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [
-          OutdoorVisualHero(asset: 'assets/visuals/hero_safety.svg', title: 'Seguridad', subtitle: 'Prepárate antes de salir y actúa con seguridad.'),
-          const SizedBox(height: 18),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: AspectRatio(
+              aspectRatio: 1.42,
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Text('SOS', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
-                  const Text('Prepara tu ubicación para emergencias. España Outdoor no sustituye a los servicios profesionales.'),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 58,
-                    child: FilledButton.icon(
-                      style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-                      onPressed: _capturing ? null : _prepareEmergencyCall,
-                      icon: const Icon(Icons.emergency),
-                      label: Text(_capturing ? 'OBTENIENDO UBICACIÓN…' : 'PREPARAR SOS / 112'),
+                  const OutdoorPhotoTile(
+                    index: 4,
+                    width: double.infinity,
+                    height: double.infinity,
+                    borderRadius: 0,
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.05),
+                          Colors.black.withValues(alpha: 0.9),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  OutlinedButton.icon(onPressed: _capturing ? null : _shareEmergency, icon: const Icon(Icons.share_location_outlined), label: const Text('ENVIAR ALERTA A CONTACTO')),
+                  Positioned(
+                    left: 18,
+                    right: 18,
+                    bottom: 18,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'SOS / Emergencia',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 27,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Llamada y ubicación en tiempo real',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                height: 54,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  onPressed: _capturing ? null : _prepareEmergencyCall,
+                  icon: const Icon(Icons.phone),
+                  label: Text(
+                    _capturing ? 'OBTENIENDO UBICACIÓN…' : 'ACTIVAR SOS',
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Usa el SOS solo cuando necesites asistencia. España Outdoor no sustituye a los servicios profesionales.',
+          ),
           const SizedBox(height: 16),
-          _SafetyTile(icon: Icons.contact_emergency_outlined, title: 'Contactos de confianza', subtitle: 'Destinatarios para alertas temporales de emergencia.', onTap: () => context.go('/safety/contacts')),
-          _SafetyTile(icon: Icons.campaign_outlined, title: 'Alertas y desastres', subtitle: 'Incendios, inundaciones, tormentas y otros riesgos.', onTap: () => context.go('/alerts')),
-          _SafetyTile(icon: Icons.pets_outlined, title: 'Mascotas', subtitle: 'Riesgos de calor, agua, fauna y restricciones.', onTap: () => context.go('/pets')),
-          _SafetyTile(icon: Icons.volunteer_activism_outlined, title: 'Rescue Link', subtitle: 'Ayuda cercana con controles antiabuso y privacidad.', onTap: () => context.go('/rescue')),
+          Row(
+            children: [
+              Expanded(
+                child: _SafetyTile(
+                  icon: Icons.location_on_outlined,
+                  title: 'Mi ubicación',
+                  subtitle: 'Compartir en tiempo real',
+                  onTap: _shareEmergency,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _SafetyTile(
+                  icon: Icons.contact_emergency_outlined,
+                  title: 'Contactos',
+                  subtitle: 'Contactos de emergencia',
+                  onTap: () => context.go('/safety/contacts'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _SafetyTile(
+                  icon: Icons.security_outlined,
+                  title: 'Seguridad',
+                  subtitle: 'Consejos y protocolos',
+                  onTap: () => context.go('/alerts'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _SafetyTile(
+                  icon: Icons.cell_tower_outlined,
+                  title: 'Cobertura',
+                  subtitle: 'Señal y comunicación',
+                  onTap: () => context.go('/map'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Información de seguridad',
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 10),
+          _SafetyInfoRow(
+            index: 5,
+            title: 'Fauna y flora',
+            subtitle: 'Respeta la naturaleza y anticipa riesgos.',
+            onTap: () => context.go('/wildlife'),
+          ),
+          const SizedBox(height: 8),
+          _SafetyInfoRow(
+            index: 10,
+            title: 'Mascotas',
+            subtitle: 'Calor, agua, normativa y preparación.',
+            onTap: () => context.go('/pets'),
+          ),
+          const SizedBox(height: 8),
+          _SafetyInfoRow(
+            index: 6,
+            title: 'NATURA PROTECT',
+            subtitle: 'Espacios sensibles y navegación responsable.',
+            onTap: () => context.go('/natura'),
+          ),
         ],
-      ),
+      )
     );
   }
 }
@@ -133,4 +253,56 @@ class _SafetyTile extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right),
         ),
       );
+}
+
+
+class _SafetyInfoRow extends StatelessWidget {
+  const _SafetyInfoRow({
+    required this.index,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final int index;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
+          children: [
+            OutdoorPhotoTile(
+              index: index,
+              width: 92,
+              height: 76,
+              borderRadius: 0,
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 3),
+                    Text(subtitle),
+                  ],
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: Icon(Icons.chevron_right),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
