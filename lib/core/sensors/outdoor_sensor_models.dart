@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 class OutdoorSensorState {
   const OutdoorSensorState({
     this.heading,
@@ -61,9 +63,8 @@ class OutdoorSensorState {
   static const _unset = Object();
 }
 
-/// Standard-atmosphere approximation used to turn pressure into relative
-/// altitude. It is intentionally exposed as a pure function so it can be
-/// tested independently from device hardware.
+/// Standard-atmosphere approximation. For a useful field altitude reading,
+/// sea-level pressure should ideally be calibrated from a trusted source.
 double pressureToAltitudeMeters(
   double pressureHpa, {
   double seaLevelPressureHpa = 1013.25,
@@ -73,64 +74,5 @@ double pressureToAltitudeMeters(
   }
   return 44330.0 *
       (1.0 -
-          _pow(pressureHpa / seaLevelPressureHpa, 1.0 / 5.255));
+          math.pow(pressureHpa / seaLevelPressureHpa, 1.0 / 5.255));
 }
-
-double _pow(double base, double exponent) {
-  // Avoid importing dart:math for this single operation while keeping the
-  // function deterministic and easy to exercise in unit tests.
-  var result = 1.0;
-  final whole = exponent.floor();
-  final fraction = exponent - whole;
-  for (var i = 0; i < whole; i++) {
-    result *= base;
-  }
-  if (fraction == 0) return result;
-  return result * _nthRoot(base, fraction);
-}
-
-double _nthRoot(double value, double exponent) {
-  // Newton iteration for x^exponent. This is only used for exponent
-  // 1/5.255 and converges rapidly for the pressure range of interest.
-  var x = value;
-  for (var i = 0; i < 12; i++) {
-    final power = _integerPower(x, 1.0 / exponent - 1.0);
-    if (power == 0) break;
-    x -= (x * exponent - value) / (exponent * power);
-  }
-  return x;
-}
-
-double _integerPower(double base, double exponent) {
-  // The exponent used here is approximately 5.255. A direct logarithm is
-  // preferable and available in dart:math; kept isolated for clarity.
-  return base == 0 ? 0 : _exp(_log(base) * exponent);
-}
-
-double _log(double value) {
-  // Natural logarithm via dart:math is injected through this small helper.
-  // ignore: avoid_web_libraries_in_flutter
-  return _Math.log(value);
-}
-
-double _exp(double value) {
-  // ignore: avoid_web_libraries_in_flutter
-  return _Math.exp(value);
-}
-
-// This indirection keeps the public model independent of the math details.
-// The implementation is replaced below by the standard library binding.
-class _Math {
-  static double log(double value) {
-    return _mathLog(value);
-  }
-
-  static double exp(double value) {
-    return _mathExp(value);
-  }
-}
-
-// These are supplied by the VM/web compiler through dart:math imports in the
-// generated library build. They remain private to this model.
-double _mathLog(double value) => throw UnimplementedError();
-double _mathExp(double value) => throw UnimplementedError();
