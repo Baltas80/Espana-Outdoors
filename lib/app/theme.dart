@@ -73,7 +73,7 @@ ThemeData buildOutdoorTheme(Brightness brightness, {bool highContrast = false}) 
       labelLarge: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
     ),
     appBarTheme: AppBarTheme(
-      centerTitle: false,
+      centerTitle: true,
       elevation: 0,
       scrolledUnderElevation: 0,
       backgroundColor: isDark
@@ -95,11 +95,23 @@ ThemeData buildOutdoorTheme(Brightness brightness, {bool highContrast = false}) 
       height: 72,
       elevation: 0,
       backgroundColor: isDark ? OutdoorBrand.darkSurface : Colors.white,
-      labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-      indicatorColor: scheme.primaryContainer,
-      indicatorShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      indicatorColor: Colors.transparent,
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return TextStyle(
+          fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+          fontSize: 11,
+          color: selected ? scheme.primary : scheme.onSurface,
+        );
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          size: selected ? 25 : 23,
+          color: selected ? scheme.primary : scheme.onSurfaceVariant,
+        );
+      }),
     ),
     navigationRailTheme: NavigationRailThemeData(
       backgroundColor: isDark ? OutdoorBrand.darkSurface : Colors.white,
