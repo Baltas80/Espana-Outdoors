@@ -33,14 +33,19 @@ download_one() {
     if curl --fail --silent --show-error --location       --retry 4 --retry-all-errors       --connect-timeout 20 --max-time 900       "${url}" -o "${dest}"; then
 
       local actual_size
-      actual_size="$(stat -c '%s' "${dest}")"
+      actual_size="$(wc -c < "${dest}" | tr -d '[:space:]')"
       if [[ "${actual_size}" != "${expected_size[$file]}" ]]; then
         echo "WARNING: size mismatch for ${file}: expected ${expected_size[$file]}, got ${actual_size}" >&2
         rm -f "${dest}"
         continue
       fi
 
-      echo "${expected_sha1[$file]}  ${dest}" | sha1sum -c -
+      if command -v sha1sum >/dev/null 2>&1; then
+        echo "${expected_sha1[$file]}  ${dest}" | sha1sum -c -
+      else
+        actual_sha1="$(shasum -a 1 "${dest}" | awk '{print $1}')"
+        test "${actual_sha1}" = "${expected_sha1[$file]}"
+      fi
       echo "verified=${dest}"
       ok=1
       break
