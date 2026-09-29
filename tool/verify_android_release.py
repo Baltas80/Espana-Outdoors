@@ -16,7 +16,8 @@ from zipfile import BadZipFile, ZipFile
 REQUIRED_SUFFIXES = (
     "assets/flutter_assets/assets/brand/espana_outdoor_mark.svg",
     "assets/flutter_assets/assets/landscapes/picos_europa_land01.svg",
-    "assets/flutter_assets/assets/map/default_style.json",
+    "assets/flutter_assets/assets/maps/icudt75l.dat",
+    "assets/flutter_assets/assets/comaps_data/countries.txt",
 )
 REQUIRED_ARCHIVE_MARKERS = (
     "AndroidManifest.xml",
