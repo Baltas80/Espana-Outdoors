@@ -57,6 +57,8 @@ class OutdoorPhotoTile extends StatelessWidget {
           ),
         ),
       ),
+        );
+      },
     );
   }
 }
