@@ -20,10 +20,22 @@ class MapPage extends ConsumerStatefulWidget {
 class _MapPageState extends ConsumerState<MapPage> {
   final agus.AgusMapController _controller = agus.AgusMapController();
   Future<void>? _runtimeFuture;
+  double _initialLat = 40.4168;
+  double _initialLon = -3.7038;
+  double _initialZoom = 7;
 
   @override
   void initState() {
     super.initState();
+    // Capture the first usable GPS fix once. Do not feed subsequent location
+    // updates into AgusMap's initial* properties while its native surface is
+    // being created; that can cause an unsafe widget/native lifecycle race.
+    final initialPosition = ref.read(locationControllerProvider).position;
+    if (initialPosition != null) {
+      _initialLat = initialPosition.latitude;
+      _initialLon = initialPosition.longitude;
+      _initialZoom = 14;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() {
@@ -32,10 +44,9 @@ class _MapPageState extends ConsumerState<MapPage> {
     });
   }
 
-  void _onMapReady(Position? position) {
-    // The widget already receives the initial viewport through initialLat/
-    // initialLon. Avoid issuing an immediate native camera mutation while the
-    // SurfaceTexture/CoMaps framework is settling on Android.
+  void _onMapReady() {
+    // Registration is intentionally deferred until AgusMap reports that its
+    // native surface/framework exists. No immediate camera mutation here.
     unawaited(AgusMapsRuntime.instance.onMapReady());
   }
 
@@ -82,13 +93,13 @@ class _MapPageState extends ConsumerState<MapPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final position = location.position;
                 return agus.AgusMap(
+                  key: const ValueKey('espana-outdoor-native-map'),
                   controller: _controller,
-                  initialLat: position?.latitude ?? 40.4168,
-                  initialLon: position?.longitude ?? -3.7038,
-                  initialZoom: position == null ? 7 : 14,
-                  onMapReady: () => _onMapReady(position),
+                  initialLat: _initialLat,
+                  initialLon: _initialLon,
+                  initialZoom: _initialZoom,
+                  onMapReady: _onMapReady,
                   userScale: 1.0,
                   isVisible: true,
                 );
