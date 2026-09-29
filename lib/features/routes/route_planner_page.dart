@@ -108,7 +108,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       final result = await service.route(
         RouteRequest(
           points: [
-            LatLng(location!.latitude, location.longitude),
+            LatLng(location.latitude, location.longitude),
             destination,
           ],
           profile: 'hiking',
