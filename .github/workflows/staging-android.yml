@@ -21,6 +21,10 @@ on:
       - 'pubspec.yaml'
       - '.github/workflows/staging-android.yml'
 
+concurrency:
+  group: android-staging-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
