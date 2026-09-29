@@ -9,6 +9,7 @@ import '../features/home/home_page.dart';
 import '../features/map/map_page.dart';
 import '../features/navigation/backtrack_page.dart';
 import '../features/navigation/navigation_page.dart';
+import '../features/navigation/waypoints_page.dart';
 import '../features/offline/offline_page.dart';
 import '../features/profile/plans_page.dart';
 import '../features/profile/profile_page.dart';
@@ -59,6 +60,7 @@ class EspanaOutdoorApp extends StatelessWidget {
         return _withBackNavigation(NavigationPage(route: route), fallback: '/routes');
       }),
       GoRoute(path: '/navigation/backtrack', builder: (_, __) => _withBackNavigation(const BacktrackPage(), fallback: '/navigation')),
+      GoRoute(path: '/navigation/waypoints', builder: (_, __) => _withBackNavigation(const WaypointsPage(), fallback: '/navigation')),
       GoRoute(path: '/instruments', builder: (_, __) => _withBackNavigation(const InstrumentsPage())),
       GoRoute(path: '/pets', builder: (_, __) => _withBackNavigation(const PetsPage())),
       GoRoute(path: '/wildlife', builder: (_, __) => _withBackNavigation(const WildlifePage())),
