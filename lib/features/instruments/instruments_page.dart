@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/sensors/outdoor_sensor_models.dart';
 import '../../core/sensors/outdoor_sensor_service.dart';
@@ -25,60 +26,49 @@ class InstrumentsPage extends ConsumerWidget {
           _MetricCard(
             icon: Icons.speed_outlined,
             title: 'Presión atmosférica',
-            value: sensor.pressureHpa == null
-                ? 'No disponible'
-                : '${sensor.pressureHpa!.toStringAsFixed(1)} hPa',
-            subtitle: sensor.barometerAvailable
-                ? 'Sensor barométrico del dispositivo'
-                : 'El dispositivo no expone un barómetro compatible',
+            value: sensor.pressureHpa == null ? 'No disponible' : '${sensor.pressureHpa!.toStringAsFixed(1)} hPa',
+            subtitle: sensor.barometerAvailable ? 'Sensor barométrico del dispositivo' : 'El dispositivo no expone un barómetro compatible',
           ),
           const SizedBox(height: 12),
           _MetricCard(
             icon: Icons.terrain_outlined,
             title: 'Altitud barométrica',
-            value: sensor.sensorAltitudeMeters == null
-                ? 'No disponible'
-                : '${sensor.sensorAltitudeMeters!.toStringAsFixed(0)} m',
+            value: sensor.sensorAltitudeMeters == null ? 'No disponible' : '${sensor.sensorAltitudeMeters!.toStringAsFixed(0)} m',
             subtitle: 'Estimación con presión estándar; calibra para mayor precisión',
           ),
           const SizedBox(height: 12),
           _MetricCard(
             icon: Icons.gps_fixed,
             title: 'Altitud GPS',
-            value: sensor.gpsAltitudeMeters == null
-                ? 'No disponible'
-                : '${sensor.gpsAltitudeMeters!.toStringAsFixed(0)} m',
+            value: sensor.gpsAltitudeMeters == null ? 'No disponible' : '${sensor.gpsAltitudeMeters!.toStringAsFixed(0)} m',
             subtitle: 'Referencia independiente del barómetro',
             trailing: IconButton(
               tooltip: 'Actualizar GPS',
-              onPressed: () => ref
-                  .read(outdoorSensorProvider.notifier)
-                  .refreshGpsAltitude(),
+              onPressed: () => ref.read(outdoorSensorProvider.notifier).refreshGpsAltitude(),
               icon: const Icon(Icons.refresh),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.nightlight_round),
+              title: const Text('Astronomía de campo', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('Sol, amanecer, puesta, posición solar y fase lunar sin conexión.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/astronomy'),
             ),
           ),
           if (sensor.error != null) ...[
             const SizedBox(height: 12),
             Card(
               color: Theme.of(context).colorScheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(sensor.error!),
-              ),
+              child: Padding(padding: const EdgeInsets.all(16), child: Text(sensor.error!)),
             ),
           ],
           const SizedBox(height: 16),
-          Text(
-            'Integración de sensores',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
+          Text('Integración de sensores', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
-          const Text(
-            'Estas herramientas complementan la navegación y las rutas de España Outdoor. No sustituyen el GPS, los mapas offline ni las fuentes meteorológicas oficiales.',
-          ),
+          const Text('Estas herramientas complementan la navegación y las rutas de España Outdoor. No sustituyen el GPS, los mapas offline ni las fuentes meteorológicas oficiales.'),
         ],
       ),
     );
@@ -87,27 +77,19 @@ class InstrumentsPage extends ConsumerWidget {
 
 class _IntroCard extends StatelessWidget {
   const _IntroCard();
-
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(
             children: [
-              Icon(
-                Icons.explore_outlined,
-                size: 42,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              Icon(Icons.explore_outlined, size: 42, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 14),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Herramientas de campo',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                    Text('Herramientas de campo', style: TextStyle(fontWeight: FontWeight.w800)),
                     SizedBox(height: 4),
                     Text('Brújula, presión y altitud usando los sensores del teléfono.'),
                   ],
@@ -127,7 +109,6 @@ class _CompassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final heading = sensor.heading;
     final direction = heading == null ? '—' : _cardinalDirection(heading);
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -137,10 +118,7 @@ class _CompassCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Brújula', style: TextStyle(fontWeight: FontWeight.w800)),
-                Text(
-                  sensor.compassAvailable ? 'Sensor OK' : 'No disponible',
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
+                Text(sensor.compassAvailable ? 'Sensor OK' : 'No disponible', style: Theme.of(context).textTheme.labelMedium),
               ],
             ),
             const SizedBox(height: 18),
@@ -150,57 +128,19 @@ class _CompassCard extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline,
-                        width: 2,
-                      ),
-                    ),
-                  ),
+                  Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Theme.of(context).colorScheme.outline, width: 2))),
                   if (heading != null)
-                    Transform.rotate(
-                      angle: -heading * math.pi / 180,
-                      child: const Icon(
-                        Icons.navigation,
-                        size: 108,
-                      ),
-                    ),
-                  Positioned(
-                    top: 12,
-                    child: Text(
-                      'N',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 12,
-                    child: Text('S', style: Theme.of(context).textTheme.labelLarge),
-                  ),
-                  Positioned(
-                    left: 12,
-                    child: Text('O', style: Theme.of(context).textTheme.labelLarge),
-                  ),
-                  Positioned(
-                    right: 12,
-                    child: Text('E', style: Theme.of(context).textTheme.labelLarge),
-                  ),
+                    Transform.rotate(angle: -heading * math.pi / 180, child: const Icon(Icons.navigation, size: 108)),
+                  Positioned(top: 12, child: Text('N', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900))),
+                  Positioned(bottom: 12, child: Text('S', style: Theme.of(context).textTheme.labelLarge)),
+                  Positioned(left: 12, child: Text('O', style: Theme.of(context).textTheme.labelLarge)),
+                  Positioned(right: 12, child: Text('E', style: Theme.of(context).textTheme.labelLarge)),
                 ],
               ),
             ),
             const SizedBox(height: 14),
-            Text(
-              heading == null ? 'Sin lectura' : '${heading.toStringAsFixed(0)}° · $direction',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            if (sensor.headingAccuracy != null)
-              Text('Precisión estimada ±${sensor.headingAccuracy!.toStringAsFixed(0)}°'),
+            Text(heading == null ? 'Sin lectura' : '${heading.toStringAsFixed(0)}° · $direction', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+            if (sensor.headingAccuracy != null) Text('Precisión estimada ±${sensor.headingAccuracy!.toStringAsFixed(0)}°'),
           ],
         ),
       ),
@@ -209,20 +149,12 @@ class _CompassCard extends StatelessWidget {
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    this.trailing,
-  });
-
+  const _MetricCard({required this.icon, required this.title, required this.value, required this.subtitle, this.trailing});
   final IconData icon;
   final String title;
   final String value;
   final String subtitle;
   final Widget? trailing;
-
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
@@ -232,16 +164,13 @@ class _MetricCard extends StatelessWidget {
               Icon(icon, size: 32),
               const SizedBox(width: 14),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 3),
-                    Text(value, style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 3),
+                  Text(value, style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                ]),
               ),
               if (trailing != null) trailing!,
             ],
