@@ -4,7 +4,8 @@
   "sources": {
     "openmaptiles": {
       "type": "vector",
-      "url": "https://tiles.openfreemap.org/planet"
+      "url": "https://tiles.openfreemap.org/planet",
+      "attribution": "© OpenStreetMap contributors"
     }
   },
   "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
@@ -20,7 +21,7 @@
     {"id":"boundary","type":"line","source":"openmaptiles","source-layer":"boundary","paint":{"line-color":"#969b96","line-opacity":0.65,"line-width":0.8,"line-dasharray":[3,2]}},
     {"id":"building","type":"fill","source":"openmaptiles","source-layer":"building","minzoom":13,"paint":{"fill-color":"#d9d3ca","fill-opacity":0.7}},
     {"id":"roads-casing","type":"line","source":"openmaptiles","source-layer":"transportation","minzoom":5,"paint":{"line-color":"#fffdf7","line-opacity":0.95,"line-width":{"stops":[[5,1.5],[8,2.5],[12,5],[16,10]]}}},
-    {"id":"roads","type":"line","source":"openmaptiles","source-layer":"transportation","minzoom":5,"paint":{"line-color":{"property":"class","type":"categorical","stops":[["motorway","#e58f63"],["trunk","#e8a36e"],["primary","#e8b66f"],["secondary","#d7b37b"],["tertiary","#c9b38f"],["residential","#b8b2a8"],["service","#aaa59e"],["track","#8d9a78"],["path","#8d9a78"],["footway","#8d9a78"]]},"line-opacity":0.96,"line-width":{"stops":[[5,0.8],[8,1.4],[12,3],[16,6]]}}},
+    {"id":"roads","type":"line","source":"openmaptiles","source-layer":"transportation","minzoom":5,"paint":{"line-color":["match",["get","class"],"motorway","#e58f63","trunk","#e8a36e","primary","#e8b66f","secondary","#d7b37b","tertiary","#c9b38f","residential","#b8b2a8","service","#aaa59e","track","#8d9a78","path","#8d9a78","footway","#8d9a78","#aaa59e"],"line-opacity":0.96,"line-width":{"stops":[[5,0.8],[8,1.4],[12,3],[16,6]]}}},
     {"id":"trails","type":"line","source":"openmaptiles","source-layer":"transportation","minzoom":11,"filter":["in","class","path","track","footway","pedestrian","cycleway","steps"],"paint":{"line-color":"#7f916d","line-opacity":0.95,"line-dasharray":[2,1.5],"line-width":{"stops":[[11,1],[15,2.8]]}}},
     {"id":"place-city","type":"symbol","source":"openmaptiles","source-layer":"place","minzoom":5,"filter":["==","class","city"],"layout":{"text-field":["coalesce",["get","name:es"],["get","name"]],"text-font":["Noto Sans Regular"],"text-size":{"stops":[[5,12],[9,17],[12,22]]},"text-max-width":8},"paint":{"text-color":"#28332e","text-halo-color":"#fffdf7","text-halo-width":1.4}},
     {"id":"place-town","type":"symbol","source":"openmaptiles","source-layer":"place","minzoom":7,"filter":["==","class","town"],"layout":{"text-field":["coalesce",["get","name:es"],["get","name"]],"text-font":["Noto Sans Regular"],"text-size":{"stops":[[7,11],[12,17]]},"text-max-width":8},"paint":{"text-color":"#3b403b","text-halo-color":"#fffdf7","text-halo-width":1.2}},
