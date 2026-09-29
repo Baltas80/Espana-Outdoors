@@ -82,9 +82,7 @@ final class AgusMapsRuntime {
     final extractedPath = await agus.extractMap(asset);
     final source = File(extractedPath);
     final fileName = source.uri.pathSegments.last;
-    final targetDir = Directory(dataPath + '/' + version.toString());
-    await targetDir.create(recursive: true);
-    final target = File(targetDir.path + '/' + fileName);
+    final target = File(dataPath + '/' + fileName);
 
     if (!await target.exists() || await source.length() != await target.length()) {
       await source.copy(target.path);
