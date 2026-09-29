@@ -26,14 +26,13 @@ import '../features/routes/routes_page.dart';
 import '../features/safety/safety_page.dart';
 import '../features/safety/trusted_contacts_page.dart';
 import '../features/instruments/instruments_page.dart';
+import '../features/weather/lightning_page.dart';
 import 'theme.dart';
 
 class EspanaOutdoorApp extends StatelessWidget {
   const EspanaOutdoorApp({super.key});
 
-  static Widget _withBackNavigation(Widget child, {String fallback = '/'}) {
-    return _BackNavigationScope(fallback: fallback, child: child);
-  }
+  static Widget _withBackNavigation(Widget child, {String fallback = '/'}) => _BackNavigationScope(fallback: fallback, child: child);
 
   static final _router = GoRouter(
     initialLocation: '/',
@@ -42,19 +41,10 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/explore', builder: (_, __) => _withBackNavigation(const ExplorePage())),
       GoRoute(path: '/routes', builder: (_, __) => _withBackNavigation(const RoutesPage())),
       GoRoute(path: '/routes/planner', builder: (_, __) => _withBackNavigation(const RoutePlannerPage(), fallback: '/routes')),
-      GoRoute(
-        path: '/routes/detail',
-        builder: (_, state) {
-          final extra = state.extra;
-          return _withBackNavigation(
-            RouteDetailPage(
-              route: extra is RouteSummary ? extra : null,
-              track: extra is ImportedTrack ? extra : null,
-            ),
-            fallback: '/routes',
-          );
-        },
-      ),
+      GoRoute(path: '/routes/detail', builder: (_, state) {
+        final extra = state.extra;
+        return _withBackNavigation(RouteDetailPage(route: extra is RouteSummary ? extra : null, track: extra is ImportedTrack ? extra : null), fallback: '/routes');
+      }),
       GoRoute(path: '/map', builder: (_, __) => _withBackNavigation(const MapPage())),
       GoRoute(path: '/navigation', builder: (_, state) {
         final route = state.extra is RouteResult ? state.extra as RouteResult : null;
@@ -64,16 +54,14 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/navigation/waypoints', builder: (_, __) => _withBackNavigation(const WaypointsPage(), fallback: '/navigation')),
       GoRoute(path: '/instruments', builder: (_, __) => _withBackNavigation(const InstrumentsPage())),
       GoRoute(path: '/astronomy', builder: (_, __) => _withBackNavigation(const AstronomyPage(), fallback: '/instruments')),
+      GoRoute(path: '/weather/lightning', builder: (_, __) => _withBackNavigation(const LightningPage(), fallback: '/instruments')),
       GoRoute(path: '/pets', builder: (_, __) => _withBackNavigation(const PetsPage())),
       GoRoute(path: '/wildlife', builder: (_, __) => _withBackNavigation(const WildlifePage())),
       GoRoute(path: '/natura', builder: (_, __) => _withBackNavigation(const NaturaProtectPage())),
       GoRoute(path: '/alerts', builder: (_, __) => _withBackNavigation(const AlertsPage())),
       GoRoute(path: '/rescue', builder: (_, __) => _withBackNavigation(const RescueLinkPage())),
       GoRoute(path: '/safety', builder: (_, __) => _withBackNavigation(const SafetyPage())),
-      GoRoute(
-        path: '/safety/contacts',
-        builder: (_, __) => _withBackNavigation(const TrustedContactsPage(), fallback: '/safety'),
-      ),
+      GoRoute(path: '/safety/contacts', builder: (_, __) => _withBackNavigation(const TrustedContactsPage(), fallback: '/safety')),
       GoRoute(path: '/offline', builder: (_, __) => _withBackNavigation(const OfflinePage())),
       GoRoute(path: '/profile', builder: (_, __) => _withBackNavigation(const ProfilePage())),
       GoRoute(path: '/plans', builder: (_, __) => _withBackNavigation(const PlansPage(), fallback: '/profile')),
@@ -81,34 +69,28 @@ class EspanaOutdoorApp extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'España Outdoor',
-      debugShowCheckedModeBanner: false,
-      theme: buildOutdoorTheme(Brightness.light),
-      darkTheme: buildOutdoorTheme(Brightness.dark),
-      themeMode: ThemeMode.system,
-      routerConfig: _router,
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp.router(
+        title: 'España Outdoor',
+        debugShowCheckedModeBanner: false,
+        theme: buildOutdoorTheme(Brightness.light),
+        darkTheme: buildOutdoorTheme(Brightness.dark),
+        themeMode: ThemeMode.system,
+        routerConfig: _router,
+      );
 }
 
 class _BackNavigationScope extends StatelessWidget {
   const _BackNavigationScope({required this.child, required this.fallback});
-
   final Widget child;
   final String fallback;
 
   @override
   Widget build(BuildContext context) {
     final canPop = context.canPop();
-
     return PopScope<Object?>(
       canPop: canPop,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && !canPop) {
-          context.go(fallback);
-        }
+        if (!didPop && !canPop) context.go(fallback);
       },
       child: child,
     );
