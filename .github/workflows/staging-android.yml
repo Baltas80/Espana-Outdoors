@@ -132,6 +132,49 @@ jobs:
           test -n "$apk"
           python3 tool/verify_android_release.py --apk "$apk"
 
+      - name: Preserve staging APK before map smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find build/app/outputs/flutter-apk -maxdepth 1 -type f -name '*.apk' | head -n 1)"
+          test -n "$apk"
+          cp "$apk" "$RUNNER_TEMP/android-staging-normal.apk"
+
+      - name: Build map smoke APK
+        run: |
+          flutter build apk --release             --dart-define=APP_ENV="$APP_ENV"             --dart-define=MAP_SMOKE=true             --dart-define=MAP_PMTILES_URL="$MAP_PMTILES_URL"             --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL"             --dart-define=SOURCE_GATEWAY_BASE_URL="$SOURCE_GATEWAY_BASE_URL"             --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL"             --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL"             --dart-define=OIDC_ISSUER="$OIDC_ISSUER"             --dart-define=OIDC_CLIENT_ID="$OIDC_CLIENT_ID"             --dart-define=OIDC_REDIRECT_URI="$OIDC_REDIRECT_URI"             --dart-define=MAP_ATTRIBUTION="$MAP_ATTRIBUTION"
+
+      - name: Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+
+      - name: Android map native smoke
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          cores: 4
+          ram-size: 4096M
+          heap-size: 512M
+          disk-size: 6000M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          emulator-boot-timeout: 900
+          script: bash tool/smoke_android_map.sh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Restore normal staging APK
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/android-staging-normal.apk" build/app/outputs/flutter-apk/app-release.apk
+
       - name: Upload Android staging APK
         uses: actions/upload-artifact@v7
         with:
