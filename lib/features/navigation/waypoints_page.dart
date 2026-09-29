@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/location/location_controller.dart';
+import '../../core/navigation/waypoint.dart';
 import '../../core/navigation/waypoint_controller.dart';
 import '../../core/navigation/waypoint_navigation.dart';
 
