@@ -2,8 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
-
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
 import '../../core/navigation/backtrack.dart';
