@@ -72,6 +72,30 @@ def check_ci() -> None:
     print("production_endpoints=absent")
 
 
+def check_staging() -> None:
+    app_env = os.environ.get("APP_ENV", "")
+    if app_env != "staging":
+        _fail(
+            "Staging profile requires APP_ENV=staging, "
+            f"got {app_env!r}."
+        )
+
+    for name in PRODUCTION_ENDPOINTS:
+        value = os.environ.get(name, "").strip()
+        if not value:
+            _fail(f"Missing required staging endpoint: {name}.")
+        _validate_https(name, value)
+
+    attribution = os.environ.get("MAP_ATTRIBUTION", "").strip()
+    if not attribution:
+        _fail("Missing required staging map attribution: MAP_ATTRIBUTION.")
+
+    print("profile=staging")
+    for name in PRODUCTION_ENDPOINTS:
+        print(f"{name}=configured")
+    print("MAP_ATTRIBUTION=configured")
+
+
 def check_production() -> None:
     app_env = os.environ.get("APP_ENV", "")
     if app_env != "production":
@@ -98,11 +122,13 @@ def check_production() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--profile", choices=("ci", "production"), required=True)
+    parser.add_argument("--profile", choices=("ci", "staging", "production"), required=True)
     args = parser.parse_args()
 
     if args.profile == "ci":
         check_ci()
+    elif args.profile == "staging":
+        check_staging()
     else:
         check_production()
     return 0
