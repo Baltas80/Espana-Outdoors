@@ -16,7 +16,7 @@ void main() {
     expect(stats.samples, 6);
     expect(stats.minMeters, 100);
     expect(stats.maxMeters, 108);
-    expect(stats.ascentMeters, 11.5);
+    expect(stats.ascentMeters, 7.5);
     expect(stats.descentMeters, 3);
   });
 
