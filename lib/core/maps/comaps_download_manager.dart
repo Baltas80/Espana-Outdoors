@@ -79,6 +79,7 @@ final class CoMapsDownloadManager {
       region: spain,
     );
   }
+
   Future<void> downloadSpain({
     required void Function(
       MwmRegion region,
@@ -170,22 +171,29 @@ final class CoMapsDownloadManager {
     );
 
     if (region.sizeBytes > 0 && received != region.sizeBytes) {
-      try {
-        await tempFile.delete();
-      } catch (_) {}
+      await _discardPartial(tempFile);
       throw StateError('Tamaño inesperado para ' + region.displayName + '.');
     }
 
+    // CoMaps publishes SHA-1 in its region catalog. Keep that upstream check,
+    // then calculate and persist our own SHA-256 fingerprint before the file
+    // can be promoted from .download to a usable MWM.
     if (region.sha1Base64 != null) {
       final actual = await _sha1Base64(tempFile);
       if (actual != region.sha1Base64) {
-        try {
-          await tempFile.delete();
-        } catch (_) {}
+        await _discardPartial(tempFile);
         throw StateError(
           'La verificación SHA-1 de ' + region.displayName + ' ha fallado.',
         );
       }
+    }
+
+    final sha256 = await _sha256Hex(tempFile);
+    if (sha256.length != 64) {
+      await _discardPartial(tempFile);
+      throw StateError(
+        'No se pudo calcular un SHA-256 válido para ${region.displayName}.',
+      );
     }
 
     if (await finalFile.exists()) {
@@ -197,6 +205,7 @@ final class CoMapsDownloadManager {
       plan: plan,
       region: region,
       file: finalFile,
+      sha256: sha256,
     );
   }
 
@@ -204,8 +213,10 @@ final class CoMapsDownloadManager {
     required CoMapsSpainPlan plan,
     required MwmRegion region,
     required File file,
+    String? sha256,
   }) async {
     final runtime = AgusMapsRuntime.instance;
+    final computedSha256 = sha256 ?? await _sha256Hex(file);
 
     await runtime.storage?.upsert(
       agus.MwmMetadata(
@@ -214,7 +225,7 @@ final class CoMapsDownloadManager {
         fileSize: await file.length(),
         downloadDate: DateTime.now(),
         filePath: file.path,
-        sha256: null,
+        sha256: computedSha256,
         isBundled: false,
       ),
     );
@@ -225,9 +236,20 @@ final class CoMapsDownloadManager {
     );
   }
 
+  Future<void> _discardPartial(File file) async {
+    try {
+      await file.delete();
+    } catch (_) {}
+  }
+
   Future<String> _sha1Base64(File file) async {
     final digest = await sha1.bind(file.openRead()).first;
     return base64Encode(digest.bytes);
+  }
+
+  Future<String> _sha256Hex(File file) async {
+    final digest = await sha256.bind(file.openRead()).first;
+    return digest.toString().toLowerCase();
   }
 
   void dispose() => _mirrors.dispose();
