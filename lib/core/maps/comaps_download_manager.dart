@@ -18,9 +18,23 @@ final class CoMapsSpainPlan {
   final Snapshot snapshot;
   final MwmRegion region;
 
-  List<MwmRegion> get leaves => region.leafRegions;
-  int get totalBytes => region.totalDownloadSizeBytes;
+  List<MwmRegion> get leaves => _leafRegions(region);
+  int get totalBytes => leaves.fold<int>(
+        0,
+        (sum, item) => sum + item.sizeBytes,
+      );
   String get label => region.displayName;
+
+  static List<MwmRegion> _leafRegions(MwmRegion root) {
+    final children = root.subregions;
+    if (children == null || children.isEmpty) {
+      return [root];
+    }
+
+    return [
+      for (final child in children) ..._leafRegions(child),
+    ];
+  }
 }
 
 final class CoMapsDownloadManager {
