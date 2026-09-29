@@ -124,20 +124,6 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: (index) {
-          if (index == 1) context.go('/map');
-          if (index == 2) context.go('/safety');
-          if (index == 3) context.go('/profile');
-        },
-        destinations: const [
-          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/home.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/home.svg', size: 28), label: 'Inicio'),
-          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/map.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/map.svg', size: 28), label: 'Mapa'),
-          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/safety.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/safety.svg', size: 28), label: 'Seguridad'),
-          NavigationDestination(icon: OutdoorAssetIcon(asset: 'assets/visuals/icons/profile.svg', size: 28), selectedIcon: OutdoorAssetIcon(asset: 'assets/visuals/icons/profile.svg', size: 28), label: 'Perfil'),
-        ],
-      ),
     );
   }
 }
