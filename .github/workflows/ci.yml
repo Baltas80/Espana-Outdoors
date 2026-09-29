@@ -23,24 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Prepare Agus Maps SDK
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="0.1.17"
-          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
-          root="$RUNNER_TEMP/agus-maps-sdk"
-          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/343726328"
-          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 -H "Accept: application/octet-stream" -o "$archive" "$url"
-          echo "f9887e016fc2538cf37b4af01725720c018b45a3acfdd94ab6b222d7aca3e884  $archive" | sha256sum -c -
-          rm -rf "$root"
-          mkdir -p "$root"
-          unzip -q "$archive" -d "$root"
-          sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"
-          test -n "$sdk_home"
-          sdk_home="${sdk_home%/android/prebuilt}"
-          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
-
       - name: Setup Java 21
         uses: actions/setup-java@v6
         with:
@@ -52,18 +34,21 @@ jobs:
         run: |
           set -euo pipefail
           version="0.1.17"
-          archive="$RUNNER_TEMP/agus-maps-sdk.zip"
-          unpack="$RUNNER_TEMP/agus-maps-sdk-unpacked"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 \
+          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
+          root="$RUNNER_TEMP/agus-maps-sdk"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 \
             "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
             -o "$archive"
-          rm -rf "$unpack"
-          mkdir -p "$unpack"
-          unzip -q "$archive" -d "$unpack"
-          sdk_home="$(find "$unpack" -maxdepth 3 -type d -name "agus-maps-sdk-v${version}" -print -quit)"
+          rm -rf "$root"
+          mkdir -p "$root"
+          unzip -q "$archive" -d "$root"
+          sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"
           test -n "$sdk_home"
+          sdk_home="${sdk_home%/android/prebuilt}"
           test -d "$sdk_home/example/assets"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
+          echo "Agus Maps SDK: $sdk_home"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -179,189 +164,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Prepare Agus Maps SDK
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="0.1.17"
-          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
-          root="$RUNNER_TEMP/agus-maps-sdk"
-          url="https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip"
-          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 900 -o "$archive" "$url"
-          echo "f9887e016fc2538cf37b4af01725720c018b45a3acfdd94ab6b222d7aca3e884  $archive" | shasum -a 256 -c
-          rm -rf "$root"
-          mkdir -p "$root"
-          unzip -q "$archive" -d "$root"
-          sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"
-          test -n "$sdk_home"
-          sdk_home="${sdk_home%/android/prebuilt}"
-          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
 
-      - name: Download Agus Maps SDK
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="0.1.17"
-          archive="$RUNNER_TEMP/agus-maps-sdk.zip"
-          unpack="$RUNNER_TEMP/agus-maps-sdk-unpacked"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 \
-            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
-            -o "$archive"
-          rm -rf "$unpack"
-          mkdir -p "$unpack"
-          unzip -q "$archive" -d "$unpack"
-          sdk_home="$(find "$unpack" -maxdepth 3 -type d -name "agus-maps-sdk-v${version}" -print -quit)"
-          test -n "$sdk_home"
-          test -d "$sdk_home/example/assets"
-          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.47.5'
-          channel: stable
-          cache: true
-
-      - name: Generate iOS project
-        run: flutter create . --platforms=ios --org com.espanaoutdoors
-
-      - name: Apply iOS native configuration
-        run: python3 tool/configure_mobile_native.py --platform ios
-
-      - name: Verify iOS native configuration
-        run: python3 tool/verify_mobile_native.py --platform ios
-
-      - name: Verify CI build profile
-        run: python3 tool/verify_build_profile.py --profile ci
-
-      - name: Dependencies
-        run: flutter pub get
-
-      - name: Analyze
-        run: flutter analyze --no-fatal-infos
-
-      - name: iOS focused safety and offline tests
-        run: >-
-          flutter test
-          test/routing_config_test.dart
-          test/offline_region_test.dart
-          test/valhalla_routing_service_test.dart
-          test/core/route_recording_store_test.dart
-          test/core/offline_package_verifier_test.dart
-          test/core/offline_sync_store_test.dart
-          test/core/offline_sync_runner_test.dart
-          test/core/emergency_share_service_test.dart
-          test/core/rescue_link_policy_test.dart
-          test/remote_source_gateway_test.dart
-
-      - name: Verify iOS native location configuration
-        run: |
-          python3 - <<'PY'
-          import plistlib
-          from pathlib import Path
-
-          path = Path('ios/Runner/Info.plist')
-          with path.open('rb') as handle:
-              plist = plistlib.load(handle)
-
-          required = {
-              'NSLocationWhenInUseUsageDescription',
-              'NSLocationAlwaysAndWhenInUseUsageDescription',
-          }
-          missing = sorted(required - plist.keys())
-          if missing:
-              raise SystemExit(f'Missing iOS location usage descriptions: {missing}')
-
-          if 'location' not in plist.get('UIBackgroundModes', []):
-              raise SystemExit('Missing iOS background location mode.')
-          PY
-
-      - name: iOS release build
-        run: flutter build ios --release --no-codesign --dart-define=APP_ENV=ci
-
-      - name: Generate iOS build manifest
-        shell: bash
-        run: |
-          set -euo pipefail
-          app="build/ios/iphoneos/Runner.app"
-          test -d "$app"
-          flutter_version="$(flutter --version | head -n 1)"
-          app_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n 1)"
-          {
-            echo "profile=ci"
-            echo "app_version=${app_version}"
-            echo "commit=${GITHUB_SHA}"
-            echo "workflow_run=${GITHUB_RUN_ID}"
-            echo "workflow=${GITHUB_WORKFLOW}"
-            echo "created_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo "flutter=${flutter_version}"
-            echo "artifact_type=unsigned_ios_app_bundle"
-            echo "app_path=${app}"
-          } > build/ios-release-manifest.txt
-
-      - name: Upload iOS build evidence
-        uses: actions/upload-artifact@v7
-        with:
-          name: ios-release-evidence
-          path: |
-            build/ios/iphoneos/Runner.app
-            build/ios-release-manifest.txt
-
-  rescue-link:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/rescue-link
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: '1.27.1'
-          cache-dependency-path: services/rescue-link/go.mod
-
-      - name: Tidy and verify Go modules
-        run: go mod tidy
-
-      - name: Show Go module diff
-        run: git diff -- go.mod go.sum
-
-      - name: Vet
-        run: go vet ./...
-
-      - name: Tests
-        run: go test ./...
-
-      - name: Container build
-        run: docker build -t espana-outdoors-rescue-link:ci .
-
-  source-gateway:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/source-gateway
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: '1.27.1'
-          cache-dependency-path: services/source-gateway/go.mod
-
-      - name: Tidy and verify Go modules
-        run: go mod tidy
-
-      - name: Show Go module diff
-        run: git diff -- go.mod go.sum
-
-      - name: Vet
-        run: go vet ./...
-
-      - name: Tests
-        run: go test ./...
-
-      - name: Container build
-        run: docker build -t espana-outdoors-source-gateway:ci .
