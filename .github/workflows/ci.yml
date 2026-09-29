@@ -47,6 +47,23 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Download Agus Maps SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="0.1.17"
+          archive="$RUNNER_TEMP/agus-maps-sdk.zip"
+          unpack="$RUNNER_TEMP/agus-maps-sdk-unpacked"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 \
+            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
+            -o "$archive"
+          rm -rf "$unpack"
+          mkdir -p "$unpack"
+          unzip -q "$archive" -d "$unpack"
+          sdk_home="$(find "$unpack" -maxdepth 3 -type d -name "agus-maps-sdk-v${version}" -print -quit)"
+          test -n "$sdk_home"
+          test -d "$sdk_home/example/assets"
+          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -180,6 +197,23 @@ jobs:
           sdk_home="${sdk_home%/android/prebuilt}"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
 
+      - name: Download Agus Maps SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="0.1.17"
+          archive="$RUNNER_TEMP/agus-maps-sdk.zip"
+          unpack="$RUNNER_TEMP/agus-maps-sdk-unpacked"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 \
+            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
+            -o "$archive"
+          rm -rf "$unpack"
+          mkdir -p "$unpack"
+          unzip -q "$archive" -d "$unpack"
+          sdk_home="$(find "$unpack" -maxdepth 3 -type d -name "agus-maps-sdk-v${version}" -print -quit)"
+          test -n "$sdk_home"
+          test -d "$sdk_home/example/assets"
+          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
