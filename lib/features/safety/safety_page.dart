@@ -42,7 +42,9 @@ class _SafetyPageState extends State<SafetyPage> {
         ],
       ),
     );
-    if (confirmed == true) await _emergency.callEmergencyServices();
+    if (confirmed == true) {
+      await _emergency.callEmergencyServices(number: contact.general);
+    }
   }
 
   Future<void> _shareEmergency() async {
