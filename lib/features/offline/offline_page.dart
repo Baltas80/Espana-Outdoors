@@ -1,11 +1,11 @@
-import 'package:background_downloader/background_downloader.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import '../../app/outdoor_visuals.dart';
+import 'dart:async';
 
-import '../../core/offline/offline_region.dart';
-import '../../core/offline/offline_region_catalog.dart';
-import '../../core/offline/offline_region_downloader.dart';
+import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
+import 'package:flutter/material.dart';
+
+import '../../app/outdoor_visuals.dart';
+import '../../core/maps/agus_maps_runtime.dart';
+import '../../core/maps/comaps_download_manager.dart';
 
 class OfflinePage extends StatefulWidget {
   const OfflinePage({super.key});
@@ -15,48 +15,64 @@ class OfflinePage extends StatefulWidget {
 }
 
 class _OfflinePageState extends State<OfflinePage> {
-  final _downloader = const OfflineRegionDownloader();
-  late Future<List<OfflineRegion>> _catalogFuture;
-  final Map<String, Transfer> _transfers = {};
-  final Set<String> _verified = {};
+  late Future<CoMapsSpainPlan> _planFuture;
+  bool _downloading = false;
+  double _progress = 0;
+  String _status = 'Preparando catálogo CoMaps…';
+  int _completed = 0;
+  int _count = 0;
 
   @override
   void initState() {
     super.initState();
-    _catalogFuture = _loadCatalog();
+    _planFuture = _loadPlan();
   }
 
-  Future<List<OfflineRegion>> _loadCatalog() async {
-    final endpoint = OfflineRegionCatalog.fromEnvironment();
-    if (endpoint == null) return const [];
-    return OfflineRegionCatalog(endpoint: endpoint).fetch();
+  Future<CoMapsSpainPlan> _loadPlan() async {
+    await AgusMapsRuntime.instance.ensureInitialized();
+    return CoMapsDownloadManager.instance.resolveSpain();
   }
 
-  Future<void> _download(OfflineRegion region) async {
+  Future<void> _downloadSpain(CoMapsSpainPlan plan) async {
+    if (_downloading) return;
+
+    setState(() {
+      _downloading = true;
+      _progress = 0;
+      _completed = 0;
+      _count = plan.leaves.length;
+      _status = 'Descargando España…';
+    });
+
     try {
-      final transfer = await _downloader.start(region);
+      await CoMapsDownloadManager.instance.downloadSpain(
+        onProgress: (region, received, total, completed, count) {
+          if (!mounted) return;
+          setState(() {
+            _completed = completed;
+            _count = count;
+            final current = total <= 0 ? 0.0 : received / total;
+            _progress = count == 0
+                ? 0.0
+                : ((completed + current) / count).clamp(0.0, 1.0);
+            _status =
+                'Descargando \${region.displayName} · \${(_progress * 100).toStringAsFixed(0)}%';
+          });
+        },
+      );
+
       if (!mounted) return;
       setState(() {
-        _transfers[region.id] = transfer;
-        _verified.remove(region.id);
+        _downloading = false;
+        _progress = 1;
+        _status = 'España descargada y verificada.';
       });
-
-      final file = await transfer.file;
-      await _downloader.verifyExisting(
-        region,
-        file,
-        requireChecksum: true,
-      );
-      if (!mounted) return;
-      setState(() => _verified.add(region.id));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mapa offline verificado: ${region.name}')),
-      );
     } on Object catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo verificar el mapa: $error')),
-      );
+      setState(() {
+        _downloading = false;
+        _status = 'Error: \$error';
+      });
     }
   }
 
@@ -68,7 +84,7 @@ class _OfflinePageState extends State<OfflinePage> {
       value /= 1024;
       unit++;
     }
-    return '${value.toStringAsFixed(unit == 0 ? 0 : 1)} ${units[unit]}';
+    return '\${value.toStringAsFixed(unit == 0 ? 0 : 1)} \${units[unit]}';
   }
 
   @override
@@ -76,178 +92,172 @@ class _OfflinePageState extends State<OfflinePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Mapas offline')),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    OutdoorAssetIcon(asset: 'assets/visuals/icons/offline.svg', size: 46),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        'Prepara una zona antes de salir. Los paquetes publicados por España Outdoor deben incluir versión, procedencia, HTTPS y SHA-256 antes de poder utilizarse.',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Catálogo disponible',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 10),
-            FutureBuilder<List<OfflineRegion>>(
-              future: _catalogFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return _CatalogMessage(
-                    icon: Icons.error_outline,
-                    message: 'No se ha podido consultar el catálogo. Los mapas locales existentes siguen siendo utilizables.',
-                  );
-                }
-                final regions = snapshot.data ?? const [];
-                if (regions.isEmpty) {
-                  return _CatalogMessage(
-                    icon: Icons.cloud_off_outlined,
-                    message: 'El catálogo de regiones todavía no está configurado o no ha publicado paquetes válidos. No se muestran zonas ficticias.',
-                  );
-                }
-                return Column(
-                  children: [
-                    for (final region in regions) _regionCard(region),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Principio de seguridad',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'La aplicación verifica la integridad del archivo antes de considerarlo disponible para cartografía offline. Un paquete sin SHA-256 o con una firma diferente se rechaza.',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+        child: FutureBuilder<CoMapsSpainPlan>(
+          future: _planFuture,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return _MapCatalogError(
+                message: snapshot.error.toString(),
+                onRetry: () {
+                  setState(() {
+                    _planFuture = _loadPlan();
+                  });
+                },
+              );
+            }
 
-  Widget _regionCard(OfflineRegion region) {
-    final transfer = _transfers[region.id];
-    final verified = _verified.contains(region.id);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(region.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 4),
-            Text(region.description),
-            const SizedBox(height: 6),
-            Text(
-              region.attribution,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Licencia: ${region.licenseUrl.host}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 4),
-            Text('${_size(region.sizeBytes)} · actualizado ${region.updatedAt.toLocal()}'),
-            if (verified) ...[
-              const SizedBox(height: 10),
-              const Chip(
-                avatar: Icon(Icons.verified_outlined, size: 18),
-                label: Text('Verificado'),
-              ),
-            ],
-            if (transfer != null) ...[
-              const SizedBox(height: 10),
-              ValueListenableBuilder<double?>(
-                valueListenable: transfer.progressNotifier,
-                builder: (_, progress, __) => LinearProgressIndicator(value: progress),
-              ),
-              const SizedBox(height: 6),
-              ValueListenableBuilder<TaskStatus>(
-                valueListenable: transfer.statusNotifier,
-                builder: (_, status, __) => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(status.name),
-                    Row(
+            final plan = snapshot.data;
+            if (plan == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final installedMaps = AgusMapsRuntime.instance.storage
+                    ?.getAll()
+                    .where((map) => !map.isBundled)
+                    .length ??
+                0;
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (status == TaskStatus.running)
-                          IconButton(
-                            tooltip: 'Pausar',
-                            onPressed: () => _downloader.pause(transfer),
-                            icon: const Icon(Icons.pause),
+                        OutdoorAssetIcon(
+                          asset: 'assets/visuals/icons/offline.svg',
+                          size: 46,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            'Cartografía offline basada en CoMaps. Los archivos MWM se descargan desde los servidores oficiales y se verifican antes de registrarse en el motor nativo.',
                           ),
-                        if (status == TaskStatus.paused)
-                          IconButton(
-                            tooltip: 'Reanudar',
-                            onPressed: () => _downloader.resume(transfer),
-                            icon: const Icon(Icons.play_arrow),
-                          ),
-                        if (!status.isFinalState)
-                          IconButton(
-                            tooltip: 'Cancelar',
-                            onPressed: () => _downloader.cancel(transfer),
-                            icon: const Icon(Icons.close),
-                          ),
+                        ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ] else
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed: kIsWeb ? null : () => _download(region),
-                  icon: const Icon(Icons.download),
-                  label: const Text('Descargar y verificar'),
+                const SizedBox(height: 20),
+                Text(
+                  'España',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
-              ),
-          ],
+                const SizedBox(height: 6),
+                Text(
+                  '\${plan.label} · versión \${plan.snapshot.formattedDate}',
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '\${_size(plan.totalBytes)} · \${plan.leaves.length} archivos de región',
+                ),
+                const SizedBox(height: 14),
+                if (_downloading || _progress > 0) ...[
+                  LinearProgressIndicator(value: _progress),
+                  const SizedBox(height: 8),
+                  Text(_status),
+                ] else
+                  Text(_status),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed:
+                      _downloading ? null : () => _downloadSpain(plan),
+                  icon: const Icon(Icons.download_outlined),
+                  label: Text(
+                    installedMaps == 0
+                        ? 'Descargar España'
+                        : 'Actualizar / comprobar España',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.storage_outlined),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            installedMaps == 0
+                                ? 'Aún no hay regiones MWM de España instaladas en el dispositivo.'
+                                : '\$installedMaps regiones MWM instaladas.',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Motor cartográfico',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Agus Maps integra el motor nativo de CoMaps. La búsqueda, etiquetas, POI, navegación y representación del mapa se resuelven en el motor nativo en lugar de mantener un renderizador vectorial propio en Dart.',
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Seguridad de los mapas',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'El archivo temporal nunca se registra como mapa activo. Se comprueba su tamaño y, cuando CoMaps publica SHA-1 en el catálogo, también se comprueba esa huella antes de renombrarlo y registrarlo.',
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _CatalogMessage extends StatelessWidget {
-  const _CatalogMessage({required this.icon, required this.message});
+class _MapCatalogError extends StatelessWidget {
+  const _MapCatalogError({
+    required this.message,
+    required this.onRetry,
+  });
 
-  final IconData icon;
   final String message;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            const Icon(Icons.cloud_off_outlined, size: 52),
+            const SizedBox(height: 14),
+            const Text(
+              'No se pudo obtener el catálogo de mapas',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
+            ),
           ],
         ),
       ),
