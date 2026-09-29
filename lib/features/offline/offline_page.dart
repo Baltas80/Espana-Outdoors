@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../app/outdoor_visuals.dart';
+import '../../app/photo_atlas.dart';
 import '../../core/maps/agus_maps_runtime.dart';
 import '../../core/maps/comaps_download_manager.dart';
 
