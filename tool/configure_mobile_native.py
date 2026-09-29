@@ -7,6 +7,36 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+
+def prepare_agus_maps_assets() -> None:
+    sdk_home = Path(__import__("os").environ.get("AGUS_MAPS_HOME", "")).expanduser()
+    if not str(sdk_home):
+        print("Agus Maps SDK asset preparation skipped: AGUS_MAPS_HOME is not set.")
+        return
+
+    sdk_assets = sdk_home / "assets"
+    if not sdk_assets.exists():
+        raise SystemExit(f"AGUS_MAPS_HOME has no assets directory: {sdk_assets}")
+
+    for name in ("maps", "comaps_data"):
+        source = sdk_assets / name
+        target = ROOT / "assets" / name
+        if not source.exists():
+            raise SystemExit(f"Agus Maps SDK is missing required asset directory: {source}")
+        import shutil
+        shutil.copytree(source, target, dirs_exist_ok=True)
+
+    required = (
+        ROOT / "assets" / "maps" / "icudt75l.dat",
+        ROOT / "assets" / "maps" / "World.mwm",
+        ROOT / "assets" / "maps" / "WorldCoasts.mwm",
+    )
+    missing = [str(path) for path in required if not path.exists()]
+    if missing:
+        raise SystemExit("Agus Maps SDK assets incomplete: " + ", ".join(missing))
+
+    print("agus_maps_sdk_assets=verified")
+
 def patch_android() -> None:
     manifest = ROOT / "android" / "app" / "src" / "main" / "AndroidManifest.xml"
     if not manifest.exists():
@@ -117,6 +147,7 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
+    prepare_agus_maps_assets()
     if args.platform in ("android", "all"):
         patch_android()
     if args.platform in ("ios", "all"):
