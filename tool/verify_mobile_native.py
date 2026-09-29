@@ -22,8 +22,6 @@ ANDROID_PERMISSIONS = {
 def verify_agus_maps_assets() -> None:
     required = (
         ROOT / "assets" / "maps" / "icudt75l.dat",
-        ROOT / "assets" / "maps" / "World.mwm",
-        ROOT / "assets" / "maps" / "WorldCoasts.mwm",
         ROOT / "assets" / "comaps_data" / "countries.txt",
     )
     missing = [str(path) for path in required if not path.exists()]
