@@ -11,6 +11,6 @@ void main() {
     expect(find.text('NATURALEZA · RUTAS · AVENTURA'), findsOneWidget);
     expect(find.textContaining('Explora'), findsOneWidget);
     expect(find.text('Buscar lugares, rutas, pueblos…'), findsOneWidget);
-    expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.search), findsOneWidget);
   });
 }
