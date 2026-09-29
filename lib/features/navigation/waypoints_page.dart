@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/location/location_controller.dart';
 import '../../core/navigation/waypoint_controller.dart';
+import '../../core/navigation/waypoint_navigation.dart';
 
 class WaypointsPage extends ConsumerWidget {
   const WaypointsPage({super.key});
@@ -43,25 +44,76 @@ class WaypointsPage extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final point = waypoints[index];
+                final snapshot = location.position == null
+                    ? null
+                    : calculateWaypointNavigation(position: location.position!, waypoint: point);
                 return Card(
                   child: ListTile(
                     leading: const Icon(Icons.location_on_outlined),
                     title: Text(point.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-                    subtitle: Text(
-                      '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}'
-                      '${point.elevationMeters == null ? '' : '\n${point.elevationMeters!.toStringAsFixed(0)} m'}',
-                    ),
-                    isThreeLine: point.elevationMeters != null,
-                    trailing: IconButton(
-                      tooltip: 'Eliminar',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => ref.read(waypointControllerProvider.notifier).remove(point.id),
+                    subtitle: Text(_subtitle(point, snapshot)),
+                    isThreeLine: snapshot != null || point.elevationMeters != null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (snapshot != null)
+                          IconButton(
+                            tooltip: snapshot.arrived ? 'Llegada' : 'Dirección al punto',
+                            icon: Icon(snapshot.arrived ? Icons.flag : Icons.navigation_outlined),
+                            onPressed: () => _showNavigation(context, point, snapshot),
+                          ),
+                        IconButton(
+                          tooltip: 'Eliminar',
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => ref.read(waypointControllerProvider.notifier).remove(point.id),
+                        ),
+                      ],
                     ),
                   ),
                 );
               },
             ),
     );
+  }
+
+  String _subtitle(OutdoorWaypoint point, WaypointNavigationSnapshot? snapshot) {
+    final coordinates = '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
+    final elevation = point.elevationMeters == null ? '' : '\n${point.elevationMeters!.toStringAsFixed(0)} m';
+    if (snapshot == null) return '$coordinates$elevation';
+    final distance = snapshot.distanceMeters < 1000
+        ? '${snapshot.distanceMeters.toStringAsFixed(0)} m'
+        : '${(snapshot.distanceMeters / 1000).toStringAsFixed(2)} km';
+    return '$coordinates\n$distance · rumbo ${snapshot.bearingDegrees.toStringAsFixed(0)}°';
+  }
+
+  void _showNavigation(BuildContext context, OutdoorWaypoint point, WaypointNavigationSnapshot snapshot) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.navigation_outlined, size: 42),
+              const SizedBox(height: 8),
+              Text(point.name, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(snapshot.arrived ? 'Estás dentro de 20 m del punto.' : '${(snapshot.distanceMeters / 1000).toStringAsFixed(2)} km'),
+              const SizedBox(height: 4),
+              Text('Rumbo ${snapshot.bearingDegrees.toStringAsFixed(0)}° · ${_relativeText(snapshot.relativeBearingDegrees)}'),
+              const SizedBox(height: 12),
+              const Text('Dirección directa al waypoint. No sustituye el routing por senderos o carreteras.'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _relativeText(double degrees) {
+    if (degrees.abs() < 15) return 'seguir recto';
+    return degrees > 0 ? 'girar ${degrees.toStringAsFixed(0)}° a la derecha' : 'girar ${degrees.abs().toStringAsFixed(0)}° a la izquierda';
   }
 
   Future<void> _addCurrentPosition(BuildContext context, WidgetRef ref) async {
