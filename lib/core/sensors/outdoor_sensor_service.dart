@@ -1,0 +1,106 @@
+import 'dart:async';
+
+import 'package:flutter_device_compass/flutter_device_compass.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+
+import 'outdoor_sensor_models.dart';
+
+final outdoorSensorProvider =
+    NotifierProvider<OutdoorSensorController, OutdoorSensorState>(
+  OutdoorSensorController.new,
+);
+
+class OutdoorSensorController extends Notifier<OutdoorSensorState> {
+  StreamSubscription<CompassEvent>? _compassSubscription;
+  StreamSubscription<BarometerEvent>? _barometerSubscription;
+  StreamSubscription<Position>? _positionSubscription;
+
+  @override
+  OutdoorSensorState build() {
+    ref.onDispose(() {
+      unawaited(_compassSubscription?.cancel());
+      unawaited(_barometerSubscription?.cancel());
+      unawaited(_positionSubscription?.cancel());
+    });
+    unawaited(_start());
+    return const OutdoorSensorState();
+  }
+
+  Future<void> _start() async {
+    try {
+      final compassSupported = await FlutterCompass.hasSensors;
+      if (compassSupported == true) {
+        _compassSubscription = FlutterCompass.eventsFor(
+          CompassUpdateOptions.balanced,
+        )?.listen((event) {
+          state = state.copyWith(
+            heading: event.heading,
+            headingAccuracy: event.accuracy,
+            compassAvailable: true,
+            lastUpdated: DateTime.now().toUtc(),
+            error: null,
+          );
+        });
+      }
+    } catch (error) {
+      state = state.copyWith(error: 'Brújula no disponible: $error');
+    }
+
+    try {
+      _barometerSubscription = barometerEventStream().listen((event) {
+        final pressure = event.pressure;
+        state = state.copyWith(
+          pressureHpa: pressure,
+          sensorAltitudeMeters: pressureToAltitudeMeters(pressure),
+          barometerAvailable: true,
+          lastUpdated: DateTime.now().toUtc(),
+        );
+      });
+    } catch (error) {
+      state = state.copyWith(error: 'Barómetro no disponible: $error');
+    }
+
+    try {
+      if (await Geolocator.isLocationServiceEnabled()) {
+        final permission = await Geolocator.checkPermission();
+        if (permission != LocationPermission.denied &&
+            permission != LocationPermission.deniedForever) {
+          _positionSubscription = Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.best,
+              distanceFilter: 10,
+            ),
+          ).listen((position) {
+            if (position.altitude.isFinite) {
+              state = state.copyWith(
+                gpsAltitudeMeters: position.altitude,
+                lastUpdated: DateTime.now().toUtc(),
+              );
+            }
+          });
+        }
+      }
+    } catch (_) {
+      // GPS is supplementary; sensor tools remain usable without it.
+    }
+  }
+
+  Future<void> refreshGpsAltitude() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
+      );
+      state = state.copyWith(
+        gpsAltitudeMeters: position.altitude,
+        lastUpdated: DateTime.now().toUtc(),
+        error: null,
+      );
+    } catch (error) {
+      state = state.copyWith(error: 'No se pudo actualizar la altitud GPS: $error');
+    }
+  }
+}
