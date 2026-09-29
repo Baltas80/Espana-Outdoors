@@ -16,6 +16,7 @@ class HomePage extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             SliverAppBar.large(
+              centerTitle: false,
               title: Row(
                 children: [
                   OutdoorBrandMark(size: 42, dark: dark),
