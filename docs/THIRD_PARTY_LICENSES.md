@@ -4,7 +4,7 @@ Estado: registro inicial; validar automáticamente y actualizar antes de cada re
 
 ## Principio de aceptación
 
-Una dependencia solo se incorpora a producción después de revisar licencia, mantenimiento, seguridad, soporte móvil, rendimiento, coste, lock-in, procedencia, obligaciones de atribución y compatibilidad con distribución propietaria.
+Una dependencia solo se incorpora a producción después de revisar licencia, mantenimiento, seguridad, soporte móvil, rendimiento, coste, lock-in, obligaciones de atribución, procedencia y compatibilidad con distribución propietaria.
 
 ## Dependencias actuales del MVP móvil
 
@@ -32,6 +32,8 @@ Una dependencia solo se incorpora a producción después de revisar licencia, ma
 | openidconnect 3.0.0 | OIDC/OAuth 2.0 + PKCE | Apache-2.0 | Aceptado |
 | sentry_flutter 9.30.1 | Crash/error telemetry | MIT | Aceptado |
 | battery_plus 7.1.1 | Estado de batería | Open source | Adoptado para SOS |
+| sensors_plus 7.1.0 | Acelerómetro, giroscopio, magnetómetro y barómetro | BSD-3-Clause | Adoptado para instrumentos de campo |
+| flutter_device_compass 2.2.0 | Brújula con heading compensado por orientación | MIT | Adoptado para instrumentos de campo |
 
 ## Dependencias del backend Rescue Link
 
@@ -42,6 +44,7 @@ Una dependencia solo se incorpora a producción después de revisar licencia, ma
 | pgx/v5 5.11.0 | PostgreSQL | MIT | Adoptado |
 | x/time 0.16.0 | Rate limiting | BSD-3-Clause | Adoptado |
 | PostgreSQL + PostGIS | Persistencia geoespacial/backend | Open source; revisar notices del paquete base | Infraestructura |
+
 ## Candidatos localizados, todavía no incorporados al pubspec
 
 | Componente | Uso | Licencia/situación | Decisión |
