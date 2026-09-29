@@ -14,6 +14,7 @@ final class AgusMapsRuntime {
   String? _dataPath;
   bool _initialized = false;
   bool _surfaceReady = false;
+  Future<void>? _registrationFuture;
 
   agus.MwmStorage? get storage => _storage;
   String? get dataPath => _dataPath;
@@ -43,12 +44,24 @@ final class AgusMapsRuntime {
 
   Future<void> onMapReady() async {
     await ensureInitialized();
+    if (_surfaceReady && _registrationFuture != null) return;
+
     _surfaceReady = true;
+    _registrationFuture ??= _registerDownloadedMapsSafely();
     try {
-      await registerAllMaps();
+      await _registrationFuture;
     } on Object catch (error, stackTrace) {
       debugPrint('[AgusMapsRuntime] map registration failed: $error');
       debugPrintStack(stackTrace: stackTrace);
+      _registrationFuture = null;
+    }
+  }
+
+  Future<void> _registerDownloadedMapsSafely() async {
+    try {
+      await registerAllMaps();
+    } catch (_) {
+      rethrow;
     }
   }
 
@@ -80,9 +93,9 @@ final class AgusMapsRuntime {
       }
     }
 
-    agus.debugListMwms();
+    // Bundled World/WorldCoasts are discovered by CoMaps during Framework
+    // startup. Only downloaded regional MWMs need explicit registration here.
     agus.invalidateMap();
-    agus.forceRedraw();
   }
 
   Future<int> registerDownloadedMap({
@@ -100,9 +113,7 @@ final class AgusMapsRuntime {
         '(result $result).',
       );
     }
-    agus.debugListMwms();
     agus.invalidateMap();
-    agus.forceRedraw();
 
     return result;
   }
