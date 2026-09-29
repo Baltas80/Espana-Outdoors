@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../app/outdoor_visuals.dart';
 import '../../app/photo_atlas.dart';
 import 'package:go_router/go_router.dart';
 
