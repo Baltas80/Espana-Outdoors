@@ -21,7 +21,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   Future<void>? _runtimeFuture;
   double _initialLat = 40.4168;
   double _initialLon = -3.7038;
-  double _initialZoom = 7;
+  int _initialZoom = 7;
 
   @override
   void initState() {
