@@ -27,7 +27,6 @@ class _WildlifePageState extends State<WildlifePage> {
           OutdoorPhotoHero(index: 5, title: 'Fauna', subtitle: 'Guía y prevención para encuentros con especies.'),
           const SizedBox(height: 18),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [OutdoorAssetIcon(asset: 'assets/visuals/icons/wildlife.svg', size: 64)]),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [OutdoorAssetIcon(asset: 'assets/visuals/icons/wildlife.svg', size: 64)]),
           const SizedBox(height: 16),
           Text(
             'Encuentros con fauna',
