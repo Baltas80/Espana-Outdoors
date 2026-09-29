@@ -15,28 +15,33 @@ def prepare_agus_maps_assets() -> None:
     if not sdk_home_value:
         print("Agus Maps SDK asset preparation skipped: AGUS_MAPS_HOME is not set.")
         return
+
     sdk_home = Path(sdk_home_value).expanduser()
     sdk_asset_candidates = (sdk_home / "assets", sdk_home / "example" / "assets")
     sdk_assets = next((path for path in sdk_asset_candidates if path.exists()), None)
     if sdk_assets is None:
-        raise SystemExit("Agus Maps SDK has no assets directory (checked assets and example/assets).")
+        raise SystemExit(
+            "Agus Maps SDK has no assets directory (checked assets and example/assets)."
+        )
 
-    maps_source = sdk_assets / "maps"
     data_source = sdk_assets / "comaps_data"
-    if not maps_source.exists() or not data_source.exists():
-        raise SystemExit(f"Agus Maps SDK assets incomplete: {maps_source} / {data_source}")
+    maps_source = sdk_assets / "maps"
+    if not data_source.exists():
+        raise SystemExit(f"Agus Maps SDK is missing comaps_data: {data_source}")
+    if not maps_source.exists():
+        raise SystemExit(f"Agus Maps SDK is missing maps: {maps_source}")
 
     maps_target = ROOT / "assets" / "maps"
     data_target = ROOT / "assets" / "comaps_data"
     maps_target.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(maps_source / "World.mwm", maps_target / "World.mwm")
-    shutil.copy2(maps_source / "WorldCoasts.mwm", maps_target / "WorldCoasts.mwm")
-    shutil.copy2(maps_source / "icudt75l.dat", maps_target / "icudt75l.dat")
+
+    icu = maps_source / "icudt75l.dat"
+    if not icu.exists():
+        raise SystemExit(f"Agus Maps SDK is missing ICU data: {icu}")
+    shutil.copy2(icu, maps_target / "icudt75l.dat")
     shutil.copytree(data_source, data_target, dirs_exist_ok=True)
 
     required = (
-        ROOT / "assets" / "maps" / "World.mwm",
-        ROOT / "assets" / "maps" / "WorldCoasts.mwm",
         ROOT / "assets" / "maps" / "icudt75l.dat",
         ROOT / "assets" / "comaps_data" / "countries.txt",
     )
