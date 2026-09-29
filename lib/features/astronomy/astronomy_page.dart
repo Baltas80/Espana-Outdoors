@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../app/photo_atlas.dart';
 import '../../core/astronomy/outdoor_astronomy_service.dart';
 
 class AstronomyPage extends StatefulWidget {
@@ -58,6 +59,8 @@ class _AstronomyPageState extends State<AstronomyPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
+          const OutdoorPhotoHero(index: 9, title: 'Astronomía', subtitle: 'Cielo nocturno, observación y planificación.'),
+          const SizedBox(height: 16),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(18),
