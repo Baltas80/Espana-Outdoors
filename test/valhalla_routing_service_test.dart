@@ -75,7 +75,7 @@ void main() {
             'summary': {'length': 1.0, 'time': 60},
             'maneuvers': [],
             // Polyline6 for: (40.410000,-3.700000) -> (40.420000,-3.690000).
-            'shape': '?????A????F??R??R',
+            'shape': '_xlalA~py`F_pR_pR',
           },
         ],
       },
