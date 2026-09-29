@@ -68,6 +68,8 @@ final class AgusMapsRuntime {
   Future<void> registerAllMaps() async {
     if (_storage == null || !_surfaceReady) return;
 
+    var registeredAny = false;
+
     for (final metadata in _storage!.getAll()) {
       if (metadata.isBundled) continue;
 
@@ -83,8 +85,9 @@ final class AgusMapsRuntime {
           : agus.registerSingleMap(metadata.filePath);
       debugPrint(
         '[AgusMapsRuntime] downloaded map registration: '
-        '${metadata.regionName} result=$result',
+        + metadata.regionName + ' result=' + result.toString(),
       );
+      registeredAny = true;
       if (result != 0) {
         throw StateError(
           'Failed to register downloaded map ${metadata.regionName} '
@@ -94,8 +97,10 @@ final class AgusMapsRuntime {
     }
 
     // Bundled World/WorldCoasts are discovered by CoMaps during Framework
-    // startup. Only downloaded regional MWMs need explicit registration here.
-    agus.invalidateMap();
+    // startup. Only invalidate after an actual regional registration.
+    if (registeredAny) {
+      agus.invalidateMap();
+    }
   }
 
   Future<int> registerDownloadedMap({
