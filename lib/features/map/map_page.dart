@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/material.dart';
@@ -77,24 +76,6 @@ class _MapPageState extends ConsumerState<MapPage> {
                 }
                 if (snapshot.connectionState != ConnectionState.done) {
                   return const Center(child: CircularProgressIndicator());
-                }
-
-                final maps = AgusMapsRuntime.instance.storage?.getAll() ?? const [];
-                final hasDownloadedMap = maps.any(
-                  (metadata) =>
-                      !metadata.isBundled && File(metadata.filePath).existsSync(),
-                );
-                if (!hasDownloadedMap) {
-                  return _MapMessage(
-                    title: 'Mapa de España no instalado',
-                    message:
-                        'Descarga el mapa de España para disponer de carreteras, pueblos, senderos, ríos y puntos de interés sin conexión.',
-                    actionLabel: 'Descargar España',
-                    onAction: () async {
-                      await context.push('/offline');
-                      if (mounted) setState(() {});
-                    },
-                  );
                 }
 
                 final position = location.position;
