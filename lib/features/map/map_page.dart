@@ -19,12 +19,17 @@ class MapPage extends ConsumerStatefulWidget {
 
 class _MapPageState extends ConsumerState<MapPage> {
   final agus.AgusMapController _controller = agus.AgusMapController();
-  late Future<void> _runtimeFuture;
+  Future<void>? _runtimeFuture;
 
   @override
   void initState() {
     super.initState();
-    _runtimeFuture = AgusMapsRuntime.instance.ensureInitialized();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _runtimeFuture = AgusMapsRuntime.instance.ensureInitialized();
+      });
+    });
   }
 
   void _onMapReady(Position? position) {
@@ -62,6 +67,9 @@ class _MapPageState extends ConsumerState<MapPage> {
             child: FutureBuilder<void>(
               future: _runtimeFuture,
               builder: (context, snapshot) {
+                if (_runtimeFuture == null) {
+                  return const Center(child: CircularProgressIndicator());
+                }
                 if (snapshot.hasError) {
                   return _MapMessage(
                     title: 'No se puede iniciar la cartografía',
