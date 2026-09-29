@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../domain/outdoor_models.dart';
 import '../storage/route_recording_store.dart';
+import 'gps_quality_gate.dart';
 
 final routeRecorderProvider =
     NotifierProvider<RouteRecorder, RouteRecordingState>(RouteRecorder.new);
@@ -18,6 +19,8 @@ class RouteRecordingState {
     this.startedAt,
     this.hasRecoverableSession = false,
     this.persistenceHealthy = true,
+    this.rejectedSamples = 0,
+    this.lastGpsRejection,
   });
 
   final bool isRecording;
@@ -26,6 +29,8 @@ class RouteRecordingState {
   final DateTime? startedAt;
   final bool hasRecoverableSession;
   final bool persistenceHealthy;
+  final int rejectedSamples;
+  final String? lastGpsRejection;
 
   RouteRecordingState copyWith({
     bool? isRecording,
@@ -34,6 +39,8 @@ class RouteRecordingState {
     DateTime? startedAt,
     bool? hasRecoverableSession,
     bool? persistenceHealthy,
+    int? rejectedSamples,
+    String? lastGpsRejection,
   }) {
     return RouteRecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -43,6 +50,8 @@ class RouteRecordingState {
       hasRecoverableSession:
           hasRecoverableSession ?? this.hasRecoverableSession,
       persistenceHealthy: persistenceHealthy ?? this.persistenceHealthy,
+      rejectedSamples: rejectedSamples ?? this.rejectedSamples,
+      lastGpsRejection: lastGpsRejection ?? this.lastGpsRejection,
     );
   }
 }
@@ -50,6 +59,7 @@ class RouteRecordingState {
 class RouteRecorder extends Notifier<RouteRecordingState> {
   StreamSubscription<Position>? _subscription;
   final RouteRecordingStore _store = RouteRecordingStore();
+  final GpsQualityGate _gpsQualityGate = const GpsQualityGate();
   Future<void> _persistTail = Future<void>.value();
   bool _disposed = false;
 
@@ -142,7 +152,7 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
       return AndroidSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 5,
-        intervalDuration: Duration(seconds: 5),
+        intervalDuration: const Duration(seconds: 5),
         foregroundNotificationConfig: ForegroundNotificationConfig(
           notificationTitle: 'España Outdoor',
           notificationText: 'Grabando tu ruta en segundo plano.',
@@ -168,6 +178,17 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
   }
 
   void _onPosition(Position position) {
+    final quality = _gpsQualityGate.evaluate(position);
+    if (!quality.isUsable) {
+      if (!_disposed) {
+        state = state.copyWith(
+          rejectedSamples: state.rejectedSamples + 1,
+          lastGpsRejection: quality.reason,
+        );
+      }
+      return;
+    }
+
     final point = GeoPoint(
       latitude: position.latitude,
       longitude: position.longitude,
@@ -186,6 +207,7 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
       points: <GeoPoint>[...state.points, point],
       distanceMeters: nextDistance,
       persistenceHealthy: true,
+      lastGpsRejection: null,
     );
     _persistTail = _persistTail.then<void>((_) async {
       try {
