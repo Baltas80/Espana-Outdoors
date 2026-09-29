@@ -14,8 +14,6 @@ void main() {
   for (final entity in lib.listSync(recursive: true, followLinks: false)) {
     if (entity is! File || !entity.path.endsWith('.dart')) continue;
     final path = entity.path.replaceAll('\\', '/');
-    if (path == allowedConfigPath) continue;
-
     final content = entity.readAsStringSync();
     if (content.contains(forbiddenTileHost)) {
       violations.add(path);
