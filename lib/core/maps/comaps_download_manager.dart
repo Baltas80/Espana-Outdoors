@@ -98,6 +98,11 @@ final class CoMapsDownloadManager {
 
     var completed = 0;
     for (final region in leaves) {
+      if (_cancelled.contains(region.id)) {
+        _cancelled.remove(region.id);
+        throw StateError('Descarga cancelada: ' + region.displayName);
+      }
+
       await _downloadRegion(
         plan: plan,
         region: region,
