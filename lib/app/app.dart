@@ -10,7 +10,6 @@ import '../features/explore/explore_page.dart';
 import '../features/home/home_page.dart';
 import '../features/instruments/instruments_page.dart';
 import '../features/map/map_page.dart';
-import '../features/map/map_navigation_smoke_page.dart';
 import '../features/navigation/backtrack_page.dart';
 import '../features/navigation/navigation_page.dart';
 import '../features/navigation/waypoints_page.dart';
@@ -29,8 +28,6 @@ import '../features/weather/lightning_page.dart';
 import '../features/wildlife/wildlife_page.dart';
 import 'app_shell.dart';
 import 'theme.dart';
-
-const bool _mapSmokeMode = bool.fromEnvironment('MAP_SMOKE', defaultValue: false);
 
 class EspanaOutdoorApp extends StatelessWidget {
   const EspanaOutdoorApp({super.key});
@@ -52,9 +49,7 @@ class EspanaOutdoorApp extends StatelessWidget {
             routes: [
               GoRoute(
                 path: '/',
-                builder: (_, __) => _mapSmokeMode
-                    ? const MapNavigationSmokePage()
-                    : const HomePage(),
+                builder: (_, __) => const HomePage(),
               ),
             ],
           ),
