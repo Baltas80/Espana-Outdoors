@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/brand.dart';
-import '../../app/outdoor_visuals.dart';
 import '../../app/photo_atlas.dart';
 
 class HomePage extends StatelessWidget {
