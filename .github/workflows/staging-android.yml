@@ -12,6 +12,8 @@ on:
       - 'lib/features/map/**'
       - 'lib/core/maps/**'
       - 'tool/configure_mobile_native.py'
+      - 'test/**'
+      - 'assets/**'
       - 'tool/verify_mobile_native.py'
       - 'pubspec.yaml'
       - '.github/workflows/staging-android.yml'
