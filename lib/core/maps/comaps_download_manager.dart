@@ -31,27 +31,27 @@ final class CoMapsDownloadManager {
   final Set<String> _cancelled = <String>{};
 
   Future<CoMapsSpainPlan> resolveSpain() async {
-    final discovered = await _mirrors.discoverMirrors();
-    final operational = discovered.where((item) => item.isOperational).toList();
+    await _mirrors.measureLatencies();
+    final selected = _mirrors.getFastestMirror();
 
-    if (operational.isEmpty) {
+    if (selected == null) {
       throw StateError('No hay ningún servidor CoMaps disponible.');
     }
 
-    final selected = operational.first;
-    final snapshot = selected.latestSnapshot!;
-    final countries = await _mirrors.getCountriesData(
-      selected.mirror,
-      snapshot,
-    );
+    final snapshots = await _mirrors.getSnapshots(selected);
+    if (snapshots.isEmpty) {
+      throw StateError('No se encontró un catálogo CoMaps reciente.');
+    }
 
-    MwmRegion? spain = countries.findRegion('Spain');
-    if (spain == null) {
-      for (final region in countries.allRegions) {
-        if (region.id.toLowerCase().contains('spain')) {
-          spain = region;
-          break;
-        }
+    final snapshot = snapshots.first;
+    final regions = await _mirrors.getRegions(selected, snapshot);
+
+    MwmRegion? spain;
+    for (final region in regions) {
+      if (region.id == 'Spain' ||
+          region.id.toLowerCase().contains('spain')) {
+        spain = region;
+        break;
       }
     }
 
@@ -60,12 +60,11 @@ final class CoMapsDownloadManager {
     }
 
     return CoMapsSpainPlan(
-      mirror: selected.mirror,
+      mirror: selected,
       snapshot: snapshot,
       region: spain,
     );
   }
-
   Future<void> downloadSpain({
     required void Function(
       MwmRegion region,
