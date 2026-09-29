@@ -17,7 +17,7 @@ class HomePage extends StatelessWidget {
           slivers: [
             SliverAppBar.large(
               title: const Text('España Outdoor'),
-              ),
+            ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
               sliver: SliverList(
