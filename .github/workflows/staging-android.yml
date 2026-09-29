@@ -30,7 +30,7 @@ permissions:
 
 env:
   APP_ENV: staging
-  AGUS_MAPS_VERSION: 0.1.17
+  AGUS_MAPS_VERSION: 0.1.18
   MAP_PMTILES_URL: https://espana-outdoor-r2-uploader.espana-outdoor.workers.dev/basemap/spain/2026-09-28/spain.pmtiles
   OFFLINE_CATALOG_URL: https://espana-outdoor-r2-uploader.espana-outdoor.workers.dev/catalog/spain.json
   VALHALLA_BASE_URL: https://routing.espanaoutdoor.es
@@ -70,12 +70,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="0.1.17"
+          version="0.1.18"
           archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
           root="$RUNNER_TEMP/agus-maps-sdk"
           curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 \
             "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
             -o "$archive"
+          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | sha256sum -c -
           rm -rf "$root"
           mkdir -p "$root"
           unzip -q "$archive" -d "$root"
@@ -151,6 +152,16 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           script: bash tool/smoke_android_map.sh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Android map smoke log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-map-smoke-log
+          path: |
+            ${{ runner.temp }}/espana-outdoor-map-logcat.txt
+            ${{ runner.temp }}/espana-window.xml
+          if-no-files-found: ignore
 
       - name: Upload Android staging APK
         uses: actions/upload-artifact@v7
