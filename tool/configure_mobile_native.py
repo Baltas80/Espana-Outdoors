@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import os
 import plistlib
+import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,11 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def prepare_agus_maps_assets() -> None:
-    sdk_home = Path(__import__("os").environ.get("AGUS_MAPS_HOME", "")).expanduser()
-    if not str(sdk_home):
+    sdk_home_value = os.environ.get("AGUS_MAPS_HOME", "").strip()
+    if not sdk_home_value:
         print("Agus Maps SDK asset preparation skipped: AGUS_MAPS_HOME is not set.")
         return
-
+    sdk_home = Path(sdk_home_value).expanduser()
     sdk_assets = sdk_home / "assets"
     if not sdk_assets.exists():
         raise SystemExit(f"AGUS_MAPS_HOME has no assets directory: {sdk_assets}")
@@ -23,7 +25,6 @@ def prepare_agus_maps_assets() -> None:
         target = ROOT / "assets" / name
         if not source.exists():
             raise SystemExit(f"Agus Maps SDK is missing required asset directory: {source}")
-        import shutil
         shutil.copytree(source, target, dirs_exist_ok=True)
 
     required = (
