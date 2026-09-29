@@ -77,9 +77,21 @@ def main() -> int:
             )
 
         shape = leg.get("shape")
+        if isinstance(shape, str):
+            # Valhalla may return its canonical encoded polyline shape even
+            # when a deployment does not honor shape_format=geojson.
+            # Count a non-empty encoded shape here; the mobile adapter
+            # decodes polyline6.
+            if len(shape) < 4:
+                raise SystemExit(
+                    f"Valhalla route smoke failed: leg {index} has no usable shape."
+                )
+            total_shape_points += 2
+            continue
+
         if not isinstance(shape, dict):
             raise SystemExit(
-                f"Valhalla route smoke failed: leg {index} has no GeoJSON shape."
+                f"Valhalla route smoke failed: leg {index} has no route shape."
             )
         geometry = shape.get("geometry")
         if isinstance(geometry, dict):
