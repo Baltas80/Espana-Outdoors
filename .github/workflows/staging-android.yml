@@ -14,6 +14,7 @@ on:
       - 'tool/configure_mobile_native.py'
       - 'tool/verify_android_release.py'
       - 'tool/verify_valhalla_route.py'
+      - 'ops/offline/prepare-agus-base-maps.sh'
       - 'test/**'
       - 'assets/**'
       - 'tool/verify_mobile_native.py'
@@ -90,6 +91,12 @@ jobs:
           test -d "$sdk_home/assets" || test -d "$sdk_home/example/assets"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
           echo "Agus Maps SDK: $sdk_home"
+
+      - name: Prepare CoMaps base maps
+        shell: bash
+        run: |
+          set -euo pipefail
+          COMAPS_BASE_SNAPSHOT=260106 bash ops/offline/prepare-agus-base-maps.sh
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
