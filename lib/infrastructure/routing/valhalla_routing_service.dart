@@ -62,7 +62,10 @@ class ValhallaRoutingService implements RoutingService {
     final response = await _client
         .post(
           uri,
-          headers: const {'content-type': 'application/json'},
+          headers: const {
+          'content-type': 'application/json',
+          'user-agent': 'EspanaOutdoor/0.1',
+        },
           body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: 20));
