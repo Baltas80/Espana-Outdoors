@@ -51,6 +51,7 @@ flutter:
     - assets/map/
     - assets/maps/
     - assets/comaps_data/
+    - assets/emergency/
     - assets/backgrounds/
     - assets/visuals/
     - assets/landscapes/
