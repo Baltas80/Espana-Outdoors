@@ -79,6 +79,23 @@ def patch_android() -> None:
     if insertion:
         text = text[: marker_end + 1] + "\n" + "\n".join(insertion) + text[marker_end + 1 :]
 
+    # Agus Maps uses its own OpenGL ES renderer through Flutter's
+    # SurfaceProducer. Disable Flutter Impeller on Android for this app to
+    # avoid known SurfaceProducer/Impeller GPU compatibility crashes.
+    impeller = """    <meta-data
+        android:name="io.flutter.embedding.android.EnableImpeller"
+        android:value="false" />
+"""
+    if 'android:name="io.flutter.embedding.android.EnableImpeller"' not in text:
+        application_marker = "    <application"
+        application_start = text.find(application_marker)
+        if application_start < 0:
+            raise SystemExit("Android manifest has no <application> element.")
+        application_tag_end = text.find(">", application_start)
+        if application_tag_end < 0:
+            raise SystemExit("Invalid Android application element.")
+        text = text[: application_tag_end + 1] + "\n" + impeller.rstrip() + text[application_tag_end + 1 :]
+
     if "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity" not in text:
         callback = """    <activity
         android:name="io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity"
