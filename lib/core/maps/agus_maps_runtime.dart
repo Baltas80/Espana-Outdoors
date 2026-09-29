@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
-import 'package:crypto/crypto.dart';
 
 final class AgusMapsRuntime {
   AgusMapsRuntime._();
@@ -39,7 +39,7 @@ final class AgusMapsRuntime {
     _dataPath = dataPath;
 
     // CoMaps scans its writable directory while the native Framework is
-    // created. Clean interrupted transfers BEFORE initWithPaths().
+    // created. Clean interrupted transfers before initWithPaths().
     await _cleanupPartialDownloads(dataPath);
     await _validatePersistedMaps();
 
@@ -76,11 +76,20 @@ final class AgusMapsRuntime {
   }
 
   Future<void> _registerDownloadedMapsSafely() async {
-    // Match the official Agus example: explicitly register the bundled base
-    // maps once the native rendering surface already exists.
     await _registerBundledMap(_worldPath);
     await _registerBundledMap(_worldCoastsPath);
     await registerAllMaps();
+
+    // The native engine is created before bundled/downloaded maps are
+    // registered. Force a redraw after registration so the first viewport is
+    // recalculated against the complete registered map set.
+    try {
+      agus.invalidateMap();
+      agus.forceRedraw();
+    } on Object catch (error, stackTrace) {
+      debugPrint('[AgusMapsRuntime] redraw after map registration failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> _registerBundledMap(String? filePath) async {
@@ -91,8 +100,7 @@ final class AgusMapsRuntime {
         : agus.registerSingleMapWithVersion(filePath, _bundledVersion!);
 
     debugPrint(
-      '[AgusMapsRuntime] bundled map registration result='
-      + result.toString(),
+      '[AgusMapsRuntime] bundled map registration result=' + result.toString(),
     );
 
     if (result != 0) {
@@ -121,8 +129,8 @@ final class AgusMapsRuntime {
           ? agus.registerSingleMapWithVersion(metadata.filePath, version)
           : agus.registerSingleMap(metadata.filePath);
       debugPrint(
-        '[AgusMapsRuntime] downloaded map registration: '
-        + metadata.regionName + ' result=' + result.toString(),
+        '[AgusMapsRuntime] downloaded map registration: ' +
+            metadata.regionName + ' result=' + result.toString(),
       );
       registeredAny = true;
       if (result != 0) {
@@ -133,8 +141,6 @@ final class AgusMapsRuntime {
       }
     }
 
-    // Bundled World/WorldCoasts are discovered by CoMaps during Framework
-    // startup. Only invalidate after an actual regional registration.
     if (registeredAny) {
       agus.invalidateMap();
     }
@@ -156,6 +162,9 @@ final class AgusMapsRuntime {
       );
     }
     agus.invalidateMap();
+    try {
+      agus.forceRedraw();
+    } catch (_) {}
 
     return result;
   }
@@ -178,7 +187,7 @@ final class AgusMapsRuntime {
 
     debugPrint(
       '[AgusMapsRuntime] replacing stale/corrupt bundled map: ' +
-      initialFile.path,
+          initialFile.path,
     );
 
     if (await initialFile.exists()) {
@@ -222,9 +231,6 @@ final class AgusMapsRuntime {
       return dataPath;
     }
 
-    // Agus Maps 0.1.17 only checks a small marker set before reusing the
-    // extraction cache. Delete that marker when critical symbol/localization
-    // resources are missing so the complete asset tree is extracted again.
     final marker = File(dataPath + '/.comaps_data_extracted');
     try {
       if (await marker.exists()) {
@@ -232,8 +238,8 @@ final class AgusMapsRuntime {
       }
     } catch (error) {
       debugPrint(
-        '[AgusMapsRuntime] could not reset CoMaps data marker: '
-        + error.toString(),
+        '[AgusMapsRuntime] could not reset CoMaps data marker: ' +
+            error.toString(),
       );
     }
 
@@ -263,22 +269,10 @@ final class AgusMapsRuntime {
     }
 
     final symbols = <({String path, int minBytes})>[
-      (
-        path: 'symbols/xxhdpi/light/symbols.png',
-        minBytes: 100000,
-      ),
-      (
-        path: 'symbols/xxhdpi/light/symbols.sdf',
-        minBytes: 1000,
-      ),
-      (
-        path: 'symbols/xxhdpi/dark/symbols.png',
-        minBytes: 100000,
-      ),
-      (
-        path: 'symbols/xxhdpi/dark/symbols.sdf',
-        minBytes: 1000,
-      ),
+      (path: 'symbols/xxhdpi/light/symbols.png', minBytes: 100000),
+      (path: 'symbols/xxhdpi/light/symbols.sdf', minBytes: 1000),
+      (path: 'symbols/xxhdpi/dark/symbols.png', minBytes: 100000),
+      (path: 'symbols/xxhdpi/dark/symbols.sdf', minBytes: 1000),
     ];
 
     for (final item in symbols) {
@@ -301,7 +295,7 @@ final class AgusMapsRuntime {
     } catch (error) {
       debugPrint(
         '[AgusMapsRuntime] could not read bundled MWM version: ' +
-        error.toString(),
+            error.toString(),
       );
       return null;
     }
@@ -323,7 +317,7 @@ final class AgusMapsRuntime {
       if (metadata.fileSize > 0 && await file.length() != metadata.fileSize) {
         debugPrint(
           '[AgusMapsRuntime] removing invalid persisted map: ' +
-          metadata.regionName,
+              metadata.regionName,
         );
         try {
           await file.delete();
@@ -358,8 +352,8 @@ final class AgusMapsRuntime {
             );
           } catch (error) {
             debugPrint(
-              '[AgusMapsRuntime] could not remove partial map: '
-              + entity.path + ': ' + error.toString(),
+              '[AgusMapsRuntime] could not remove partial map: ' +
+                  entity.path + ': ' + error.toString(),
             );
           }
         }
