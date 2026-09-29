@@ -17,14 +17,7 @@ class HomePage extends StatelessWidget {
           slivers: [
             SliverAppBar.large(
               title: const Text('España Outdoor'),
-              actions: [
-                IconButton(
-                  tooltip: 'Perfil',
-                  onPressed: () => context.go('/profile'),
-                  icon: const Icon(Icons.person_outline),
-                ),
-              ],
-            ),
+              ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
               sliver: SliverList(
