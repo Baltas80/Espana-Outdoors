@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../app/outdoor_visuals.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/brand.dart';
+import '../../app/outdoor_visuals.dart';
+import '../../app/photo_atlas.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -16,100 +17,191 @@ class HomePage extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             SliverAppBar.large(
-              title: const Text('España Outdoor'),
+              title: Row(
+                children: [
+                  OutdoorBrandMark(size: 42, dark: dark),
+                  const SizedBox(width: 10),
+                  const Text('ESPAÑA OUTDOOR'),
+                ],
+              ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
                   [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        OutdoorBrandMark(size: 56, dark: dark),
-                        const SizedBox(width: 14),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('ESPAÑA OUTDOOR', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.2)),
-                              SizedBox(height: 3),
-                              Text('Explora España. Hazlo preparado.'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    const OutdoorVisualHero(asset: 'assets/visuals/hero_routes.svg', title: 'Explora España', subtitle: 'Rutas, naturaleza y seguridad en una sola experiencia.'),
-                    const SizedBox(height: 24),
-                    Text('Hola, explorador', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 6),
-                    const Text('Naturaleza, aventura y seguridad en un solo lugar.'),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/routes.svg', label: 'Rutas', onTap: () => context.go('/routes'))),
-                        const SizedBox(width: 12),
-                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/map.svg', label: 'Mapa', onTap: () => context.go('/map'))),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/pets.svg', label: 'Mascotas', onTap: () => context.go('/pets'))),
-                        const SizedBox(width: 12),
-                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/wildlife.svg', label: 'Fauna', onTap: () => context.go('/wildlife'))),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/alerts.svg', label: 'Alertas', onTap: () => context.go('/alerts'))),
-                        const SizedBox(width: 12),
-                        Expanded(child: _QuickAction(asset: 'assets/visuals/icons/natura.svg', label: 'Natura', onTap: () => context.go('/natura'))),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _QuickAction(asset: 'assets/visuals/icons/rescue.svg', label: 'Rescue Link', onTap: () => context.go('/rescue')),
-                    const SizedBox(height: 12),
-                    _InstrumentAction(onTap: () => context.go('/instruments')),
-                    const SizedBox(height: 24),
-                    Card(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () => context.go('/safety'),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(color: Theme.of(context).colorScheme.errorContainer, borderRadius: BorderRadius.circular(14)),
-                                child: const OutdoorAssetIcon(asset: 'assets/visuals/icons/safety.svg', size: 44),
-                              ),
-                              const SizedBox(width: 14),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Centro de seguridad', style: TextStyle(fontWeight: FontWeight.w800)),
-                                    SizedBox(height: 4),
-                                    Text('SOS, alertas, contactos y preparación'),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: AspectRatio(
+                        aspectRatio: 0.82,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            const OutdoorPhotoTile(
+                              index: 0,
+                              width: double.infinity,
+                              height: double.infinity,
+                              borderRadius: 0,
+                            ),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  stops: const [0.25, 0.72, 1],
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.05),
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.92),
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.chevron_right),
-                            ],
-                          ),
+                            ),
+                            Positioned(
+                              left: 20,
+                              right: 20,
+                              top: 22,
+                              child: Text(
+                                'NATURALEZA · RUTAS · AVENTURA',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.4,
+                                ),
+                              ),
+                            ),
+                            const Positioned(
+                              left: 20,
+                              right: 20,
+                              bottom: 88,
+                              child: Text(
+                                'Explora\nDescubre\nVive España',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 33,
+                                  height: 0.98,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 18,
+                              right: 18,
+                              bottom: 18,
+                              child: Material(
+                                color: Colors.black.withValues(alpha: 0.48),
+                                borderRadius: BorderRadius.circular(18),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(18),
+                                  onTap: () => context.go('/map'),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.search, color: Colors.white),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            'Buscar lugares, rutas, pueblos…',
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _HomeAction(
+                            icon: Icons.route_outlined,
+                            label: 'Rutas',
+                            onTap: () => context.go('/routes'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _HomeAction(
+                            icon: Icons.map_outlined,
+                            label: 'Mapa',
+                            onTap: () => context.go('/map'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _HomeAction(
+                            icon: Icons.download_for_offline_outlined,
+                            label: 'Offline',
+                            onTap: () => context.go('/offline'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _HomeAction(
+                            icon: Icons.pets_outlined,
+                            label: 'Fauna',
+                            onTap: () => context.go('/wildlife'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _HomeAction(
+                            icon: Icons.eco_outlined,
+                            label: 'Natura 2000',
+                            onTap: () => context.go('/natura'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _HomeAction(
+                            icon: Icons.location_city_outlined,
+                            label: 'Pueblos',
+                            onTap: () => context.go('/explore'),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
-                    Text('Antes de salir', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 12),
-                    _ReadinessCard(onOffline: () => context.go('/offline'), onContacts: () => context.go('/safety/contacts')),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Destacados',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        TextButton(
+                          onPressed: () => context.go('/explore'),
+                          child: const Text('Ver todos'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    OutdoorImageCard(
+                      index: 3,
+                      height: 190,
+                      title: 'Costa Brava',
+                      subtitle: 'Rutas entre calas y acantilados',
+                      meta: 'MODERADA · 8,3 km · 2–3 h',
+                      onTap: () => context.go('/routes'),
+                    ),
                   ],
                 ),
               ),
@@ -121,108 +213,42 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _QuickAction extends StatelessWidget {
-  const _QuickAction({required this.asset, required this.label, required this.onTap});
-  final String asset;
+class _HomeAction extends StatelessWidget {
+  const _HomeAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
   final String label;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Card(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutdoorAssetIcon(asset: asset, size: 32),
-                const SizedBox(width: 9),
-                Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-              ],
-            ),
-          ),
-        ),
-      );
-}
-
-class _InstrumentAction extends StatelessWidget {
-  const _InstrumentAction({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Card(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
-            child: Row(
-              children: [
-                Icon(Icons.explore_outlined, size: 32, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Instrumentos de campo', style: TextStyle(fontWeight: FontWeight.w800)),
-                      SizedBox(height: 3),
-                      Text('Brújula, presión y altitud del dispositivo'),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right),
-              ],
-            ),
-          ),
-        ),
-      );
-}
-
-class _ReadinessCard extends StatelessWidget {
-  const _ReadinessCard({required this.onOffline, required this.onContacts});
-  final VoidCallback onOffline;
-  final VoidCallback onContacts;
-
-  @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              _ReadinessRow(asset: 'assets/visuals/icons/offline.svg', label: 'Mapa offline', value: 'Preparar', onTap: onOffline),
-              const Divider(height: 24),
-              const _ReadinessRow(asset: 'assets/visuals/icons/map.svg', label: 'Ubicación', value: 'Al iniciar'),
-              const Divider(height: 24),
-              _ReadinessRow(asset: 'assets/visuals/icons/safety.svg', label: 'Contacto de confianza', value: 'Configurar', onTap: onContacts),
+              Icon(
+                icon,
+                size: 27,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 7),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
             ],
           ),
         ),
-      );
-}
-
-class _ReadinessRow extends StatelessWidget {
-  const _ReadinessRow({required this.asset, required this.label, required this.value, this.onTap});
-  final String asset;
-  final String label;
-  final String value;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            children: [
-              OutdoorAssetIcon(asset: asset, size: 32),
-              const SizedBox(width: 12),
-              Expanded(child: Text(label)),
-              Text(value, style: Theme.of(context).textTheme.labelLarge),
-            ],
-          ),
-        ),
-      );
+      ),
+    );
+  }
 }
