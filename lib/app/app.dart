@@ -22,6 +22,7 @@ import '../../core/models/route_summary.dart';
 import '../features/routes/routes_page.dart';
 import '../features/safety/safety_page.dart';
 import '../features/safety/trusted_contacts_page.dart';
+import '../features/instruments/instruments_page.dart';
 import 'theme.dart';
 
 class EspanaOutdoorApp extends StatelessWidget {
@@ -56,6 +57,7 @@ class EspanaOutdoorApp extends StatelessWidget {
         final route = state.extra is RouteResult ? state.extra as RouteResult : null;
         return _withBackNavigation(NavigationPage(route: route), fallback: '/routes');
       }),
+      GoRoute(path: '/instruments', builder: (_, __) => _withBackNavigation(const InstrumentsPage())),
       GoRoute(path: '/pets', builder: (_, __) => _withBackNavigation(const PetsPage())),
       GoRoute(path: '/wildlife', builder: (_, __) => _withBackNavigation(const WildlifePage())),
       GoRoute(path: '/natura', builder: (_, __) => _withBackNavigation(const NaturaProtectPage())),
@@ -87,10 +89,6 @@ class EspanaOutdoorApp extends StatelessWidget {
 
 /// Keeps Android/iOS back navigation inside the app when a top-level page was
 /// reached with go() and therefore has no Navigator history to pop.
-///
-/// If a real route stack exists, the normal pop is preserved. Otherwise the
-/// user is returned to the logical parent/home destination instead of closing
-/// the application. The home route itself remains the normal app root.
 class _BackNavigationScope extends StatelessWidget {
   const _BackNavigationScope({required this.child, required this.fallback});
 
