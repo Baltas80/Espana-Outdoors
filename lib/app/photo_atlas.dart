@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class OutdoorPhotoTile extends StatelessWidget {
@@ -36,7 +38,10 @@ class OutdoorPhotoTile extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        final scale = actualWidth / _tileWidth;
+        final scale = math.max(
+          actualWidth / _tileWidth,
+          actualHeight / _tileHeight,
+        );
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(borderRadius),
