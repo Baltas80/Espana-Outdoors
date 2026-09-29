@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../app/outdoor_visuals.dart';
+import '../../app/photo_atlas.dart';
 
 import 'wildlife_guidance.dart';
 
@@ -23,7 +23,7 @@ class _WildlifePageState extends State<WildlifePage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          OutdoorVisualHero(asset: 'assets/visuals/hero_wildlife.svg', title: 'Encuentros con fauna', subtitle: 'Orientación preventiva y segura.'),
+          OutdoorPhotoHero(index: 5, title: 'Fauna', subtitle: 'Guía y prevención para encuentros con especies.')
           const SizedBox(height: 18),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [OutdoorAssetIcon(asset: 'assets/visuals/icons/wildlife.svg', size: 64)]),
           const SizedBox(height: 16),
