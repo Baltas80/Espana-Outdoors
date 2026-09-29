@@ -13,6 +13,9 @@ final class AgusMapsRuntime {
   Future<void>? _initializing;
   agus.MwmStorage? _storage;
   String? _dataPath;
+  String? _worldPath;
+  String? _worldCoastsPath;
+  int? _bundledVersion;
   bool _initialized = false;
   bool _surfaceReady = false;
   Future<void>? _registrationFuture;
@@ -34,20 +37,25 @@ final class AgusMapsRuntime {
     final dataPath = await agus.extractDataFiles();
     _dataPath = dataPath;
 
+    // CoMaps scans its writable directory while the native Framework is
+    // created. Clean interrupted transfers BEFORE initWithPaths().
+    await _cleanupPartialDownloads(dataPath);
+    await _validatePersistedMaps();
+
     await agus.extractMap('assets/maps/icudt75l.dat');
-    await _ensureBundledMap(
+    _worldPath = await _ensureBundledMap(
       assetPath: 'assets/maps/World.mwm',
       expectedSize: 53029018,
       expectedSha1: '7a588f8c9d81ae26eb509b4b00ac8f790b2f5054',
     );
-    await _ensureBundledMap(
+    _worldCoastsPath = await _ensureBundledMap(
       assetPath: 'assets/maps/WorldCoasts.mwm',
       expectedSize: 8505665,
       expectedSha1: 'cfd2cce0526ca92cf03c1cc784e12d433bf590d9',
     );
 
+    _bundledVersion = await _readBundledMwmVersion(dataPath);
     agus.initWithPaths(dataPath, dataPath);
-    await _cleanupPartialDownloads(dataPath);
     _initialized = true;
   }
 
@@ -67,10 +75,29 @@ final class AgusMapsRuntime {
   }
 
   Future<void> _registerDownloadedMapsSafely() async {
-    try {
-      await registerAllMaps();
-    } catch (_) {
-      rethrow;
+    // Match the official Agus example: explicitly register the bundled base
+    // maps once the native rendering surface already exists.
+    await _registerBundledMap(_worldPath);
+    await _registerBundledMap(_worldCoastsPath);
+    await registerAllMaps();
+  }
+
+  Future<void> _registerBundledMap(String? filePath) async {
+    if (filePath == null || !await File(filePath).exists()) return;
+
+    final result = _bundledVersion == null
+        ? agus.registerSingleMap(filePath)
+        : agus.registerSingleMapWithVersion(filePath, _bundledVersion!);
+
+    debugPrint(
+      '[AgusMapsRuntime] bundled map registration result='
+      + result.toString(),
+    );
+
+    if (result != 0) {
+      debugPrint(
+        '[AgusMapsRuntime] bundled map was not registered: ' + filePath,
+      );
     }
   }
 
@@ -132,7 +159,7 @@ final class AgusMapsRuntime {
     return result;
   }
 
-  Future<void> _ensureBundledMap({
+  Future<String> _ensureBundledMap({
     required String assetPath,
     required int expectedSize,
     required String expectedSha1,
@@ -145,7 +172,7 @@ final class AgusMapsRuntime {
       expectedSize: expectedSize,
       expectedSha1: expectedSha1,
     )) {
-      return;
+      return initialPath;
     }
 
     debugPrint(
@@ -169,6 +196,8 @@ final class AgusMapsRuntime {
         'Bundled map integrity check failed for ' + assetPath,
       );
     }
+
+    return freshPath;
   }
 
   Future<bool> _matchesBundledMap(
@@ -183,6 +212,49 @@ final class AgusMapsRuntime {
 
     final digest = await sha1.bind(file.openRead()).first;
     return digest.toString().toLowerCase() == expectedSha1;
+  }
+
+  Future<int?> _readBundledMwmVersion(String dataPath) async {
+    try {
+      final file = File(dataPath + '/countries.txt');
+      if (!await file.exists()) return null;
+
+      final contents = await file.readAsString();
+      final match = RegExp(r'"v"\s*:\s*(\d+)').firstMatch(contents);
+      return match == null ? null : int.tryParse(match.group(1)!);
+    } catch (error) {
+      debugPrint(
+        '[AgusMapsRuntime] could not read bundled MWM version: ' +
+        error.toString(),
+      );
+      return null;
+    }
+  }
+
+  Future<void> _validatePersistedMaps() async {
+    final storage = _storage;
+    if (storage == null) return;
+
+    for (final metadata in List<agus.MwmMetadata>.from(storage.getAll())) {
+      if (metadata.isBundled) continue;
+
+      final file = File(metadata.filePath);
+      if (!await file.exists()) {
+        await storage.remove(metadata.regionName);
+        continue;
+      }
+
+      if (metadata.fileSize > 0 && await file.length() != metadata.fileSize) {
+        debugPrint(
+          '[AgusMapsRuntime] removing invalid persisted map: ' +
+          metadata.regionName,
+        );
+        try {
+          await file.delete();
+        } catch (_) {}
+        await storage.remove(metadata.regionName);
+      }
+    }
   }
 
   Future<void> _cleanupPartialDownloads(String dataPath) async {
