@@ -28,14 +28,10 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
 
   void _onMapReady(Position? position) {
+    // The widget already receives the initial viewport through initialLat/
+    // initialLon. Avoid issuing an immediate native camera mutation while the
+    // SurfaceTexture/CoMaps framework is settling on Android.
     unawaited(AgusMapsRuntime.instance.onMapReady());
-    if (position != null) {
-      _controller.moveToLocation(
-        position.latitude,
-        position.longitude,
-        14,
-      );
-    }
   }
 
   @override
