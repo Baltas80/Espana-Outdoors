@@ -53,15 +53,22 @@ class ValhallaRoutingService implements RoutingService {
     String endpoint,
     Map<String, Object?> body,
   ) async {
+    final uri = _baseUri.resolve(endpoint);
     final response = await _client
         .post(
-          _baseUri.resolve(endpoint),
+          uri,
           headers: const {'content-type': 'application/json'},
           body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: 20));
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('Valhalla $endpoint failed: HTTP ${response.statusCode}');
+      final detail = response.body.trim();
+      final suffix = detail.isEmpty
+          ? ''
+          : ': ${detail.length > 240 ? '${detail.substring(0, 240)}…' : detail}';
+      throw StateError(
+        'Valhalla $endpoint failed: HTTP ${response.statusCode}$suffix',
+      );
     }
     final decoded = jsonDecode(response.body);
     if (decoded is! Map<String, dynamic>) {
@@ -90,7 +97,6 @@ class ValhallaRoutingService implements RoutingService {
       final summary = item['summary'];
       if (summary is Map<String, dynamic>) {
         distanceKm += (summary['length'] as num?)?.toDouble() ?? 0;
-        // Valhalla reports summary.time in seconds, not minutes.
         durationSeconds += (summary['time'] as num?)?.toDouble() ?? 0;
       }
 
