@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/contracts/routing_service.dart';
 import '../../core/domain/outdoor_models.dart';
@@ -44,7 +45,6 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
   Widget build(BuildContext context) {
     final location = ref.watch(locationControllerProvider);
     final recording = ref.watch(routeRecorderProvider);
-
     final position = location.position;
     final accuracy = position?.accuracy;
     final guidance = widget.route == null || position == null
@@ -66,9 +66,18 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
         title: const Text('Navegación GPS'),
         actions: [
           IconButton(
+            tooltip: 'Volver sobre mis pasos',
+            onPressed: () => context.push('/navigation/backtrack'),
+            icon: const Icon(Icons.undo),
+          ),
+          IconButton(
+            tooltip: 'Puntos guardados',
+            onPressed: () => context.push('/navigation/waypoints'),
+            icon: const Icon(Icons.location_on_outlined),
+          ),
+          IconButton(
             tooltip: 'Centrar en mi posición',
-            onPressed: () =>
-                ref.read(locationControllerProvider.notifier).locate(),
+            onPressed: () => ref.read(locationControllerProvider.notifier).locate(),
             icon: const Icon(Icons.my_location),
           ),
         ],
@@ -83,29 +92,15 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      recording.isRecording
-                          ? Icons.navigation
-                          : Icons.gps_fixed,
-                      size: 32,
-                    ),
+                    Icon(recording.isRecording ? Icons.navigation : Icons.gps_fixed, size: 32),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            recording.isRecording
-                                ? 'Navegación activa'
-                                : 'GPS preparado',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
+                          Text(recording.isRecording ? 'Navegación activa' : 'GPS preparado', style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 6),
-                          Text(
-                            position == null
-                                ? 'Obtén una posición para comenzar.'
-                                : 'Posición disponible${accuracy == null ? '' : ' · precisión ±${accuracy.toStringAsFixed(0)} m'}',
-                          ),
+                          Text(position == null ? 'Obtén una posición para comenzar.' : 'Posición disponible${accuracy == null ? '' : ' · precisión ±${accuracy.toStringAsFixed(0)} m'}'),
                         ],
                       ),
                     ),
@@ -114,12 +109,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
               ),
             ),
             const SizedBox(height: 12),
-            _StatGrid(
-              distanceKm: recording.distanceMeters / 1000,
-              elapsed: elapsed,
-              altitude: position?.altitude,
-              speedKmh: position == null ? null : position.speed * 3.6,
-            ),
+            _StatGrid(distanceKm: recording.distanceMeters / 1000, elapsed: elapsed, altitude: position?.altitude, speedKmh: position == null ? null : position.speed * 3.6),
             const SizedBox(height: 12),
             Card(
               child: Padding(
@@ -127,14 +117,9 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Posición actual',
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text('Posición actual', style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 10),
-                    Text(
-                      position == null
-                          ? 'Sin posición disponible.'
-                          : '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}',
-                    ),
+                    Text(position == null ? 'Sin posición disponible.' : '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}'),
                     if (position != null) ...[
                       const SizedBox(height: 6),
                       Text('Altitud: ${position.altitude.toStringAsFixed(0)} m'),
@@ -153,12 +138,9 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ruta calculada',
-                          style: Theme.of(context).textTheme.titleMedium),
+                      Text('Ruta calculada', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
-                      Text(
-                        '${((widget.route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((widget.route!.durationSeconds ?? 0) / 60).round()} min',
-                      ),
+                      Text('${((widget.route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((widget.route!.durationSeconds ?? 0) / 60).round()} min'),
                       if (widget.route!.steps.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         for (final step in widget.route!.steps.take(3))
@@ -185,14 +167,9 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Instrucciones de ruta',
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text('Instrucciones de ruta', style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 8),
-                    Text(
-                      widget.route == null
-                          ? 'Las indicaciones giro a giro aparecerán cuando exista una ruta calculada con pasos reales. No se muestran instrucciones inventadas.'
-                          : 'La ruta usa pasos devueltos por el motor de routing configurado.',
-                    ),
+                    Text(widget.route == null ? 'Las indicaciones giro a giro aparecerán cuando exista una ruta calculada con pasos reales. No se muestran instrucciones inventadas.' : 'La ruta usa pasos devueltos por el motor de routing configurado.'),
                   ],
                 ),
               ),
@@ -209,24 +186,15 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                   }
                 } on Object catch (error) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error.toString())),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
                 }
               },
-              icon: Icon(
-                recording.isRecording ? Icons.stop : Icons.play_arrow,
-              ),
-              label: Text(
-                recording.isRecording
-                    ? 'Detener navegación'
-                    : 'Iniciar navegación GPS',
-              ),
+              icon: Icon(recording.isRecording ? Icons.stop : Icons.play_arrow),
+              label: Text(recording.isRecording ? 'Detener navegación' : 'Iniciar navegación GPS'),
             ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () =>
-                  ref.read(locationControllerProvider.notifier).locate(),
+              onPressed: () => ref.read(locationControllerProvider.notifier).locate(),
               icon: const Icon(Icons.gps_fixed),
               label: const Text('Actualizar ubicación'),
             ),
@@ -243,41 +211,27 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
 }
 
 class _StatGrid extends StatelessWidget {
-  const _StatGrid({
-    required this.distanceKm,
-    required this.elapsed,
-    required this.altitude,
-    required this.speedKmh,
-  });
-
+  const _StatGrid({required this.distanceKm, required this.elapsed, required this.altitude, required this.speedKmh});
   final double distanceKm;
   final Duration elapsed;
   final double? altitude;
   final double? speedKmh;
 
   @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 2.15,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: [
-        _Stat(label: 'Distancia', value: '${distanceKm.toStringAsFixed(2)} km'),
-        _Stat(label: 'Tiempo', value: _duration(elapsed)),
-        _Stat(
-          label: 'Altitud',
-          value: altitude == null ? '—' : '${altitude!.toStringAsFixed(0)} m',
-        ),
-        _Stat(
-          label: 'Velocidad',
-          value: speedKmh == null ? '—' : '${speedKmh!.toStringAsFixed(1)} km/h',
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => GridView.count(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 2.15,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          _Stat(label: 'Distancia', value: '${distanceKm.toStringAsFixed(2)} km'),
+          _Stat(label: 'Tiempo', value: _duration(elapsed)),
+          _Stat(label: 'Altitud', value: altitude == null ? '—' : '${altitude!.toStringAsFixed(0)} m'),
+          _Stat(label: 'Velocidad', value: speedKmh == null ? '—' : '${speedKmh!.toStringAsFixed(1)} km/h'),
+        ],
+      );
 
   String _duration(Duration duration) {
     final h = duration.inHours;
@@ -289,33 +243,29 @@ class _StatGrid extends StatelessWidget {
 
 class _Stat extends StatelessWidget {
   const _Stat({required this.label, required this.value});
-
   final String label;
   final String value;
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(label, style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 3),
-            Text(value, style: Theme.of(context).textTheme.titleMedium),
-          ],
+  Widget build(BuildContext context) => Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(label, style: Theme.of(context).textTheme.labelMedium),
+              const SizedBox(height: 3),
+              Text(value, style: Theme.of(context).textTheme.titleMedium),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _GuidanceCard extends StatelessWidget {
   const _GuidanceCard({required this.guidance});
-
   final NavigationGuidance guidance;
 
   @override
@@ -323,60 +273,21 @@ class _GuidanceCard extends StatelessWidget {
     final String title;
     final String message;
     final IconData icon;
-
     switch (guidance.status) {
       case NavigationGuidanceStatus.noRoute:
-        title = 'Sin ruta';
-        message = 'No hay una ruta válida para ofrecer guía.';
-        icon = Icons.route_outlined;
-        break;
+        title = 'Sin ruta'; message = 'No hay una ruta válida para ofrecer guía.'; icon = Icons.route_outlined; break;
       case NavigationGuidanceStatus.gpsPoor:
-        title = 'GPS con precisión insuficiente';
-        message = 'La posición actual no permite decidir con seguridad si estás fuera de ruta.';
-        icon = Icons.gps_off_outlined;
-        break;
+        title = 'GPS con precisión insuficiente'; message = 'La posición actual no permite decidir con seguridad si estás fuera de ruta.'; icon = Icons.gps_off_outlined; break;
       case NavigationGuidanceStatus.onRoute:
-        title = 'En ruta';
-        message = 'Separación de la ruta: ' +
-            guidance.distanceFromRouteMeters.toStringAsFixed(0) +
-            ' m.';
-        icon = Icons.navigation_outlined;
-        break;
+        title = 'En ruta'; message = 'Separación de la ruta: ${guidance.distanceFromRouteMeters.toStringAsFixed(0)} m.'; icon = Icons.navigation_outlined; break;
       case NavigationGuidanceStatus.approachingTurn:
-        title = 'Próximo giro';
-        message = guidance.nextStep == null
-            ? 'Se aproxima una maniobra de la ruta.'
-            : guidance.nextStep!.instruction +
-                ' · ' +
-                (guidance.distanceToNextStepMeters?.toStringAsFixed(0) ?? '—') +
-                ' m';
-        icon = Icons.turn_right_outlined;
-        break;
+        title = 'Próximo giro'; message = guidance.nextStep == null ? 'Se aproxima una maniobra de la ruta.' : '${guidance.nextStep!.instruction} · ${guidance.distanceToNextStepMeters?.toStringAsFixed(0) ?? '—'} m'; icon = Icons.turn_right_outlined; break;
       case NavigationGuidanceStatus.offRoute:
-        title = 'Fuera de ruta';
-        message = 'La posición está a ' +
-            guidance.distanceFromRouteMeters.toStringAsFixed(0) +
-            ' m de la ruta. La aplicación no inventa una nueva ruta.';
-        icon = Icons.warning_amber_rounded;
-        break;
+        title = 'Fuera de ruta'; message = 'La posición está a ${guidance.distanceFromRouteMeters.toStringAsFixed(0)} m de la ruta. La aplicación no inventa una nueva ruta.'; icon = Icons.warning_amber_rounded; break;
       case NavigationGuidanceStatus.arrived:
-        title = 'Llegada';
-        message = 'Estás dentro de la zona de llegada de la ruta.';
-        icon = Icons.flag_outlined;
-        break;
+        title = 'Llegada'; message = 'Estás dentro de la zona de llegada de la ruta.'; icon = Icons.flag_outlined; break;
     }
-
-    final color = guidance.status == NavigationGuidanceStatus.offRoute ||
-            guidance.status == NavigationGuidanceStatus.gpsPoor
-        ? Theme.of(context).colorScheme.error
-        : Theme.of(context).colorScheme.primary;
-
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, color: color),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-        subtitle: Text(message),
-      ),
-    );
+    final color = guidance.status == NavigationGuidanceStatus.offRoute || guidance.status == NavigationGuidanceStatus.gpsPoor ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary;
+    return Card(child: ListTile(leading: Icon(icon, color: color), title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(message)));
   }
 }
