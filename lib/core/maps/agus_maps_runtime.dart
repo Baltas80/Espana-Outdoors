@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:crypto/crypto.dart';
 
@@ -333,18 +334,35 @@ final class AgusMapsRuntime {
   }
 
   Future<void> _cleanupPartialDownloads(String dataPath) async {
-    final root = Directory(dataPath);
-    if (!await root.exists()) return;
+    final documents = await getApplicationDocumentsDirectory();
+    final roots = <Directory>[
+      Directory(dataPath),
+      documents,
+      Directory('\${documents.path}/agus_maps_flutter/maps'),
+    ];
 
-    await for (final entity in root.list(
-      recursive: true,
-      followLinks: false,
-    )) {
-      if (entity is File && entity.path.endsWith('.mwm.download')) {
-        try {
-          await entity.delete();
-        } catch (_) {}
+    final seen = <String>{};
+    for (final root in roots) {
+      final key = root.path;
+      if (!seen.add(key) || !await root.exists()) continue;
+
+      await for (final entity in root.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is File && entity.path.endsWith('.mwm.download')) {
+          try {
+            await entity.delete();
+            debugPrint(
+              '[AgusMapsRuntime] removed partial map: ' + entity.path,
+            );
+          } catch (error) {
+            debugPrint(
+              '[AgusMapsRuntime] could not remove partial map: '
+              + entity.path + ': ' + error.toString(),
+            );
+          }
+        }
       }
     }
-  }
-}
+  }}
