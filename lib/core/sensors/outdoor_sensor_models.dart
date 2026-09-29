@@ -72,7 +72,8 @@ double pressureToAltitudeMeters(
   if (pressureHpa <= 0 || seaLevelPressureHpa <= 0) {
     throw ArgumentError('Pressure must be greater than zero.');
   }
-  return 44330.0 *
-      (1.0 -
-          math.pow(pressureHpa / seaLevelPressureHpa, 1.0 / 5.255));
+  return (44330.0 *
+          (1.0 -
+              math.pow(pressureHpa / seaLevelPressureHpa, 1.0 / 5.255)))
+      .toDouble();
 }
