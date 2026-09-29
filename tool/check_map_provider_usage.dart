@@ -1,7 +1,6 @@
 import 'dart:io';
 
 const forbiddenTileHost = 'tile.openstreetmap.org';
-const allowedConfigPath = 'lib/features/map/map_provider_config.dart';
 
 void main() {
   final violations = <String>[];
