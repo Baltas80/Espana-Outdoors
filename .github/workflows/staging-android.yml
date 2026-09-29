@@ -12,6 +12,7 @@ on:
       - 'lib/features/map/**'
       - 'lib/core/maps/**'
       - 'tool/configure_mobile_native.py'
+      - 'tool/verify_android_release.py'
       - 'test/**'
       - 'assets/**'
       - 'tool/verify_mobile_native.py'
