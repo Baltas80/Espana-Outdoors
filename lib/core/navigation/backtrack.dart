@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:geolocator/geolocator.dart';
 
 import '../domain/outdoor_models.dart';
@@ -45,9 +43,7 @@ class BacktrackService {
       }
     }
 
-    // Move backwards through the track. If we are very close to the nearest
-    // recorded point, skip it so the arrow points toward the previous point.
-    final targetIndex = math.max(0, nearestIndex - 1);
+    final targetIndex = nearestIndex > 0 ? nearestIndex - 1 : 0;
     final target = recordedPoints[targetIndex];
     final bearing = Geolocator.bearingBetween(
       current.latitude,
