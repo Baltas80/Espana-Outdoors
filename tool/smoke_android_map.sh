@@ -21,8 +21,6 @@ adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
 echo "Waiting for normal home screen..."
 sleep 5
 
-# Dump the actual UI hierarchy and select the lowest visible node labelled
-# "Mapa". This is the bottom-navigation destination in the staging UI.
 adb shell uiautomator dump /sdcard/espana-window.xml >/dev/null 2>&1 || true
 adb exec-out cat /sdcard/espana-window.xml >"${RUNNER_TEMP:-/tmp}/espana-window.xml"
 
@@ -48,9 +46,7 @@ for node in root.iter("node"):
         continue
 
     x1, y1, x2, y2 = map(int, match.groups())
-    cx = (x1 + x2) // 2
-    cy = (y1 + y2) // 2
-    candidates.append((cy, cx))
+    candidates.append(((y1 + y2) // 2, (x1 + x2) // 2))
 
 if not candidates:
     raise SystemExit("Could not find visible Mapa navigation destination")
@@ -69,13 +65,10 @@ sleep 15
 logcat_file="${RUNNER_TEMP:-/tmp}/espana-outdoor-map-logcat.txt"
 adb logcat -d >"${logcat_file}"
 
-if ! adb shell pidof "${package_name}" >/tmp/espana-pid.txt 2>/dev/null; then
-  :
-fi
-
-if ! test -s /tmp/espana-pid.txt; then
+pid="$(adb shell pidof "${package_name}" 2>/dev/null | tr -d '\r' | tr -d '\n' || true)"
+if test -z "${pid}"; then
   echo "FAIL: application process is not alive after tapping Mapa."
-  grep -E "FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|Abort message:|backtrace:|AgusMaps|AgusMapsFlutterNative|AndroidRuntime" "${logcat_file}" | tail -n 400 || true
+  grep -Ein "FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|Abort message:|backtrace:|AgusMaps|AgusMapsFlutterNative|AndroidRuntime" "${logcat_file}" | tail -n 400 || true
   exit 1
 fi
 
