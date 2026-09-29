@@ -22,7 +22,12 @@ class ValhallaRoutingService implements RoutingService {
     }
     final response = await _post('route', {
       'locations': [
-        for (final p in request.points) {'lat': p.latitude, 'lon': p.longitude}
+        for (final p in request.points)
+        {
+          'lat': p.latitude,
+          'lon': p.longitude,
+          'type': 'break',
+        }
       ],
       'costing': _costing(request.profile),
       'units': 'kilometers',
