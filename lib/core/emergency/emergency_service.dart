@@ -45,8 +45,8 @@ class EmergencyService {
     );
   }
 
-  Future<bool> callEmergencyServices() async {
-    final uri = Uri(scheme: 'tel', path: '112');
+  Future<bool> callEmergencyServices({String number = '112'}) async {
+    final uri = Uri(scheme: 'tel', path: number);
     if (!await canLaunchUrl(uri)) return false;
     return launchUrl(uri);
   }
