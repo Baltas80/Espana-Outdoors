@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 
 final class AgusMapsRuntime {
@@ -11,6 +12,7 @@ final class AgusMapsRuntime {
   Future<void>? _initializing;
   agus.MwmStorage? _storage;
   String? _dataPath;
+  final List<String> _bundledBaseMaps = <String>[];
   bool _initialized = false;
   bool _surfaceReady = false;
 
@@ -32,6 +34,11 @@ final class AgusMapsRuntime {
     _dataPath = dataPath;
 
     await agus.extractMap('assets/maps/icudt75l.dat');
+    _bundledBaseMaps
+      ..clear()
+      ..add(await agus.extractMap('assets/maps/World.mwm'))
+      ..add(await agus.extractMap('assets/maps/WorldCoasts.mwm'));
+
     agus.initWithPaths(dataPath, dataPath);
     await _cleanupPartialDownloads(dataPath);
     _initialized = true;
@@ -40,11 +47,29 @@ final class AgusMapsRuntime {
   Future<void> onMapReady() async {
     await ensureInitialized();
     _surfaceReady = true;
-    await registerAllMaps();
+    try {
+      await registerAllMaps();
+    } on Object catch (error, stackTrace) {
+      debugPrint('[AgusMapsRuntime] map registration failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> registerAllMaps() async {
     if (_storage == null || !_surfaceReady) return;
+
+    for (final path in _bundledBaseMaps) {
+      final result = agus.registerSingleMap(path);
+      final name = File(path).uri.pathSegments.last;
+      debugPrint(
+        '[AgusMapsRuntime] bundled map registration: $name result=$result',
+      );
+      if (result != 0) {
+        throw StateError(
+          'Failed to register bundled map $name (result $result).',
+        );
+      }
+    }
 
     for (final metadata in _storage!.getAll()) {
       if (metadata.isBundled) continue;
@@ -56,13 +81,22 @@ final class AgusMapsRuntime {
       }
 
       final version = int.tryParse(metadata.snapshotVersion);
-      if (version != null) {
-        agus.registerSingleMapWithVersion(metadata.filePath, version);
-      } else {
-        agus.registerSingleMap(metadata.filePath);
+      final result = version != null
+          ? agus.registerSingleMapWithVersion(metadata.filePath, version)
+          : agus.registerSingleMap(metadata.filePath);
+      debugPrint(
+        '[AgusMapsRuntime] downloaded map registration: '
+        '${metadata.regionName} result=$result',
+      );
+      if (result != 0) {
+        throw StateError(
+          'Failed to register downloaded map ${metadata.regionName} '
+          '(result $result).',
+        );
       }
     }
 
+    agus.debugListMwms();
     agus.invalidateMap();
     agus.forceRedraw();
   }
@@ -76,6 +110,13 @@ final class AgusMapsRuntime {
     if (!_surfaceReady) return -1;
 
     final result = agus.registerSingleMapWithVersion(filePath, version);
+    if (result != 0) {
+      throw StateError(
+        'Failed to register downloaded map ${File(filePath).uri.pathSegments.last} '
+        '(result $result).',
+      );
+    }
+    agus.debugListMwms();
     agus.invalidateMap();
     agus.forceRedraw();
 
