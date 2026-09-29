@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/location/location_controller.dart';
@@ -100,7 +99,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                   initialLon: _initialLon,
                   initialZoom: _initialZoom,
                   onMapReady: _onMapReady,
-                  userScale: 1.0,
+                  userScale: 1,
                   isVisible: true,
                 );
               },
