@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../app/outdoor_visuals.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/photo_atlas.dart';
 import '../../core/auth/oidc_config.dart';
 import '../../infrastructure/auth/openidconnect_auth_service.dart';
 
@@ -78,87 +78,186 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final signedIn = _signedIn == true;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
+      appBar: AppBar(
+        title: const Text('Perfil'),
+        actions: [
+          IconButton(
+            tooltip: 'Configuración',
+            onPressed: () {},
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ],
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          OutdoorVisualHero(asset: 'assets/visuals/hero_profile.svg', title: 'Perfil', subtitle: 'Privacidad, identidad y preparación de tu aventura.'),
-          const SizedBox(height: 18),
           Card(
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-              title: Text(signedIn ? 'Cuenta conectada' : 'Aventura'),
-              subtitle: Text(
-                signedIn
-                    ? 'Identidad protegida mediante OpenID Connect.'
-                    : 'Perfil local · identidad opcional',
-              ),
-              trailing: IconButton(
-                tooltip: signedIn ? 'Cerrar sesión' : 'Iniciar sesión',
-                onPressed: _busy ? null : (signedIn ? _signOut : _signIn),
-                icon: Icon(signedIn ? Icons.logout : Icons.login),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const ClipOval(
+                        child: OutdoorPhotoTile(
+                          index: 0,
+                          width: 78,
+                          height: 78,
+                          borderRadius: 0,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              signedIn ? 'Aventurero' : 'Aventurero',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                            const SizedBox(height: 3),
+                            const Text('Usuario'),
+                            const SizedBox(height: 8),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                child: Text(
+                                  'Explorador',
+                                  style: TextStyle(fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: signedIn ? 'Cerrar sesión' : 'Iniciar sesión',
+                        onPressed: _busy ? null : (signedIn ? _signOut : _signIn),
+                        icon: Icon(signedIn ? Icons.logout : Icons.login),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  const Row(
+                    children: [
+                      Expanded(child: _Stat(value: '24', label: 'Rutas')),
+                      Expanded(child: _Stat(value: '6', label: 'Parques')),
+                      Expanded(child: _Stat(value: '12', label: 'Favoritos')),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
           const SizedBox(height: 12),
+          _ProfileItem(
+            icon: Icons.favorite_border,
+            title: 'Rutas guardadas',
+            onTap: () => context.go('/routes'),
+          ),
+          _ProfileItem(
+            icon: Icons.download_for_offline_outlined,
+            title: 'Mapas offline',
+            onTap: () => context.go('/offline'),
+          ),
+          _ProfileItem(
+            icon: Icons.photo_library_outlined,
+            title: 'Mis fotos',
+          ),
+          _ProfileItem(
+            icon: Icons.place_outlined,
+            title: 'Puntos de interés',
+            onTap: () => context.go('/explore'),
+          ),
+          _ProfileItem(
+            icon: Icons.history,
+            title: 'Historial',
+          ),
+          _ProfileItem(
+            icon: Icons.emoji_events_outlined,
+            title: 'Logros',
+          ),
+          const SizedBox(height: 16),
           Card(
             child: ListTile(
               onTap: () => context.go('/plans'),
-              leading: const OutdoorAssetIcon(asset: 'assets/visuals/icons/plans.svg', size: 38),
-              title: const Text('Free · Premium · Professional', style: TextStyle(fontWeight: FontWeight.w800)),
-              subtitle: const Text('Consulta las capacidades de cada plan.'),
+              leading: const Icon(Icons.workspace_premium_outlined),
+              title: const Text(
+                'Free · Premium · Professional',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text('Capacidades y funciones del servicio.'),
               trailing: const Icon(Icons.chevron_right),
             ),
           ),
-          const SizedBox(height: 16),
-          const _Section(title: 'Privacidad', items: [
-            _Item(asset: 'assets/visuals/icons/location.svg', title: 'Permisos de ubicación', subtitle: 'Controla cuándo puede acceder la app.'),
-            _Item(asset: 'assets/visuals/icons/privacy.svg', title: 'Datos y seguridad', subtitle: 'Minimización, almacenamiento y eliminación.'),
-            _Item(asset: 'assets/visuals/icons/export.svg', title: 'Exportar mis datos', subtitle: 'Preparado para portabilidad.'),
-          ]),
-          const SizedBox(height: 16),
-          _Section(title: 'Aventura', items: [
-            _Item(asset: 'assets/visuals/icons/pets.svg', title: 'Mis mascotas', subtitle: 'Preferencias para rutas y riesgos.', onTap: () => context.go('/pets')),
-            _Item(asset: 'assets/visuals/icons/offline.svg', title: 'Contenido offline', subtitle: 'Gestiona mapas y datos descargados.', onTap: () => context.go('/offline')),
-            _Item(asset: 'assets/visuals/icons/natura.svg', title: 'NATURA PROTECT', subtitle: 'Conservación y navegación responsable.', onTap: () => context.go('/natura')),
-          ]),
         ],
       ),
     );
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.items});
-  final String title;
-  final List<Widget> items;
+class _Stat extends StatelessWidget {
+  const _Stat({required this.value, required this.label});
+
+  final String value;
+  final String label;
 
   @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 10),
-          Card(child: Column(children: [for (var i = 0; i < items.length; i++) ...[items[i], if (i != items.length - 1) const Divider(height: 1, indent: 72)]])),
-        ],
-      );
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 3),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
 }
 
-class _Item extends StatelessWidget {
-  const _Item({required this.asset, required this.title, required this.subtitle, this.onTap});
-  final String asset;
+class _ProfileItem extends StatelessWidget {
+  const _ProfileItem({
+    required this.icon,
+    required this.title,
+    this.onTap,
+  });
+
+  final IconData icon;
   final String title;
-  final String subtitle;
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => ListTile(
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 1),
+      child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-        leading: OutdoorAssetIcon(asset: asset, size: 34),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(subtitle),
+        leading: Icon(icon),
+        title: Text(title),
         trailing: const Icon(Icons.chevron_right),
-      );
+      ),
+    );
+  }
 }
