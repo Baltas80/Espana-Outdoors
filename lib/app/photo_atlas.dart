@@ -26,37 +26,47 @@ class OutdoorPhotoTile extends StatelessWidget {
     final safeIndex = index.clamp(0, 11);
     final column = safeIndex % _columns;
     final row = safeIndex ~/ _columns;
-    final scale = width / _tileWidth;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: ClipRect(
-          child: Transform.scale(
-            alignment: Alignment.topLeft,
-            scale: scale,
-            child: Transform.translate(
-              offset: Offset(
-                -column * _tileWidth,
-                -row * _tileHeight,
-              ),
-              child: SizedBox(
-                width: _atlasWidth,
-                height: _atlasHeight,
-                child: Image.asset(
-                  _asset,
-                  width: _atlasWidth,
-                  height: _atlasHeight,
-                  fit: BoxFit.fill,
-                  filterQuality: FilterQuality.medium,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final actualWidth = width.isFinite ? width : constraints.maxWidth;
+        final actualHeight = height.isFinite ? height : constraints.maxHeight;
+
+        if (!actualWidth.isFinite || !actualHeight.isFinite) {
+          return const SizedBox.shrink();
+        }
+
+        final scale = actualWidth / _tileWidth;
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: SizedBox(
+            width: actualWidth,
+            height: actualHeight,
+            child: ClipRect(
+              child: Transform.scale(
+                alignment: Alignment.topLeft,
+                scale: scale,
+                child: Transform.translate(
+                  offset: Offset(
+                    -column * _tileWidth,
+                    -row * _tileHeight,
+                  ),
+                  child: SizedBox(
+                    width: _atlasWidth,
+                    height: _atlasHeight,
+                    child: Image.asset(
+                      _asset,
+                      width: _atlasWidth,
+                      height: _atlasHeight,
+                      fit: BoxFit.fill,
+                      filterQuality: FilterQuality.medium,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
         );
       },
     );
@@ -100,7 +110,10 @@ class OutdoorPhotoHero extends StatelessWidget {
                   stops: const [0.3, 1],
                   colors: [
                     Colors.transparent,
-                    Theme.of(context).colorScheme.scrim.withValues(alpha: 0.88),
+                    Theme.of(context)
+                        .colorScheme
+                        .scrim
+                        .withValues(alpha: 0.88),
                   ],
                 ),
               ),
@@ -183,7 +196,10 @@ class OutdoorImageCard extends StatelessWidget {
                   stops: const [0.25, 1],
                   colors: [
                     Colors.transparent,
-                    Theme.of(context).colorScheme.scrim.withValues(alpha: 0.9),
+                    Theme.of(context)
+                        .colorScheme
+                        .scrim
+                        .withValues(alpha: 0.9),
                   ],
                 ),
               ),
@@ -233,16 +249,16 @@ class OutdoorImageCard extends StatelessWidget {
       ),
     );
 
-    return onTap == null
-        ? card
-        : Semantics(
-            button: true,
-            label: title,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20),
-              onTap: onTap,
-              child: card,
-            ),
-          );
+    if (onTap == null) return card;
+
+    return Semantics(
+      button: true,
+      label: title,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: card,
+      ),
+    );
   }
 }
