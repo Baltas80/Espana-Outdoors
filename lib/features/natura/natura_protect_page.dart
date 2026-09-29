@@ -35,7 +35,7 @@ class NaturaProtectPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          OutdoorPhotoHero(index: 6, title: 'NATURA 2000', subtitle: 'Espacios protegidos y navegación responsable.')
+          OutdoorPhotoHero(index: 6, title: 'NATURA 2000', subtitle: 'Espacios protegidos y navegación responsable.'),
           const SizedBox(height: 18),
           Card(
             color: theme.colorScheme.primaryContainer,
