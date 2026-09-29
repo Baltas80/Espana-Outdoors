@@ -2,6 +2,15 @@ name: Android staging
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - 'lib/features/routes/**'
+      - 'lib/infrastructure/routing/**'
+      - 'lib/core/routing/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/staging-android.yml'
 
 permissions:
   contents: read
