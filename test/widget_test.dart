@@ -10,10 +10,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.bySemanticsLabel('España Outdoor'), findsOneWidget);
-    expect(find.text('ESPAÑA OUTDOOR'), findsOneWidget);
+    expect(find.text('ESPAÑA OUTDOOR'), findsNWidgets(2));
     expect(find.text('Buscar lugares, rutas, pueblos…'), findsOneWidget);
     expect(find.text('Rutas'), findsOneWidget);
-    expect(find.text('Mapa'), findsOneWidget);
+    expect(find.byIcon(Icons.map_outlined), findsOneWidget);
     expect(find.text('Offline'), findsOneWidget);
   });
 }
