@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
-
 import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/services.dart';
 
@@ -30,7 +28,6 @@ final class AgusMapsRuntime {
     await _copyAssetToDataPath('assets/maps/icudt75l.dat', dataPath);
 
     agus.initWithPaths(dataPath, dataPath);
-    agus.setLocale(ui.PlatformDispatcher.instance.locale.toLanguageTag());
 
     await _cleanupPartialDownloads(dataPath);
   }
