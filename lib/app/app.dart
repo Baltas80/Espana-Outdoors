@@ -4,6 +4,7 @@ import '../core/contracts/routing_service.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/alerts/alerts_page.dart';
+import '../features/astronomy/astronomy_page.dart';
 import '../features/explore/explore_page.dart';
 import '../features/home/home_page.dart';
 import '../features/map/map_page.dart';
@@ -62,6 +63,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       GoRoute(path: '/navigation/backtrack', builder: (_, __) => _withBackNavigation(const BacktrackPage(), fallback: '/navigation')),
       GoRoute(path: '/navigation/waypoints', builder: (_, __) => _withBackNavigation(const WaypointsPage(), fallback: '/navigation')),
       GoRoute(path: '/instruments', builder: (_, __) => _withBackNavigation(const InstrumentsPage())),
+      GoRoute(path: '/astronomy', builder: (_, __) => _withBackNavigation(const AstronomyPage(), fallback: '/instruments')),
       GoRoute(path: '/pets', builder: (_, __) => _withBackNavigation(const PetsPage())),
       GoRoute(path: '/wildlife', builder: (_, __) => _withBackNavigation(const WildlifePage())),
       GoRoute(path: '/natura', builder: (_, __) => _withBackNavigation(const NaturaProtectPage())),
