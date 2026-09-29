@@ -34,7 +34,7 @@ final class AgusMapsRuntime {
       await _storage!.pruneOrphaned();
     }
 
-    final dataPath = await agus.extractDataFiles();
+    final dataPath = await _extractComapsDataSafely();
     _dataPath = dataPath;
 
     // CoMaps scans its writable directory while the native Framework is
@@ -212,6 +212,81 @@ final class AgusMapsRuntime {
 
     final digest = await sha1.bind(file.openRead()).first;
     return digest.toString().toLowerCase() == expectedSha1;
+  }
+
+  Future<String> _extractComapsDataSafely() async {
+    var dataPath = await agus.extractDataFiles();
+
+    if (await _comapsDataComplete(dataPath)) {
+      return dataPath;
+    }
+
+    // Agus Maps 0.1.17 only checks a small marker set before reusing the
+    // extraction cache. Delete that marker when critical symbol/localization
+    // resources are missing so the complete asset tree is extracted again.
+    final marker = File(dataPath + '/.comaps_data_extracted');
+    try {
+      if (await marker.exists()) {
+        await marker.delete();
+      }
+    } catch (error) {
+      debugPrint(
+        '[AgusMapsRuntime] could not reset CoMaps data marker: '
+        + error.toString(),
+      );
+    }
+
+    dataPath = await agus.extractDataFiles();
+
+    if (!await _comapsDataComplete(dataPath)) {
+      throw StateError(
+        'CoMaps data assets are incomplete after re-extraction.',
+      );
+    }
+
+    return dataPath;
+  }
+
+  Future<bool> _comapsDataComplete(String dataPath) async {
+    final required = <String>[
+      'fonts/unicode_blocks.txt',
+      'localized_types/en.lproj/LocalizableTypes.strings',
+      'categories_brands.txt',
+      'sound-strings/en.json/localize.json',
+    ];
+
+    for (final relative in required) {
+      if (!await File(dataPath + '/' + relative).exists()) {
+        return false;
+      }
+    }
+
+    final symbols = <({String path, int minBytes})>[
+      (
+        path: 'symbols/xxhdpi/light/symbols.png',
+        minBytes: 100000,
+      ),
+      (
+        path: 'symbols/xxhdpi/light/symbols.sdf',
+        minBytes: 1000,
+      ),
+      (
+        path: 'symbols/xxhdpi/dark/symbols.png',
+        minBytes: 100000,
+      ),
+      (
+        path: 'symbols/xxhdpi/dark/symbols.sdf',
+        minBytes: 1000,
+      ),
+    ];
+
+    for (final item in symbols) {
+      final file = File(dataPath + '/' + item.path);
+      if (!await file.exists()) return false;
+      if (await file.length() < item.minBytes) return false;
+    }
+
+    return true;
   }
 
   Future<int?> _readBundledMwmVersion(String dataPath) async {
