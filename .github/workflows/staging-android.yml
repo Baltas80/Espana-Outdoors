@@ -6,7 +6,7 @@ on:
     branches:
       - master
     paths:
-      - 'lib/features/routes/**'
+      - 'lib/**'
       - 'lib/infrastructure/routing/**'
       - 'lib/core/routing/**'
       - 'lib/features/map/**'
