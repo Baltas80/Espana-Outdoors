@@ -338,7 +338,7 @@ final class AgusMapsRuntime {
     final roots = <Directory>[
       Directory(dataPath),
       documents,
-      Directory('\${documents.path}/agus_maps_flutter/maps'),
+      Directory(documents.path + '/agus_maps_flutter/maps'),
     ];
 
     final seen = <String>{};
@@ -365,4 +365,5 @@ final class AgusMapsRuntime {
         }
       }
     }
-  }}
+  }
+}
