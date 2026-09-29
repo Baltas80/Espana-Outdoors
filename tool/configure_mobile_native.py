@@ -19,6 +19,7 @@ def patch_android() -> None:
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.INTERNET",
     ]
 
     marker_end = text.find(">")
@@ -33,7 +34,26 @@ def patch_android() -> None:
 
     if insertion:
         text = text[: marker_end + 1] + "\n" + "\n".join(insertion) + text[marker_end + 1 :]
-        manifest.write_text(text, encoding="utf-8")
+
+    if "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity" not in text:
+        callback = """    <activity
+        android:name="io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity"
+        android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data
+          android:scheme="com.espanaoutdoors"
+          android:host="oauth2redirect" />
+      </intent-filter>
+    </activity>"""
+        application_end = text.rfind("</application>")
+        if application_end < 0:
+            raise SystemExit("Android manifest has no </application> element.")
+        text = text[:application_end] + callback + "\n" + text[application_end:]
+
+    manifest.write_text(text, encoding="utf-8")
 
     gradle_candidates = [
         ROOT / "android" / "app" / "build.gradle.kts",
