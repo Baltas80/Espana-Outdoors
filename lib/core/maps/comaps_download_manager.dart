@@ -165,14 +165,18 @@ final class CoMapsDownloadManager {
     );
 
     if (region.sizeBytes > 0 && received != region.sizeBytes) {
-      await tempFile.delete().catchError((_) {});
+      try {
+        await tempFile.delete();
+      } catch (_) {}
       throw StateError('Tamaño inesperado para ' + region.displayName + '.');
     }
 
     if (region.sha1Base64 != null) {
       final actual = await _sha1Base64(tempFile);
       if (actual != region.sha1Base64) {
-        await tempFile.delete().catchError((_) {});
+        try {
+          await tempFile.delete();
+        } catch (_) {}
         throw StateError(
           'La verificación SHA-1 de ' + region.displayName + ' ha fallado.',
         );
