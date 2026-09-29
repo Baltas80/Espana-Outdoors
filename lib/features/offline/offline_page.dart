@@ -179,7 +179,7 @@ class _OfflinePageState extends State<OfflinePage> {
                           child: Text(
                             installedMaps == 0
                                 ? 'Aún no hay regiones MWM de España instaladas en el dispositivo.'
-                                : '\$installedMaps regiones MWM instaladas.',
+                                : '$installedMaps regiones MWM instaladas.',
                           ),
                         ),
                       ],
