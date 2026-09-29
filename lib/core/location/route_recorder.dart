@@ -7,8 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import '../domain/outdoor_models.dart';
 import '../storage/route_recording_store.dart';
 
-final routeRecorderProvider =
-    NotifierProvider<RouteRecorder, RouteRecordingState>(RouteRecorder.new);
+final routeRecorderProvider = NotifierProvider<RouteRecorder, RouteRecordingState>(RouteRecorder.new);
 
 class RouteRecordingState {
   const RouteRecordingState({
@@ -40,8 +39,7 @@ class RouteRecordingState {
       points: points ?? this.points,
       distanceMeters: distanceMeters ?? this.distanceMeters,
       startedAt: startedAt ?? this.startedAt,
-      hasRecoverableSession:
-          hasRecoverableSession ?? this.hasRecoverableSession,
+      hasRecoverableSession: hasRecoverableSession ?? this.hasRecoverableSession,
       persistenceHealthy: persistenceHealthy ?? this.persistenceHealthy,
     );
   }
@@ -58,9 +56,7 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
     ref.onDispose(() {
       _disposed = true;
       final subscription = _subscription;
-      if (subscription != null) {
-        unawaited(subscription.cancel());
-      }
+      if (subscription != null) unawaited(subscription.cancel());
     });
     unawaited(_restore());
     return const RouteRecordingState();
@@ -110,10 +106,7 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
     _subscription = null;
     await _persistTail;
     await _store.finish();
-    state = state.copyWith(
-      isRecording: false,
-      hasRecoverableSession: false,
-    );
+    state = state.copyWith(isRecording: false, hasRecoverableSession: false);
   }
 
   Future<void> _ensureLocationPermission() async {
@@ -124,17 +117,14 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
       throw StateError('No hay permiso de ubicación para grabar la ruta.');
     }
   }
 
   void _listenForPositions() {
     _subscription?.cancel();
-    _subscription = Geolocator.getPositionStream(
-      locationSettings: _locationSettings(),
-    ).listen(_onPosition);
+    _subscription = Geolocator.getPositionStream(locationSettings: _locationSettings()).listen(_onPosition);
   }
 
   LocationSettings _locationSettings() {
@@ -142,12 +132,13 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
       return AndroidSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 5,
-        intervalDuration: Duration(seconds: 5),
-        foregroundNotificationConfig: ForegroundNotificationConfig(
+        intervalDuration: const Duration(seconds: 5),
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'España Outdoor',
           notificationText: 'Grabando tu ruta en segundo plano.',
           notificationChannelName: 'Seguimiento GPS',
           enableWakeLock: true,
+          setOngoing: true,
         ),
       );
     }
@@ -161,27 +152,20 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
         showBackgroundLocationIndicator: true,
       );
     }
-    return const LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 5,
-    );
+    return const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5);
   }
 
   void _onPosition(Position position) {
-    final point = GeoPoint(
-      latitude: position.latitude,
-      longitude: position.longitude,
-    );
+    final point = GeoPoint(latitude: position.latitude, longitude: position.longitude);
     final previous = state.points.isEmpty ? null : state.points.last;
     final nextDistance = previous == null
         ? state.distanceMeters
-        : state.distanceMeters +
-            Geolocator.distanceBetween(
-              previous.latitude,
-              previous.longitude,
-              point.latitude,
-              point.longitude,
-            );
+        : state.distanceMeters + Geolocator.distanceBetween(
+            previous.latitude,
+            previous.longitude,
+            point.latitude,
+            point.longitude,
+          );
     state = state.copyWith(
       points: <GeoPoint>[...state.points, point],
       distanceMeters: nextDistance,
@@ -189,14 +173,9 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
     );
     _persistTail = _persistTail.then<void>((_) async {
       try {
-        await _store.append(
-          point: point,
-          distanceMeters: nextDistance,
-        );
+        await _store.append(point: point, distanceMeters: nextDistance);
       } on Object {
-        if (!_disposed) {
-          state = state.copyWith(persistenceHealthy: false);
-        }
+        if (!_disposed) state = state.copyWith(persistenceHealthy: false);
       }
     });
   }
