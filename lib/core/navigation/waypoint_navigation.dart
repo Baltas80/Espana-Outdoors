@@ -9,22 +9,40 @@ class WaypointNavigationSnapshot {
     required this.distanceMeters,
     required this.bearingDegrees,
     required this.relativeBearingDegrees,
+    required this.positionAccuracyMeters,
+    required this.isUsable,
+    this.reason,
   });
 
   final double distanceMeters;
   final double bearingDegrees;
   final double relativeBearingDegrees;
+  final double positionAccuracyMeters;
+  final bool isUsable;
+  final String? reason;
 
-  bool get arrived => distanceMeters <= 20;
+  bool get arrived => isUsable && distanceMeters <= 20;
 }
 
-/// Calculates a direct bearing/distance to a saved waypoint.
-/// It intentionally does not replace the routing engine: it is useful when
-/// following a waypoint off-road or with no route network available.
+/// Calculates direct bearing/distance to a saved waypoint.
+///
+/// It intentionally does not replace the routing engine. It is useful for
+/// off-road navigation and remains available without a route network.
+/// Poor or stale GPS fixes are rejected instead of presenting false precision.
 WaypointNavigationSnapshot calculateWaypointNavigation({
   required Position position,
   required OutdoorWaypoint waypoint,
+  double maximumAccuracyMeters = 100,
+  Duration maximumAge = const Duration(seconds: 30),
+  DateTime? now,
 }) {
+  final currentTime = now ?? DateTime.now();
+  final age = currentTime.difference(position.timestamp).abs();
+  final accuracy = position.accuracy;
+  final accurateEnough = accuracy.isFinite && accuracy >= 0 && accuracy <= maximumAccuracyMeters;
+  final freshEnough = age <= maximumAge;
+  final usable = accurateEnough && freshEnough;
+
   final distance = Geolocator.distanceBetween(
     position.latitude,
     position.longitude,
@@ -48,6 +66,11 @@ WaypointNavigationSnapshot calculateWaypointNavigation({
     distanceMeters: distance,
     bearingDegrees: bearing,
     relativeBearingDegrees: relative,
+    positionAccuracyMeters: accuracy,
+    isUsable: usable,
+    reason: usable
+        ? null
+        : (!accurateEnough ? 'Precisión GPS insuficiente.' : 'Lectura GPS antigua.'),
   );
 }
 
