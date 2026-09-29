@@ -53,7 +53,8 @@ La arquitectura conserva interfaces abstractas para permitir en el futuro integr
 - Flutter / Dart.
 - Riverpod para estado.
 - go_router para navegación.
-- MapLibre/PMTiles como renderizado/vector/offline cartográfico prioritario.
+- Agus Maps / CoMaps como renderer vectorial offline Android, con MWM para la cartografía ejecutada por el motor nativo.
+- PMTiles se mantiene como distribución/validación cartográfica independiente; no se presenta como renderer del stack Agus Maps.
 - geolocator para ubicación.
 - connectivity_plus para estado de conectividad.
 - shared_preferences para preferencias no críticas.
@@ -100,7 +101,7 @@ El catálogo se inyecta mediante configuración de entorno:
 flutter run --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL"
 ```
 
-El endpoint debe devolver un array JSON con `id`, `name`, `description`, `providerId`, `licenseUrl`, `attribution`, `downloadUrl`, `sizeBytes`, `updatedAt` y `sha256`. Todos los paquetes deben declarar una licencia HTTPS, atribución y SHA-256 válidos; no se deben publicar URLs ni paquetes ficticios.
+El cliente acepta tanto el formato histórico de array JSON como el formato de entrada publicado actualmente para España, una entrada JSON única con su metadata. Todos los paquetes deben declarar una licencia HTTPS, atribución y SHA-256 válidos; no se deben publicar URLs ni paquetes ficticios. Todos los paquetes deben declarar una licencia HTTPS, atribución y SHA-256 válidos; no se deben publicar URLs ni paquetes ficticios.
 
 ## Identidad OIDC / Keycloak
 
