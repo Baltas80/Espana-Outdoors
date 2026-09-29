@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../app/outdoor_visuals.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/photo_atlas.dart';
 import '../../core/gpx/gpx_import_service.dart';
 import '../../core/storage/local_route_store.dart';
 
@@ -18,6 +18,7 @@ class _RoutesPageState extends State<RoutesPage> {
 
   ImportedTrack? _imported;
   String? _error;
+  String _filter = 'Todas';
 
   @override
   void initState() {
@@ -30,10 +31,8 @@ class _RoutesPageState extends State<RoutesPage> {
     try {
       final imported = await _gpx.pickAndImport();
       if (!mounted || imported == null) return;
-
       await _store.saveImportedTrack(imported);
       if (!mounted) return;
-
       setState(() => _imported = imported);
     } on Object catch (error) {
       if (!mounted) return;
@@ -48,6 +47,11 @@ class _RoutesPageState extends State<RoutesPage> {
         title: const Text('Rutas'),
         actions: [
           IconButton(
+            tooltip: 'Filtrar',
+            onPressed: () {},
+            icon: const Icon(Icons.tune),
+          ),
+          IconButton(
             tooltip: 'Importar GPX',
             onPressed: _importGpx,
             icon: const Icon(Icons.file_upload_outlined),
@@ -55,22 +59,54 @@ class _RoutesPageState extends State<RoutesPage> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [
-          OutdoorVisualHero(asset: 'assets/visuals/hero_routes.svg', title: 'Planifica tu próxima salida', subtitle: 'Rutas con contexto y preparación offline.'),
+          const _SearchField(),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final item in const ['Todas', 'Senderismo', 'MTB', 'Cicloturismo'])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(item),
+                      selected: _filter == item,
+                      onSelected: (_) => setState(() => _filter = item),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          OutdoorImageCard(
+            index: 1,
+            height: 205,
+            title: 'Lagos de Covadonga',
+            subtitle: 'Picos de Europa · Asturias',
+            meta: 'MODERADA · 12,4 km · ↑ 650 m · 4–5 h',
+            onTap: () => context.push('/routes/planner'),
+          ),
+          const SizedBox(height: 12),
+          OutdoorImageCard(
+            index: 2,
+            height: 205,
+            title: 'Peñalara por la Cuerda Larga',
+            subtitle: 'Sierra de Guadarrama · Madrid',
+            meta: 'DIFÍCIL · 18,7 km · ↑ 1.320 m · 7–8 h',
+            onTap: () => context.push('/routes/planner'),
+          ),
+          const SizedBox(height: 12),
+          OutdoorImageCard(
+            index: 3,
+            height: 205,
+            title: 'Ruta de los Acantilados',
+            subtitle: 'Costa da Morte · Galicia',
+            meta: 'FÁCIL · 8,3 km · ↑ 210 m · 2–3 h',
+            onTap: () => context.push('/routes/planner'),
+          ),
           const SizedBox(height: 18),
-          Text(
-            'Planifica tu próxima salida',
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Rutas con contexto: distancia, desnivel, mascotas, agua y preparación offline.',
-          ),
-          const SizedBox(height: 20),
           if (_error != null)
             Card(
               color: Theme.of(context).colorScheme.errorContainer,
@@ -97,8 +133,22 @@ class _RoutesPageState extends State<RoutesPage> {
             icon: const Icon(Icons.upload_file_outlined),
             label: const Text('Importar GPX'),
           ),
-          const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  const _SearchField();
+
+  @override
+  Widget build(BuildContext context) {
+    return const TextField(
+      textInputAction: TextInputAction.search,
+      decoration: InputDecoration(
+        prefixIcon: Icon(Icons.search),
+        hintText: 'Buscar rutas, refugios…',
       ),
     );
   }
@@ -129,10 +179,7 @@ class _ImportedTrackCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              track.name,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text(track.name, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             FilledButton.tonalIcon(
               onPressed: onOpen,
@@ -156,4 +203,3 @@ class _ImportedTrackCard extends StatelessWidget {
     );
   }
 }
-
