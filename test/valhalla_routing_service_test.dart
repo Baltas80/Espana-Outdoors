@@ -67,4 +67,34 @@ void main() {
     expect(result.steps.single.instruction, 'Gira a la derecha');
     expect(result.steps.single.distanceMeters, 500);
   });
+  test('Valhalla route decodes polyline6 shapes', () async {
+    final client = _FakeClient({
+      'trip': {
+        'legs': [
+          {
+            'summary': {'length': 1.0, 'time': 60},
+            'maneuvers': [],
+            // Polyline6 for: (40.410000,-3.700000) -> (40.420000,-3.690000).
+            'shape': '?????A????F??R??R',
+          },
+        ],
+      },
+    });
+
+    final service = ValhallaRoutingService(
+      baseUri: Uri.parse('https://routing.example.com/'),
+      client: client,
+    );
+    final result = await service.route(
+      const RouteRequest(
+        points: [LatLng(40.41, -3.70), LatLng(40.42, -3.69)],
+      ),
+    );
+
+    expect(result.points, hasLength(2));
+    expect(result.points.first.latitude, closeTo(40.41, 0.000001));
+    expect(result.points.first.longitude, closeTo(-3.70, 0.000001));
+    expect(result.points.last.latitude, closeTo(40.42, 0.000001));
+    expect(result.points.last.longitude, closeTo(-3.69, 0.000001));
+  });
 }
