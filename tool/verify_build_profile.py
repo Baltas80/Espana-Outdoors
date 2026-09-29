@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validate CI and production build configuration profiles.
+"""Validate CI and Android production build configuration profiles.
 
-The normal CI pipeline must build only a non-production artifact.
-The release-candidate workflow must fail closed unless every required
-production endpoint is present, HTTPS-only, and clearly non-placeholder.
+Android uses Agus Maps/CoMaps MWM files. PMTiles is deliberately excluded from
+this mobile build profile; any legacy web PMTiles deployment is outside the
+Android runtime path.
 """
 
 from __future__ import annotations
@@ -13,8 +13,7 @@ import os
 import sys
 from urllib.parse import urlparse
 
-PRODUCTION_ENDPOINTS = (
-    "MAP_PMTILES_URL",
+ANDROID_ENDPOINTS = (
     "VALHALLA_BASE_URL",
     "SOURCE_GATEWAY_BASE_URL",
     "OFFLINE_CATALOG_URL",
@@ -29,8 +28,6 @@ PLACEHOLDER_HOSTS = {
     "127.0.0.1",
     "::1",
 }
-
-PRODUCTION_VARS = PRODUCTION_ENDPOINTS
 
 
 def _fail(message: str) -> "NoReturn":
@@ -55,67 +52,71 @@ def _validate_https(name: str, raw: str) -> None:
         _fail(f"{name} must not embed credentials in the URL.")
 
 
+def _check_endpoint_set(profile: str) -> None:
+    for name in ANDROID_ENDPOINTS:
+        value = os.environ.get(name, "").strip()
+        if not value:
+            _fail(f"Missing required {profile} endpoint: {name}.")
+        _validate_https(name, value)
+
+
 def check_ci() -> None:
     app_env = os.environ.get("APP_ENV", "")
     if app_env != "ci":
-        _fail(f"CI profile requires APP_ENV=ci, got {app_env!r}.")
+        _fail(f"CI profile requires APP_ENV=ci, got {app_env!r}")
 
-    for name in PRODUCTION_VARS:
-        value = os.environ.get(name, "")
-        if value:
+    for name in ANDROID_ENDPOINTS:
+        if os.environ.get(name, "").strip():
             _fail(
                 f"CI profile must not receive production variable {name}. "
-                "Use the production release-candidate workflow instead."
+                "Use the Android staging/release workflow instead."
             )
 
+    if os.environ.get("MAP_PMTILES_URL", "").strip():
+        _fail("Android CI must not receive legacy MAP_PMTILES_URL.")
+
     print("profile=ci")
-    print("production_endpoints=absent")
+    print("android_production_endpoints=absent")
 
 
 def check_staging() -> None:
-    app_env = os.environ.get("APP_ENV", "")
-    if app_env != "staging":
+    if os.environ.get("APP_ENV", "") != "staging":
         _fail(
             "Staging profile requires APP_ENV=staging, "
-            f"got {app_env!r}."
+            f"got {os.environ.get('APP_ENV', '')!r}."
         )
+    _check_endpoint_set("staging")
 
-    for name in PRODUCTION_ENDPOINTS:
-        value = os.environ.get(name, "").strip()
-        if not value:
-            _fail(f"Missing required staging endpoint: {name}.")
-        _validate_https(name, value)
+    if os.environ.get("MAP_PMTILES_URL", "").strip():
+        _fail("Android staging must not configure MAP_PMTILES_URL.")
 
     attribution = os.environ.get("MAP_ATTRIBUTION", "").strip()
     if not attribution:
         _fail("Missing required staging map attribution: MAP_ATTRIBUTION.")
 
     print("profile=staging")
-    for name in PRODUCTION_ENDPOINTS:
+    for name in ANDROID_ENDPOINTS:
         print(f"{name}=configured")
     print("MAP_ATTRIBUTION=configured")
 
 
 def check_production() -> None:
-    app_env = os.environ.get("APP_ENV", "")
-    if app_env != "production":
+    if os.environ.get("APP_ENV", "") != "production":
         _fail(
             "Production profile requires APP_ENV=production, "
-            f"got {app_env!r}."
+            f"got {os.environ.get('APP_ENV', '')!r}."
         )
+    _check_endpoint_set("production")
 
-    for name in PRODUCTION_ENDPOINTS:
-        value = os.environ.get(name, "").strip()
-        if not value:
-            _fail(f"Missing required production endpoint: {name}.")
-        _validate_https(name, value)
+    if os.environ.get("MAP_PMTILES_URL", "").strip():
+        _fail("Android production must not configure MAP_PMTILES_URL.")
 
     attribution = os.environ.get("MAP_ATTRIBUTION", "").strip()
     if not attribution:
         _fail("Missing required production map attribution: MAP_ATTRIBUTION.")
 
     print("profile=production")
-    for name in PRODUCTION_ENDPOINTS:
+    for name in ANDROID_ENDPOINTS:
         print(f"{name}=configured")
     print("MAP_ATTRIBUTION=configured")
 
