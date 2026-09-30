@@ -57,7 +57,12 @@ jobs:
           channel: stable
           cache: true
       - name: Generate Android project
-        run: flutter create . --platforms=android --org com.espanaoutdoors
+        shell: bash
+        run: |
+          set -euxo pipefail
+          flutter --version
+          flutter create . --platforms=android --org com.espanaoutdoors --overwrite
+          test -f android/app/build.gradle.kts || test -f android/app/build.gradle
       - name: Dependencies
         run: flutter pub get
       - name: Analyze and test
