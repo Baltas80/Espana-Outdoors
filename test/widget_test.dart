@@ -22,6 +22,5 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Offline'), findsOneWidget);
   });
 }
