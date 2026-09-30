@@ -21,7 +21,7 @@ La arquitectura conserva interfaces abstractas para permitir en el futuro integr
 - Integración del símbolo de marca en la experiencia principal.
 - Atribución visible de OpenStreetMap en el mapa.
 - ADR de cartografía/offline con decisión de no usar los servidores públicos de teselas OSM para descargas offline.
-- Agus Maps / CoMaps integrado como renderer vectorial nativo Android.
+- PMTiles + flutter_map_vector_tiles como renderer cartográfico Android.
 - PMTiles desacoplado del renderer: se mantiene como distribución/validación cartográfica independiente y no como renderer Android.
 - Licencia propietaria incorporada para el código y activos propios; las dependencias de terceros conservan sus licencias.
 - Registro inicial de dependencias y alternativas maduras en `docs/THIRD_PARTY_LICENSES.md`.
@@ -52,7 +52,7 @@ La arquitectura conserva interfaces abstractas para permitir en el futuro integr
 - Flutter / Dart.
 - Riverpod para estado.
 - go_router para navegación.
-- Agus Maps / CoMaps como renderer vectorial offline Android, con MWM para la cartografía ejecutada por el motor nativo.
+- PMTiles como fuente cartográfica offline/online controlada por catálogo y R2.
 - PMTiles para distribución/validación cartográfica regional independiente del renderer.
 - geolocator para ubicación.
 - connectivity_plus para estado de conectividad.
@@ -89,7 +89,7 @@ flutter run \
   --dart-define=MAP_ATTRIBUTION="$MAP_ATTRIBUTION"
 ```
 
-No se debe introducir una URL de ejemplo en un release. El renderer Android de producción es Agus Maps / CoMaps; PMTiles se conserva como distribución/validación independiente.
+No se debe introducir una URL de ejemplo en un release. El renderer Android de producción usa PMTiles mediante flutter_map_vector_tiles; Agus Maps/CoMaps queda fuera de la arquitectura.
 
 ## Configuración del catálogo offline
 
