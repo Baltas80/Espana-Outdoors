@@ -47,7 +47,7 @@ class _OfflinePageState extends State<OfflinePage> {
             _progress = count == 0
                 ? 0.0
                 : ((completed + current) / count).clamp(0.0, 1.0);
-            final label = region?.displayName ?? 'España';
+            final label = region.displayName;
             _status = 'Descargando $label · ${(_progress * 100).toStringAsFixed(0)}%';
           });
         },
