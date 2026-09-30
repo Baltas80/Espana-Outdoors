@@ -15,6 +15,7 @@ on:
       - 'tool/verify_android_release.py'
       - 'tool/verify_valhalla_route.py'
       - 'tool/verify_build_profile.py'
+      - 'tool/patch_agus_maps_android_lifecycle.py'
       - 'ops/offline/prepare-agus-base-maps.sh'
       - 'test/**'
       - 'assets/**'
@@ -111,6 +112,9 @@ jobs:
 
       - name: Dependencies
         run: flutter pub get
+
+      - name: Patch Agus Maps Android surface lifecycle
+        run: python3 tool/patch_agus_maps_android_lifecycle.py
 
       - name: Analyze and test
         run: |
