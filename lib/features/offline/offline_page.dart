@@ -94,7 +94,7 @@ class _OfflinePageState extends State<OfflinePage> {
             }
             final plan = snapshot.data;
             if (plan == null) return const Center(child: CircularProgressIndicator());
-            final installedMaps = AgusMapsRuntime.instance.storage?.getAll().where((map) => !map.isBundled).length ?? 0;
+            final installedMaps = AgusMapsRuntime.instance.storage.getAll().where((map) => !map.isBundled).length;
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
