@@ -4,7 +4,7 @@ set -euo pipefail
 apk_path="${1:?APK path required}"
 aapt_path="$(find "${ANDROID_HOME}/build-tools" -maxdepth 2 -type f -name aapt -print | sort -V | tail -n 1)"
 test -x "${aapt_path}"
-package_name="$("${aapt_path}" dump badging "${apk_path}" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)"
+package_name="$("${aapt_path}" dump badging "${apk_path}" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -n 1)"
 test -n "${package_name}"
 
 echo "Installing ${package_name}"
@@ -21,11 +21,20 @@ adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
 echo "Waiting for normal home screen..."
 sleep 5
 
-adb shell uiautomator dump /sdcard/espana-window.xml >/dev/null 2>&1 || true
-adb exec-out cat /sdcard/espana-window.xml >"${RUNNER_TEMP:-/tmp}/espana-window.xml"
+window_file="${RUNNER_TEMP:-/tmp}/espana-window.xml"
+# Android 11+ may deny shell access to XML files written under /sdcard.
+# Dump directly to stdout instead of round-tripping through shared storage.
+adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator.err >"${window_file}" || true
+
+if ! grep -q '^<?xml' "${window_file}"; then
+  echo "FAIL: UIAutomator did not return a valid XML hierarchy."
+  cat /tmp/espana-uiautomator.err || true
+  head -c 1000 "${window_file}" || true
+  exit 1
+fi
 
 read -r tap_x tap_y < <(
-  python3 - "${RUNNER_TEMP:-/tmp}/espana-window.xml" <<'PY'
+  python3 - "${window_file}" <<'PY'
 import re
 import sys
 import xml.etree.ElementTree as ET
