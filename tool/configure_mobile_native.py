@@ -9,7 +9,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-
 def prepare_agus_maps_assets() -> None:
     sdk_home_value = os.environ.get("AGUS_MAPS_HOME", "").strip()
     if not sdk_home_value:
@@ -35,6 +34,16 @@ def prepare_agus_maps_assets() -> None:
     data_target = ROOT / "assets" / "comaps_data"
     maps_target.mkdir(parents=True, exist_ok=True)
 
+    # The base CoMaps runtime requires these two MWM files to be packaged
+    # into the Flutter asset bundle. They are supplied by the pinned Agus
+    # Maps SDK and must not be replaced by remote tiles or PMTiles.
+    required_map_names = ("World.mwm", "WorldCoasts.mwm")
+    for map_name in required_map_names:
+        source = maps_source / map_name
+        if not source.exists():
+            raise SystemExit(f"Agus Maps SDK is missing base map: {source}")
+        shutil.copy2(source, maps_target / map_name)
+
     icu = maps_source / "icudt75l.dat"
     if not icu.exists():
         raise SystemExit(f"Agus Maps SDK is missing ICU data: {icu}")
@@ -42,14 +51,17 @@ def prepare_agus_maps_assets() -> None:
     shutil.copytree(data_source, data_target, dirs_exist_ok=True)
 
     required = (
-        ROOT / "assets" / "maps" / "icudt75l.dat",
-        ROOT / "assets" / "comaps_data" / "countries.txt",
+        maps_target / "World.mwm",
+        maps_target / "WorldCoasts.mwm",
+        maps_target / "icudt75l.dat",
+        data_target / "countries.txt",
     )
     missing = [str(path) for path in required if not path.exists()]
     if missing:
         raise SystemExit("Agus Maps SDK assets incomplete: " + ", ".join(missing))
 
     print("agus_maps_sdk_assets=verified")
+
 
 def patch_android() -> None:
     manifest = ROOT / "android" / "app" / "src" / "main" / "AndroidManifest.xml"
