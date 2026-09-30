@@ -13,6 +13,26 @@ if not source.is_file():
 text = source.read_text(encoding="utf-8")
 original = text
 
+# Agus Maps 0.1.18 releases may already contain the native SurfaceProducer
+# lifecycle fix. Do not fail the build by trying to apply the older patch a
+# second time. Validate the relevant primitives and leave the upstream code
+# untouched when they are already present.
+if "g_oglFactory" in text:
+    required = (
+        "nativeOnSurfaceChanged",
+        "nativeOnSurfaceDestroyed",
+        "g_oglFactory->SetSurface",
+        "g_oglFactory->ResetSurface",
+    )
+    missing = [marker for marker in required if marker not in text]
+    if missing:
+        raise SystemExit(
+            "Agus Maps source contains partial surface lifecycle support; "
+            "missing: " + ", ".join(missing)
+        )
+    print(f"Agus Maps {VERSION}: native surface lifecycle already patched; no changes needed")
+    raise SystemExit(0)
+
 old_globals = '''static std::unique_ptr<Framework> g_framework;\nstatic drape_ptr<dp::ThreadSafeFactory> g_factory;\nstatic std::string g_resourcePath;'''
 new_globals = '''static std::unique_ptr<Framework> g_framework;\nstatic drape_ptr<dp::ThreadSafeFactory> g_factory;\nstatic agus::AgusOGLContextFactory* g_oglFactory = nullptr;\nstatic std::string g_resourcePath;'''
 if old_globals not in text:
