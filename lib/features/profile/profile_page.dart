@@ -258,3 +258,4 @@ class _ProfileItem extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right),
         ),
       );
+}
