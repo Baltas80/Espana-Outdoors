@@ -13,8 +13,6 @@ const _styleUrl = String.fromEnvironment(
 );
 
 Future<vt.Style> loadPmTilesStyle() async {
-  // A verified local region is authoritative when present. This is what makes
-  // a downloaded region usable without the catalog endpoint or tile network.
   final localPath = await findLocalPmTiles();
   String? remoteUrl;
 
@@ -49,9 +47,11 @@ Future<vt.Style> loadPmTilesStyle() async {
       remoteUrl = downloadUrl;
     }
 
-    if (!remoteUrl.startsWith('https://')) {
+    final sourceUrl = remoteUrl;
+    if (sourceUrl == null || !sourceUrl.startsWith('https://')) {
       throw StateError('La fuente PMTiles debe usar HTTPS.');
     }
+    remoteUrl = sourceUrl;
   }
 
   final provider = await vt.PmTilesVectorTileProvider.open(
