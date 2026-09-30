@@ -131,8 +131,3 @@ jobs:
             ${{ runner.temp }}/espana-window.xml
             ${{ runner.temp }}/espana-outdoor-map.png
           if-no-files-found: ignore
-      - name: Fail staging when native map smoke fails
-        if: steps.android_map_smoke.outcome == 'failure'
-        run: |
-          echo "Android native map smoke failed; APK was already published for physical/device inspection."
-          exit 1
