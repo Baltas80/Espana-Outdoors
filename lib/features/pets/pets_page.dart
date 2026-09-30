@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../app/photo_atlas.dart';
 import '../../app/outdoor_visuals.dart';
 
 import '../../core/domain/outdoor_models.dart';
@@ -39,7 +38,7 @@ class _PetsPageState extends State<PetsPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          OutdoorPhotoHero(index: 10, title: 'Mascotas', subtitle: 'Rutas pet-friendly y preparación antes de salir.'),
+          const OutdoorVisualHero(asset: 'assets/visuals/hero_pets.svg', title: 'Mascotas', subtitle: 'Rutas pet-friendly y preparación antes de salir.'),
           const SizedBox(height: 18),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [OutdoorAssetIcon(asset: 'assets/visuals/icons/pets.svg', size: 64)]),
           const SizedBox(height: 16),
