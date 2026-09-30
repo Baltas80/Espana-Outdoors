@@ -7,6 +7,7 @@ import '../../core/contracts/routing_service.dart';
 import '../../core/location/location_controller.dart';
 import '../../core/routing/routing_config.dart';
 import '../../infrastructure/routing/valhalla_routing_service.dart';
+import '../map/map_page.dart';
 
 class RoutePlannerPage extends ConsumerStatefulWidget {
   const RoutePlannerPage({super.key});
@@ -22,74 +23,46 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
 
   Future<void> _showDestinationDialog() async {
     final existing = _destination;
-    final latController = TextEditingController(
-      text: existing?.latitude.toStringAsFixed(6) ?? '',
-    );
-    final lonController = TextEditingController(
-      text: existing?.longitude.toStringAsFixed(6) ?? '',
-    );
-
-    final destination = await showDialog<LatLng>(
+    final latController = TextEditingController(text: existing?.latitude.toString() ?? '');
+    final lonController = TextEditingController(text: existing?.longitude.toString() ?? '');
+    final result = await showDialog<LatLng>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Destino'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Introduce las coordenadas WGS84 del destino.',
-            ),
-            const SizedBox(height: 16),
             TextField(
               controller: latController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-                signed: true,
-              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
               decoration: const InputDecoration(labelText: 'Latitud'),
             ),
-            const SizedBox(height: 10),
             TextField(
               controller: lonController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-                signed: true,
-              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
               decoration: const InputDecoration(labelText: 'Longitud'),
             ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           FilledButton(
             onPressed: () {
-              final lat =
-                  double.tryParse(latController.text.replaceAll(',', '.'));
-              final lon =
-                  double.tryParse(lonController.text.replaceAll(',', '.'));
-              if (lat == null ||
-                  lon == null ||
-                  lat.abs() > 90 ||
-                  lon.abs() > 180) {
-                return;
-              }
+              final lat = double.tryParse(latController.text.trim());
+              final lon = double.tryParse(lonController.text.trim());
+              if (lat == null || lon == null || lat.abs() > 90 || lon.abs() > 180) return;
               Navigator.pop(context, LatLng(lat, lon));
             },
-            child: const Text('Seleccionar'),
+            child: const Text('Usar destino'),
           ),
         ],
       ),
     );
-
     latController.dispose();
     lonController.dispose();
-
-    if (destination == null || !mounted) return;
+    if (result == null || !mounted) return;
     setState(() {
-      _destination = destination;
+      _destination = result;
       _route = null;
     });
   }
@@ -123,7 +96,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       final result = await service.route(
         RouteRequest(
           points: [
-            LatLng(location.latitude, location.longitude),
+            LatLng(location!.latitude, location.longitude),
             destination,
           ],
           profile: 'hiking',
@@ -163,15 +136,12 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
         children: [
           Positioned.fill(
             child: PmTilesMapViewport(
-              key: ValueKey(
-                center.latitude.toString() + ':' + center.longitude.toString(),
-              ),
+              key: ValueKey('${center.latitude}:${center.longitude}:${_route?.points.length ?? 0}'),
               initialCenter: center,
               initialZoom: destination == null ? 12 : 14,
+              routePoints: _route?.points ?? const <LatLng>[],
             ),
           ),
-        ],
-      ),
           Positioned(
             left: 16,
             right: 16,
@@ -182,10 +152,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Ruta de senderismo',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                    const Text('Ruta de senderismo', style: TextStyle(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
                     Text(destinationLabel),
                     if (_route != null) ...[
@@ -218,9 +185,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: _busy
-                          ? null
-                          : () => context.push('/navigation', extra: _route),
+                      onPressed: _busy ? null : () => context.push('/navigation', extra: _route),
                       icon: const Icon(Icons.navigation_outlined),
                       label: const Text('Iniciar navegación'),
                     ),
@@ -230,12 +195,9 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed:
-                        _busy || destination == null ? null : _calculate,
+                    onPressed: _busy || destination == null ? null : _calculate,
                     icon: const Icon(Icons.alt_route),
-                    label: Text(
-                      _busy ? 'CALCULANDO…' : 'CALCULAR RUTA',
-                    ),
+                    label: Text(_busy ? 'CALCULANDO…' : 'CALCULAR RUTA'),
                   ),
                 ),
               ],
