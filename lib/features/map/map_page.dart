@@ -16,50 +16,34 @@ const _mapAttribution = String.fromEnvironment(
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
-
   @override
   ConsumerState<MapPage> createState() => _MapPageState();
 }
 
 class _MapPageState extends ConsumerState<MapPage> {
   late Future<vt.Style> _styleFuture;
-
   @override
   void initState() {
     super.initState();
     _styleFuture = loadPmTilesStyle();
   }
-
-  void _retry() {
-    setState(() => _styleFuture = loadPmTilesStyle());
-  }
-
+  void _retry() => setState(() => _styleFuture = loadPmTilesStyle());
   @override
   void dispose() {
     _styleFuture.then((style) => style.dispose());
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(locationControllerProvider);
     final recording = ref.watch(routeRecorderProvider);
     final recorder = ref.read(routeRecorderProvider.notifier);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mapa'),
         actions: [
-          IconButton(
-            tooltip: 'Mapas offline',
-            onPressed: () => context.push('/offline'),
-            icon: const Icon(Icons.download_outlined),
-          ),
-          IconButton(
-            tooltip: 'Navegación GPS',
-            onPressed: () => context.push('/navigation'),
-            icon: const Icon(Icons.navigation_outlined),
-          ),
+          IconButton(tooltip: 'Mapas offline', onPressed: () => context.push('/offline'), icon: const Icon(Icons.download_outlined)),
+          IconButton(tooltip: 'Navegación GPS', onPressed: () => context.push('/navigation'), icon: const Icon(Icons.navigation_outlined)),
         ],
       ),
       body: Stack(
@@ -69,20 +53,10 @@ class _MapPageState extends ConsumerState<MapPage> {
               future: _styleFuture,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return _MapMessage(
-                    title: 'No se pudo cargar el mapa',
-                    message: snapshot.error.toString(),
-                    onRetry: _retry,
-                  );
+                  return _MapMessage(title: 'No se pudo cargar el mapa', message: snapshot.error.toString(), onRetry: _retry);
                 }
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                return _PmTilesLayer(
-                  style: snapshot.data!,
-                  center: const LatLng(40.4168, -3.7038),
-                  zoom: 6.2,
-                );
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                return _PmTilesLayer(style: snapshot.data!, center: const LatLng(40.4168, -3.7038), zoom: 6.2);
               },
             ),
           ),
@@ -93,19 +67,11 @@ class _MapPageState extends ConsumerState<MapPage> {
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    const Icon(Icons.map_outlined),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        recording.isRecording
-                            ? 'Grabando ${(recording.distanceMeters / 1000).toStringAsFixed(2)} km'
-                            : location.message,
-                      ),
-                    ),
-                  ],
-                ),
+                child: Row(children: [
+                  const Icon(Icons.map_outlined),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(recording.isRecording ? 'Grabando ${(recording.distanceMeters / 1000).toStringAsFixed(2)} km' : location.message)),
+                ]),
               ),
             ),
           ),
@@ -113,14 +79,8 @@ class _MapPageState extends ConsumerState<MapPage> {
             left: 16,
             bottom: 16,
             child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                child: Text(_mapAttribution, style: TextStyle(fontSize: 11)),
-              ),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface.withValues(alpha: .92), borderRadius: BorderRadius.circular(8)),
+              child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5), child: Text(_mapAttribution, style: TextStyle(fontSize: 11))),
             ),
           ),
           Positioned(
@@ -137,34 +97,14 @@ class _MapPageState extends ConsumerState<MapPage> {
                   }
                 } on Object catch (error) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error.toString())),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
                 }
               },
               child: Icon(recording.isRecording ? Icons.stop : Icons.fiber_manual_record),
             ),
           ),
-          Positioned(
-            right: 16,
-            bottom: 152,
-            child: FloatingActionButton.small(
-              tooltip: 'Navegación GPS',
-              onPressed: () => context.push('/navigation'),
-              child: const Icon(Icons.navigation_outlined),
-            ),
-          ),
-          Positioned(
-            right: 16,
-            bottom: 24,
-            child: FloatingActionButton(
-              tooltip: 'Usar mi ubicación',
-              onPressed: () async {
-                await ref.read(locationControllerProvider.notifier).locate();
-              },
-              child: const Icon(Icons.my_location),
-            ),
-          ),
+          Positioned(right: 16, bottom: 152, child: FloatingActionButton.small(tooltip: 'Navegación GPS', onPressed: () => context.push('/navigation'), child: const Icon(Icons.navigation_outlined))),
+          Positioned(right: 16, bottom: 24, child: FloatingActionButton(tooltip: 'Usar mi ubicación', onPressed: () async => ref.read(locationControllerProvider.notifier).locate(), child: const Icon(Icons.my_location))),
         ],
       ),
     );
@@ -172,133 +112,72 @@ class _MapPageState extends ConsumerState<MapPage> {
 }
 
 class _PmTilesLayer extends StatelessWidget {
-  const _PmTilesLayer({
-    required this.style,
-    required this.center,
-    required this.zoom,
-    this.routePoints = const <LatLng>[],
-  });
-
+  const _PmTilesLayer({required this.style, required this.center, required this.zoom, this.routePoints = const <LatLng>[]});
   final vt.Style style;
   final LatLng center;
   final double zoom;
   final List<LatLng> routePoints;
-
   @override
   Widget build(BuildContext context) => FlutterMap(
-        options: MapOptions(
-          initialCenter: center,
-          initialZoom: zoom,
-          minZoom: 3,
-          maxZoom: 18,
-        ),
-        children: [
-          vt.VectorTileLayer(
-            theme: style.theme,
-            tileProviders: style.providers,
-            rasterSources: style.rasterSources,
-            sprites: style.sprites,
-            logger: const vt.Logger.console(),
-          ),
-          if (routePoints.length >= 2)
-            PolylineLayer(
-              polylines: [
-                Polyline(
-                  points: routePoints,
-                  strokeWidth: 5,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ],
-            ),
-        ],
-      );
+    options: MapOptions(initialCenter: center, initialZoom: zoom, minZoom: 3, maxZoom: 18),
+    children: [
+      vt.VectorTileLayer(theme: style.theme, tileProviders: style.providers, rasterSources: style.rasterSources, sprites: style.sprites, logger: const vt.Logger.console()),
+      if (routePoints.length >= 2)
+        PolylineLayer(polylines: [Polyline(points: routePoints, strokeWidth: 5, color: Theme.of(context).colorScheme.primary)]),
+    ],
+  );
 }
 
-class _MapMessage extends StatelessWidget {
-  const _MapMessage({required this.title, required this.message, required this.onRetry});
-
-  final String title;
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.map_outlined, size: 52),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              Text(message, textAlign: TextAlign.center),
-              const SizedBox(height: 18),
-              FilledButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Reintentar'),
-              ),
-            ],
-          ),
-        ),
-      );
-
 class PmTilesMapViewport extends StatefulWidget {
-  const PmTilesMapViewport({
-    super.key,
-    this.initialCenter = const LatLng(40.4168, -3.7038),
-    this.initialZoom = 7,
-    this.routePoints = const <LatLng>[],
-  });
-
+  const PmTilesMapViewport({super.key, this.initialCenter = const LatLng(40.4168, -3.7038), this.initialZoom = 7, this.routePoints = const <LatLng>[]});
   final LatLng initialCenter;
   final double initialZoom;
   final List<LatLng> routePoints;
-
   @override
   State<PmTilesMapViewport> createState() => _PmTilesMapViewportState();
 }
 
 class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
   late Future<vt.Style> _styleFuture;
-
   @override
   void initState() {
     super.initState();
     _styleFuture = loadPmTilesStyle();
   }
-
   @override
   void dispose() {
     _styleFuture.then((style) => style.dispose());
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) => FutureBuilder<vt.Style>(
-        future: _styleFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return _MapMessage(
-              title: 'No se pudo cargar el mapa',
-              message: snapshot.error.toString(),
-              onRetry: () => setState(() => _styleFuture = loadPmTilesStyle()),
-            );
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return _PmTilesLayer(
-            style: snapshot.data!,
-            center: widget.initialCenter,
-            zoom: widget.initialZoom,
-            routePoints: widget.routePoints,
-          );
-        },
-      );
+    future: _styleFuture,
+    builder: (context, snapshot) {
+      if (snapshot.hasError) return _MapMessage(title: 'No se pudo cargar el mapa', message: snapshot.error.toString(), onRetry: () => setState(() => _styleFuture = loadPmTilesStyle()));
+      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+      return _PmTilesLayer(style: snapshot.data!, center: widget.initialCenter, zoom: widget.initialZoom, routePoints: widget.routePoints);
+    },
+  );
+}
+
+class _MapMessage extends StatelessWidget {
+  const _MapMessage({required this.title, required this.message, required this.onRetry});
+  final String title;
+  final String message;
+  final VoidCallback onRetry;
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.map_outlined, size: 52),
+        const SizedBox(height: 14),
+        Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        Text(message, textAlign: TextAlign.center),
+        const SizedBox(height: 18),
+        FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: const Text('Reintentar')),
+      ]),
+    ),
+  );
 }
