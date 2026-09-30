@@ -38,6 +38,7 @@ dependencies:
   battery_plus: ^7.1.1
   sensors_plus: ^7.1.0
   flutter_device_compass: ^2.2.0
+  agus_maps_flutter: 0.1.18
 
 dev_dependencies:
   flutter_test:
@@ -46,7 +47,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  generate: true
   assets:
     - assets/brand/
     - assets/maps/
