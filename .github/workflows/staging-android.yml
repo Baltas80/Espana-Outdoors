@@ -7,7 +7,6 @@ on:
     paths:
       - 'lib/**'
       - 'tool/**'
-      - 'ops/offline/prepare-agus-base-maps.sh'
       - 'test/**'
       - 'assets/**'
       - 'pubspec.yaml'
@@ -22,7 +21,6 @@ permissions:
 
 env:
   APP_ENV: staging
-  AGUS_MAPS_VERSION: 0.1.18
   OFFLINE_CATALOG_URL: https://espana-outdoor-r2-uploader.espana-outdoor.workers.dev/catalog/spain.json
   VALHALLA_BASE_URL: https://routing.espanaoutdoor.es
   SOURCE_GATEWAY_BASE_URL: https://api.espanaoutdoor.es
@@ -52,22 +50,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Download Agus Maps SDK
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="0.1.18"
-          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
-          root="$RUNNER_TEMP/agus-maps-sdk"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" -o "$archive"
-          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | sha256sum -c -
-          rm -rf "$root"; mkdir -p "$root"; unzip -q "$archive" -d "$root"
-          sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"; test -n "$sdk_home"
-          sdk_home="${sdk_home%/android/prebuilt}"; test -d "$sdk_home/assets" || test -d "$sdk_home/example/assets"
-          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
-      - name: Prepare CoMaps base maps
-        shell: bash
-        run: COMAPS_BASE_SNAPSHOT=260106 bash ops/offline/prepare-agus-base-maps.sh
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -76,14 +58,8 @@ jobs:
           cache: true
       - name: Generate Android project
         run: flutter create . --platforms=android --org com.espanaoutdoors
-      - name: Apply Android native configuration
-        run: python3 tool/configure_mobile_native.py --platform android
-      - name: Verify Android native configuration
-        run: python3 tool/verify_mobile_native.py --platform android
       - name: Dependencies
         run: flutter pub get
-      - name: Patch Agus Maps Android surface lifecycle
-        run: python3 tool/patch_agus_maps_android_lifecycle.py
       - name: Analyze and test
         run: |
           flutter analyze --no-fatal-infos
