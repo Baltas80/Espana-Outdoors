@@ -60,7 +60,7 @@ final class AgusMapsRuntime {
     // World.mwm/WorldCoasts.mwm once. Do not register those bundled maps a
     // second time from Dart: duplicate RegisterMap calls are unnecessary and
     // can race the native renderer during its first frame.
-    await agus.initWithPaths(dataPath, dataPath);
+    agus.initWithPaths(dataPath, dataPath);
     _initialized = true;
   }
 
