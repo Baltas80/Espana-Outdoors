@@ -12,32 +12,39 @@ const _styleUrl = String.fromEnvironment(
 );
 
 Future<vt.Style> loadPmTilesStyle() async {
-  if (_catalogUrl.isEmpty) {
-    throw StateError('OFFLINE_CATALOG_URL no está configurado.');
-  }
-
-  final catalogResponse = await http
-      .get(Uri.parse(_catalogUrl))
-      .timeout(const Duration(seconds: 20));
-  if (catalogResponse.statusCode != 200) {
-    throw StateError(
-      'No se pudo cargar el catálogo cartográfico (${catalogResponse.statusCode}).',
-    );
-  }
-
-  final decoded = jsonDecode(catalogResponse.body);
-  if (decoded is! Map<String, dynamic>) {
-    throw StateError('El catálogo cartográfico no tiene un formato válido.');
-  }
-
-  final downloadUrl = decoded['downloadUrl'];
-  if (downloadUrl is! String || !downloadUrl.startsWith('https://')) {
-    throw StateError('El catálogo no contiene un downloadUrl HTTPS válido.');
-  }
-
+  // A verified local region is authoritative when present. This allows the
+  // map to open without the catalog endpoint or tile network being reachable.
   final localPath = await findLocalPmTiles();
+  String? remoteUrl;
+
+  if (localPath == null) {
+    if (_catalogUrl.isEmpty) {
+      throw StateError('OFFLINE_CATALOG_URL no está configurado.');
+    }
+
+    final catalogResponse = await http
+        .get(Uri.parse(_catalogUrl))
+        .timeout(const Duration(seconds: 20));
+    if (catalogResponse.statusCode != 200) {
+      throw StateError(
+        'No se pudo cargar el catálogo cartográfico (${catalogResponse.statusCode}).',
+      );
+    }
+
+    final decoded = jsonDecode(catalogResponse.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw StateError('El catálogo cartográfico no tiene un formato válido.');
+    }
+
+    final downloadUrl = decoded['downloadUrl'];
+    if (downloadUrl is! String || !downloadUrl.startsWith('https://')) {
+      throw StateError('El catálogo no contiene un downloadUrl HTTPS válido.');
+    }
+    remoteUrl = downloadUrl;
+  }
+
   final provider = await vt.PmTilesVectorTileProvider.open(
-    localPath ?? downloadUrl,
+    localPath ?? remoteUrl!,
     logger: const vt.Logger.console(),
   );
 
