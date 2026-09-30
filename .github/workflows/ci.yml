@@ -142,7 +142,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -156,11 +155,12 @@ jobs:
           cp pubspec.yaml "$RUNNER_TEMP/pubspec.yaml"
           cp lib/main.dart "$RUNNER_TEMP/main.dart"
           if [[ -f analysis_options.yaml ]]; then cp analysis_options.yaml "$RUNNER_TEMP/analysis_options.yaml"; fi
+          if [[ -f test/widget_test.dart ]]; then cp test/widget_test.dart "$RUNNER_TEMP/widget_test.dart"; fi
           flutter create . --platforms=ios --org com.espanaoutdoors
           cp "$RUNNER_TEMP/pubspec.yaml" pubspec.yaml
           cp "$RUNNER_TEMP/main.dart" lib/main.dart
           if [[ -f "$RUNNER_TEMP/analysis_options.yaml" ]]; then cp "$RUNNER_TEMP/analysis_options.yaml" analysis_options.yaml; fi
-
+          if [[ -f "$RUNNER_TEMP/widget_test.dart" ]]; then cp "$RUNNER_TEMP/widget_test.dart" test/widget_test.dart; fi
       - name: Apply iOS native configuration
         run: python3 tool/configure_mobile_native.py --platform ios
       - name: Verify iOS native configuration
