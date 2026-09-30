@@ -36,7 +36,7 @@ dependencies:
   openidconnect: ^3.0.0
   sentry_flutter: ^9.30.1
   battery_plus: ^7.1.1
-  sensors_plus: ^7.1.1
+  sensors_plus: ^7.1.0
   flutter_device_compass: ^2.2.0
 
 dev_dependencies:
