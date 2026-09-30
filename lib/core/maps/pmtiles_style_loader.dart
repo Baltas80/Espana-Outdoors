@@ -13,7 +13,7 @@ const _catalogUrl = String.fromEnvironment('OFFLINE_CATALOG_URL');
 const _directPmTilesUrl = String.fromEnvironment('MAP_PMTILES_URL');
 const _styleUrl = String.fromEnvironment(
   'MAP_STYLE_URL',
-  defaultValue: 'https://tiles.openfreemap.org/styles/liberty',
+  defaultValue: 'asset://assets/maps/offline_style.json',
 );
 
 Future<vt.Style> loadPmTilesStyle() async {
@@ -99,7 +99,7 @@ Future<OfflineRegion> _loadCatalogRegion() async {
 
   final response = await http
       .get(Uri.parse(_catalogUrl))
-      .timeout(const Duration(seconds: 20));
+      .timeout(const Duration(seconds: 12));
 
   if (response.statusCode != 200) {
     throw StateError(
