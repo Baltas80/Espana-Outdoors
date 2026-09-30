@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:http/http.dart' as http;
 
+import '../offline/offline_package_verifier.dart';
 import '../offline/offline_region.dart';
+import '../offline/offline_region_store.dart';
 import 'pmtiles_local_source.dart';
 
 const _catalogUrl = String.fromEnvironment('OFFLINE_CATALOG_URL');
@@ -14,37 +17,77 @@ const _styleUrl = String.fromEnvironment(
 );
 
 Future<vt.Style> loadPmTilesStyle() async {
-  String? localPath;
-  late final String sourceUrl;
+  // A verified archive already stored on the device is authoritative for
+  // offline rendering. Do this before touching the remote catalog so loss of
+  // connectivity cannot make an otherwise complete offline map unusable.
+  final storedPath = await _findStoredVerifiedPmTiles();
+  if (storedPath != null) return _readStyleFromLocal(storedPath);
 
+  late final String sourceUrl;
   if (_directPmTilesUrl.isNotEmpty) {
     sourceUrl = _directPmTilesUrl;
   } else {
     final region = await _loadCatalogRegion();
     final expectedFileName =
         '${region.id}-${region.sha256.substring(0, 12)}.pmtiles';
-    localPath = await findValidLocalPmTiles(
+    final verifiedPath = await findValidLocalPmTiles(
       expectedFileName: expectedFileName,
       expectedSha256: region.sha256,
     );
+    if (verifiedPath != null) return _readStyleFromLocal(verifiedPath);
     sourceUrl = region.downloadUrl.toString();
   }
 
-  if (localPath == null && !sourceUrl.startsWith('https://')) {
+  if (!sourceUrl.startsWith('https://')) {
     throw StateError('La fuente PMTiles debe usar HTTPS.');
   }
 
   final provider = await vt.PmTilesVectorTileProvider.open(
-    localPath ?? sourceUrl,
+    sourceUrl,
     logger: const vt.Logger.console(),
   );
+  return _readStyleWithProvider(provider);
+}
 
-  return vt.StyleReader(
-    uri: _styleUrl,
-    resolveProvider: (sourceId) async =>
-        sourceId == 'openmaptiles' ? provider : null,
+Future<vt.Style> _readStyleFromLocal(String path) async {
+  final provider = await vt.PmTilesVectorTileProvider.open(
+    path,
     logger: const vt.Logger.console(),
-  ).read();
+  );
+  return _readStyleWithProvider(provider);
+}
+
+Future<vt.Style> _readStyleWithProvider(vt.VectorTileProvider provider) =>
+    vt.StyleReader(
+      uri: _styleUrl,
+      resolveProvider: (sourceId) async =>
+          sourceId == 'openmaptiles' ? provider : null,
+      logger: const vt.Logger.console(),
+    ).read();
+
+Future<String?> _findStoredVerifiedPmTiles() async {
+  final record = OfflineRegionStore().get('spain');
+  if (record == null || !record.hasValidArtifact) return null;
+
+  final path = record.localPath?.trim();
+  final sha256 = record.sha256?.trim().toLowerCase();
+  if (path == null || path.isEmpty ||
+      sha256 == null || !RegExp(r'^[a-f0-9]{64}$').hasMatch(sha256)) {
+    return null;
+  }
+
+  final file = File(path);
+  if (!await file.exists()) return null;
+
+  try {
+    await const OfflinePackageVerifier().verifyFile(
+      file,
+      expectedSha256: sha256,
+    );
+    return file.path;
+  } on Object {
+    return null;
+  }
 }
 
 Future<OfflineRegion> _loadCatalogRegion() async {
