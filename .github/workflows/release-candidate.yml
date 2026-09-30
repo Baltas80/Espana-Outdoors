@@ -64,28 +64,6 @@ jobs:
           sdk_home="${sdk_home%/android/prebuilt}"
           echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
 
-      - name: Prepare CoMaps base maps
-        shell: bash
-        run: |
-          set -euo pipefail
-          COMAPS_BASE_SNAPSHOT=260106 bash ops/offline/prepare-agus-base-maps.sh
-
-      - name: Setup Java 21
-        uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.47.5'
-          channel: stable
-          cache: true
-
-      - name: Generate Android project
-        run: flutter create . --platforms=android --org com.espanaoutdoors
-
       - name: Apply Android native configuration
         run: python3 tool/configure_mobile_native.py --platform android
 
