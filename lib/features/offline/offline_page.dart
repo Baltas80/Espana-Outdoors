@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 
-import '../../app/photo_atlas.dart';
 import '../../app/outdoor_visuals.dart';
+import '../../app/photo_atlas.dart';
 import '../../core/offline/offline_region.dart';
 import '../../core/offline/offline_region_catalog.dart';
 import '../../core/offline/offline_region_downloader.dart';
@@ -58,12 +55,6 @@ class _OfflinePageState extends State<OfflinePage> {
     }
   }
 
-  Future<bool> _isInstalled(OfflineRegion region) async {
-    final support = await getApplicationSupportDirectory();
-    final prefix = '${region.id}-${region.sha256.substring(0, 12)}.pmtiles';
-    return File('${support.path}/offline_regions/$prefix').exists();
-  }
-
   String _size(int bytes) {
     const units = ['B', 'KB', 'MB', 'GB'];
     var value = bytes.toDouble();
@@ -108,7 +99,7 @@ class _OfflinePageState extends State<OfflinePage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        OutdoorAssetIcon(
+                        const OutdoorAssetIcon(
                           asset: 'assets/visuals/icons/offline.svg',
                           size: 46,
                         ),
@@ -124,53 +115,36 @@ class _OfflinePageState extends State<OfflinePage> {
                 ),
                 const SizedBox(height: 20),
                 for (final region in regions) ...[
-                  FutureBuilder<bool>(
-                    future: _isInstalled(region),
-                    builder: (context, installedSnapshot) {
-                      final installed = installedSnapshot.data ?? false;
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                region.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
-                                    ?.copyWith(fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(region.description),
-                              const SizedBox(height: 4),
-                              Text('${_size(region.sizeBytes)} · ${region.updatedAt.toLocal()}'),
-                              const SizedBox(height: 4),
-                              Text('SHA-256: ${region.sha256}'),
-                              const SizedBox(height: 12),
-                              if (_downloading)
-                                const LinearProgressIndicator(),
-                              const SizedBox(height: 8),
-                              FilledButton.icon(
-                                onPressed: _downloading
-                                    ? null
-                                    : () => _downloadRegion(region),
-                                icon: Icon(
-                                  installed
-                                      ? Icons.verified_outlined
-                                      : Icons.download_outlined,
-                                ),
-                                label: Text(
-                                  installed
-                                      ? 'Volver a verificar / actualizar'
-                                      : 'Descargar ${region.name}',
-                                ),
-                              ),
-                            ],
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            region.name,
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
                           ),
-                        ),
-                      );
-                    },
+                          const SizedBox(height: 6),
+                          Text(region.description),
+                          const SizedBox(height: 4),
+                          Text('${_size(region.sizeBytes)} · ${region.updatedAt.toLocal()}'),
+                          const SizedBox(height: 4),
+                          Text('SHA-256: ${region.sha256}'),
+                          const SizedBox(height: 12),
+                          if (_downloading) const LinearProgressIndicator(),
+                          const SizedBox(height: 8),
+                          FilledButton.icon(
+                            onPressed: _downloading ? null : () => _downloadRegion(region),
+                            icon: const Icon(Icons.download_outlined),
+                            label: Text('Descargar ${region.name}'),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                 ],
