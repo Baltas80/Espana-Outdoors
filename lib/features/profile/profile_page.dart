@@ -114,7 +114,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              signedIn ? 'Aventurero' : 'Aventurero',
+                              'Aventurero',
                               style: Theme.of(context)
                                   .textTheme
                                   .titleLarge
@@ -146,8 +146,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       IconButton(
-                        tooltip: signedIn ? 'Cerrar sesión' : 'Iniciar sesión',
-                        onPressed: _busy ? null : (signedIn ? _signOut : _signIn),
+                        tooltip:
+                            signedIn ? 'Cerrar sesión' : 'Iniciar sesión',
+                        onPressed:
+                            _busy ? null : (signedIn ? _signOut : _signIn),
                         icon: Icon(signedIn ? Icons.logout : Icons.login),
                       ),
                     ],
@@ -197,7 +199,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 16),
           Card(
             child: ListTile(
-              onTap: () => context.go('/plans'),
+              onTap: () => context.go('/profile/plans'),
               leading: const Icon(Icons.workspace_premium_outlined),
               title: const Text(
                 'Free · Premium · Professional',
@@ -220,21 +222,19 @@ class _Stat extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 3),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Column(
+        children: [
+          Text(
+            value,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 3),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      );
 }
 
 class _ProfileItem extends StatelessWidget {
@@ -249,15 +249,12 @@ class _ProfileItem extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 1),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(icon),
-        title: Text(title),
-        trailing: const Icon(Icons.chevron_right),
-      ),
-    );
-  }
-}
+  Widget build(BuildContext context) => Card(
+        margin: const EdgeInsets.only(bottom: 1),
+        child: ListTile(
+          onTap: onTap,
+          leading: Icon(icon),
+          title: Text(title),
+          trailing: const Icon(Icons.chevron_right),
+        ),
+      );
