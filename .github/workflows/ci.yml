@@ -60,6 +60,12 @@ jobs:
       - name: Generate mobile platform projects
         run: flutter create . --platforms=android,ios --org com.espanaoutdoors
 
+      - name: Prepare CoMaps base maps
+        shell: bash
+        run: |
+          set -euo pipefail
+          COMAPS_BASE_SNAPSHOT=260106 bash ops/offline/prepare-agus-base-maps.sh
+
       - name: Apply Android native configuration
         run: python3 tool/configure_mobile_native.py --platform android
 
@@ -200,6 +206,12 @@ jobs:
       - name: Generate iOS project
         run: flutter create . --platforms=ios --org com.espanaoutdoors
 
+      - name: Prepare CoMaps base maps
+        shell: bash
+        run: |
+          set -euo pipefail
+          COMAPS_BASE_SNAPSHOT=260106 bash ops/offline/prepare-agus-base-maps.sh
+
       - name: Apply iOS native configuration
         run: python3 tool/configure_mobile_native.py --platform ios
 
@@ -216,5 +228,4 @@ jobs:
         run: flutter test
 
       - name: Build configured iOS candidate
-        run: |
-          flutter build ios --release --no-codesign --dart-define=APP_ENV=ci
+        run: flutter build ios --release --no-codesign --dart-define=APP_ENV=ci
