@@ -1,11 +1,15 @@
-import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../app/photo_atlas.dart';
 import '../../app/outdoor_visuals.dart';
-import '../../core/maps/agus_maps_runtime.dart';
-import '../../core/maps/comaps_download_manager.dart';
+import '../../core/offline/offline_region.dart';
+import '../../core/offline/offline_region_catalog.dart';
+import '../../core/offline/offline_region_downloader.dart';
+
+const _catalogUrl = String.fromEnvironment('OFFLINE_CATALOG_URL');
 
 class OfflinePage extends StatefulWidget {
   const OfflinePage({super.key});
@@ -15,48 +19,35 @@ class OfflinePage extends StatefulWidget {
 }
 
 class _OfflinePageState extends State<OfflinePage> {
-  late Future<CoMapsSpainPlan> _planFuture;
+  late Future<List<OfflineRegion>> _catalogFuture;
   bool _downloading = false;
-  double _progress = 0;
-  String _status = 'Preparando catálogo CoMaps…';
+  String _status = 'Preparando catálogo PMTiles…';
 
   @override
   void initState() {
     super.initState();
-    _planFuture = _loadPlan();
+    _catalogFuture = _loadCatalog();
   }
 
-  Future<CoMapsSpainPlan> _loadPlan() async {
-    await AgusMapsRuntime.instance.ensureInitialized();
-    return CoMapsDownloadManager.instance.resolveSpain();
+  Future<List<OfflineRegion>> _loadCatalog() async {
+    if (_catalogUrl.isEmpty) {
+      throw StateError('OFFLINE_CATALOG_URL no está configurado.');
+    }
+    return OfflineRegionCatalog(endpoint: Uri.parse(_catalogUrl)).fetch();
   }
 
-  Future<void> _downloadSpain(CoMapsSpainPlan plan) async {
+  Future<void> _downloadRegion(OfflineRegion region) async {
     if (_downloading) return;
     setState(() {
       _downloading = true;
-      _progress = 0;
-      _status = 'Descargando España…';
+      _status = 'Descargando ${region.name}…';
     });
     try {
-      await CoMapsDownloadManager.instance.downloadSpain(
-        onProgress: (region, received, total, completed, count) {
-          if (!mounted) return;
-          setState(() {
-            final current = total <= 0 ? 0.0 : received / total;
-            _progress = count == 0
-                ? 0.0
-                : ((completed + current) / count).clamp(0.0, 1.0);
-            final label = region.displayName;
-            _status = 'Descargando $label · ${(_progress * 100).toStringAsFixed(0)}%';
-          });
-        },
-      );
+      await const OfflineRegionDownloader().startAndVerify(region);
       if (!mounted) return;
       setState(() {
         _downloading = false;
-        _progress = 1;
-        _status = 'España descargada y verificada.';
+        _status = '${region.name} descargada y verificada.';
       });
     } on Object catch (error) {
       if (!mounted) return;
@@ -65,6 +56,12 @@ class _OfflinePageState extends State<OfflinePage> {
         _status = 'Error: $error';
       });
     }
+  }
+
+  Future<bool> _isInstalled(OfflineRegion region) async {
+    final support = await getApplicationSupportDirectory();
+    final prefix = '${region.id}-${region.sha256.substring(0, 12)}.pmtiles';
+    return File('${support.path}/offline_regions/$prefix').exists();
   }
 
   String _size(int bytes) {
@@ -83,25 +80,27 @@ class _OfflinePageState extends State<OfflinePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Mapas offline')),
       body: SafeArea(
-        child: FutureBuilder<CoMapsSpainPlan>(
-          future: _planFuture,
+        child: FutureBuilder<List<OfflineRegion>>(
+          future: _catalogFuture,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return _MapCatalogError(
                 message: snapshot.error.toString(),
-                onRetry: () => setState(() => _planFuture = _loadPlan()),
+                onRetry: () => setState(() => _catalogFuture = _loadCatalog()),
               );
             }
-            final plan = snapshot.data;
-            if (plan == null) return const Center(child: CircularProgressIndicator());
-            final storage = AgusMapsRuntime.instance.storage;
-            final installedMaps = storage == null
-                ? 0
-                : storage.getAll().where((map) => !map.isBundled).length;
+            final regions = snapshot.data;
+            if (regions == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
-                const OutdoorPhotoHero(index: 11, title: 'Offline', subtitle: 'Mapas sin conexión y gestión de descargas.'),
+                const OutdoorPhotoHero(
+                  index: 11,
+                  title: 'Offline',
+                  subtitle: 'Mapas PMTiles sin conexión y gestión de descargas.',
+                ),
                 const SizedBox(height: 16),
                 Card(
                   child: Padding(
@@ -109,33 +108,72 @@ class _OfflinePageState extends State<OfflinePage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        OutdoorAssetIcon(asset: 'assets/visuals/icons/offline.svg', size: 46),
+                        OutdoorAssetIcon(
+                          asset: 'assets/visuals/icons/offline.svg',
+                          size: 46,
+                        ),
                         const SizedBox(width: 14),
-                        const Expanded(child: Text('Gestión de cartografía offline. El mapa principal de España Outdoor utiliza PMTiles; esta pantalla conserva compatibilidad con el catálogo heredado mientras completamos la migración del almacenamiento offline.')),
+                        const Expanded(
+                          child: Text(
+                            'España Outdoor utiliza PMTiles como fuente cartográfica. Las descargas offline se almacenan localmente y se verifican mediante SHA-256 antes de considerarse válidas.',
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text('España', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 6),
-                Text('${plan.label} · versión ${plan.snapshot.formattedDate}'),
-                const SizedBox(height: 4),
-                Text('${_size(plan.totalBytes)} · ${plan.leaves.length} archivos de región'),
-                const SizedBox(height: 14),
-                if (_downloading || _progress > 0) ...[
-                  LinearProgressIndicator(value: _progress),
-                  const SizedBox(height: 8),
-                  Text(_status),
-                ] else
-                  Text(_status),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: _downloading ? null : () => _downloadSpain(plan),
-                  icon: const Icon(Icons.download_outlined),
-                  label: Text(installedMaps == 0 ? 'Descargar España' : 'Actualizar / comprobar España'),
-                ),
-                const SizedBox(height: 20),
+                for (final region in regions) ...[
+                  FutureBuilder<bool>(
+                    future: _isInstalled(region),
+                    builder: (context, installedSnapshot) {
+                      final installed = installedSnapshot.data ?? false;
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                region.name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(region.description),
+                              const SizedBox(height: 4),
+                              Text('${_size(region.sizeBytes)} · ${region.updatedAt.toLocal()}'),
+                              const SizedBox(height: 4),
+                              Text('SHA-256: ${region.sha256}'),
+                              const SizedBox(height: 12),
+                              if (_downloading)
+                                const LinearProgressIndicator(),
+                              const SizedBox(height: 8),
+                              FilledButton.icon(
+                                onPressed: _downloading
+                                    ? null
+                                    : () => _downloadRegion(region),
+                                icon: Icon(
+                                  installed
+                                      ? Icons.verified_outlined
+                                      : Icons.download_outlined,
+                                ),
+                                label: Text(
+                                  installed
+                                      ? 'Volver a verificar / actualizar'
+                                      : 'Descargar ${region.name}',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -143,15 +181,23 @@ class _OfflinePageState extends State<OfflinePage> {
                       children: [
                         const Icon(Icons.storage_outlined),
                         const SizedBox(width: 12),
-                        Expanded(child: Text(installedMaps == 0 ? 'Aún no hay regiones heredadas instaladas en el dispositivo.' : '$installedMaps regiones heredadas instaladas.')),
+                        Expanded(child: Text(_status)),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 18),
-                Text('Motor cartográfico', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                Text(
+                  'Motor cartográfico',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
                 const SizedBox(height: 6),
-                const Text('El mapa principal utiliza PMTiles con flutter_map_vector_tiles. Agus Maps queda solamente como compatibilidad heredada de esta pantalla y no participa en el renderizado principal.'),
+                const Text(
+                  'El mapa principal utiliza PMTiles con flutter_map_vector_tiles. No depende de Agus Maps.',
+                ),
               ],
             );
           },
@@ -165,6 +211,7 @@ class _MapCatalogError extends StatelessWidget {
   const _MapCatalogError({required this.message, required this.onRetry});
   final String message;
   final VoidCallback onRetry;
+
   @override
   Widget build(BuildContext context) => Center(
         child: Padding(
@@ -174,11 +221,19 @@ class _MapCatalogError extends StatelessWidget {
             children: [
               const Icon(Icons.cloud_off_outlined, size: 52),
               const SizedBox(height: 14),
-              const Text('No se pudo obtener el catálogo de mapas', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+              const Text(
+                'No se pudo obtener el catálogo de mapas',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
               const SizedBox(height: 8),
               Text(message, textAlign: TextAlign.center),
               const SizedBox(height: 18),
-              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: const Text('Reintentar')),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
             ],
           ),
         ),
