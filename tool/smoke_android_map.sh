@@ -22,14 +22,15 @@ echo "Waiting for normal home screen..."
 sleep 5
 
 window_file="${RUNNER_TEMP:-/tmp}/espana-window.xml"
-# Android 11+ may deny shell access to XML files written under /sdcard.
-# Dump directly to stdout instead of round-tripping through shared storage.
+# adb exec-out/uiautomator can return more than one XML document or a trailing
+# diagnostic payload depending on Android/API level. Normalize the first
+# complete hierarchy before parsing it instead of feeding the raw stream to ET.
 adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator.err >"${window_file}" || true
 
-if ! grep -q '^<?xml' "${window_file}"; then
-  echo "FAIL: UIAutomator did not return a valid XML hierarchy."
+if ! grep -q '<hierarchy' "${window_file}"; then
+  echo "FAIL: UIAutomator did not return a hierarchy."
   cat /tmp/espana-uiautomator.err || true
-  head -c 1000 "${window_file}" || true
+  head -c 2000 "${window_file}" || true
   exit 1
 fi
 
@@ -40,7 +41,20 @@ import sys
 import xml.etree.ElementTree as ET
 
 path = sys.argv[1]
-root = ET.parse(path).getroot()
+raw = open(path, "rb").read().decode("utf-8", errors="replace")
+
+start = raw.find("<?xml")
+if start < 0:
+    start = raw.find("<hierarchy")
+if start < 0:
+    raise SystemExit("Could not locate UIAutomator XML hierarchy")
+
+end = raw.find("</hierarchy>", start)
+if end < 0:
+    raise SystemExit("UIAutomator hierarchy is incomplete")
+
+xml = raw[start:end + len("</hierarchy>")]
+root = ET.fromstring(xml)
 candidates = []
 
 for node in root.iter("node"):
