@@ -34,12 +34,12 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
     final track = widget.track;
     final route = widget.route;
     final title = track?.name ?? route?.name ?? 'Detalle de ruta';
-    final points = track?.points ?? const [];
+    final List<LatLng> points = track?.points ?? const <LatLng>[];
     final center = points.isNotEmpty ? points[points.length ~/ 2] : null;
     return Scaffold(
       appBar: AppBar(title: Text(title), actions: [if (track != null) IconButton(tooltip: 'Exportar GPX', onPressed: _exportTrack, icon: const Icon(Icons.file_download_outlined))]),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 32), children: [
-        SizedBox(height: 300, child: ClipRRect(borderRadius: BorderRadius.circular(20), child: PmTilesMapViewport(initialCenter: LatLng(center?.latitude ?? 40.4168, center?.longitude ?? -3.7038), initialZoom: center == null ? 7 : 14, routePoints: track?.points ?? const <LatLng>[],))),
+        SizedBox(height: 300, child: ClipRRect(borderRadius: BorderRadius.circular(20), child: PmTilesMapViewport(initialCenter: LatLng(center?.latitude ?? 40.4168, center?.longitude ?? -3.7038), initialZoom: center == null ? 7 : 14, routePoints: points))),
         if (track != null) ...[const SizedBox(height: 10), const Text('La traza se conserva completa en el GPX y en el registro de la ruta.', textAlign: TextAlign.center)],
         const SizedBox(height: 18),
         if (track != null) _TrackStats(track: track),
