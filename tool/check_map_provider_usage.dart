@@ -4,7 +4,6 @@ const forbiddenTileHost = 'tile.openstreetmap.org';
 const forbiddenImports = <String>{
   'package:maplibre_gl/',
   'package:maplibre_gl_platform_interface/',
-  'package:pmtiles/',
 };
 
 void main() {
@@ -38,8 +37,8 @@ void main() {
       stderr.writeln(' - $violation');
     }
     stderr.writeln(
-      'España Outdoor uses flutter_map_vector_tiles as the renderer and '\
-      'PMTiles/R2 as the cartographic data source. Direct OSM tile endpoints '\
+      'España Outdoor uses flutter_map_vector_tiles as the renderer and '
+      'PMTiles/R2 as the cartographic data source. Direct OSM tile endpoints '
       'and MapLibre native bindings are forbidden.',
     );
     exitCode = 1;
