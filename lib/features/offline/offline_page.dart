@@ -28,6 +28,19 @@ class _OfflinePageState extends State<OfflinePage> {
   }
 
   Future<List<OfflineRegion>> _loadCatalog() async {
+    // A verified local package is enough to render and manage Spain offline.
+    // Do not block the screen on remote catalog DNS/network when the archive
+    // is already present and valid.
+    if (await _hasVerifiedLocalSpain()) {
+      if (mounted) {
+        setState(() {
+          _readyIds.add('spain');
+          _status = 'España disponible sin conexión.';
+        });
+      }
+      return const <OfflineRegion>[];
+    }
+
     try {
       if (_catalogUrl.isEmpty) {
         throw StateError('OFFLINE_CATALOG_URL no está configurado.');
@@ -39,19 +52,9 @@ class _OfflinePageState extends State<OfflinePage> {
 
       await _refreshReady(regions);
       return regions;
-    } on Object catch (error) {
-      // The catalog is remote metadata. A verified local package is sufficient
-      // to keep the offline screen useful when the device has no connectivity.
-      final localReady = await _hasVerifiedLocalSpain();
-      if (!localReady) rethrow;
-
-      if (mounted) {
-        setState(() {
-          _readyIds.add('spain');
-          _status = 'España disponible sin conexión. Catálogo remoto no disponible.';
-        });
-      }
-      return const <OfflineRegion>[];
+    } on Object {
+      // No local archive and no remote catalog: surface the actionable error.
+      rethrow;
     }
   }
 
@@ -203,43 +206,21 @@ class _OfflinePageState extends State<OfflinePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              region.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
+                            Text(region.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                             const SizedBox(height: 6),
                             Text(region.description),
                             const SizedBox(height: 4),
-                            Text(
-                              '${_size(region.sizeBytes)} · ${region.updatedAt.toLocal()}',
-                            ),
+                            Text('${_size(region.sizeBytes)} · ${region.updatedAt.toLocal()}'),
                             const SizedBox(height: 4),
                             Text('SHA-256: ${region.sha256}'),
                             const SizedBox(height: 12),
-                            if (_downloading) const LinearProgressIndicator(),
-                            const SizedBox(height: 8),
-                            Builder(
-                              builder: (context) {
-                                final ready = _readyIds.contains(region.id);
-                                return FilledButton.icon(
-                                  onPressed: _downloading || ready
-                                      ? null
-                                      : () => _downloadRegion(region),
-                                  icon: Icon(
-                                    ready
-                                        ? Icons.check_circle_outline
-                                        : Icons.download_outlined,
-                                  ),
-                                  label: Text(
-                                    ready
-                                        ? 'España disponible sin conexión'
-                                        : 'Descargar ${region.name}',
-                                  ),
-                                );
-                              },
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _downloading || _readyIds.contains(region.id) ? null : () => _downloadRegion(region),
+                                icon: Icon(_readyIds.contains(region.id) ? Icons.check : Icons.download),
+                                label: Text(_readyIds.contains(region.id) ? 'Disponible sin conexión' : 'Descargar mapa'),
+                              ),
                             ),
                           ],
                         ),
@@ -247,30 +228,7 @@ class _OfflinePageState extends State<OfflinePage> {
                     ),
                     const SizedBox(height: 12),
                   ],
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.storage_outlined),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text(_status)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Motor cartográfico',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'El mapa principal utiliza PMTiles con flutter_map_vector_tiles.',
-                  ),
+                  Text(_status, textAlign: TextAlign.center),
                 ],
               );
             },
@@ -280,11 +238,7 @@ class _OfflinePageState extends State<OfflinePage> {
 }
 
 class _MapCatalogError extends StatelessWidget {
-  const _MapCatalogError({
-    required this.message,
-    required this.onRetry,
-  });
-
+  const _MapCatalogError({required this.message, required this.onRetry});
   final String message;
   final VoidCallback onRetry;
 
@@ -295,21 +249,13 @@ class _MapCatalogError extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_outlined, size: 52),
+              const Icon(Icons.cloud_off, size: 52),
               const SizedBox(height: 14),
-              const Text(
-                'No se pudo obtener el catálogo de mapas',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-              ),
+              Text('No se pudo obtener el catálogo de mapas', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(message, textAlign: TextAlign.center),
               const SizedBox(height: 18),
-              FilledButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Reintentar'),
-              ),
+              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: const Text('Reintentar')),
             ],
           ),
         ),
