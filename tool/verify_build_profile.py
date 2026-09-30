@@ -83,11 +83,6 @@ def check_staging() -> None:
         )
     _check_endpoint_set("staging")
 
-    pmtiles_url = os.environ.get("MAP_PMTILES_URL", "").strip()
-    if not pmtiles_url:
-        _fail("Missing required production PMTiles URL: MAP_PMTILES_URL.")
-    _validate_https("MAP_PMTILES_URL", pmtiles_url)
-
     attribution = os.environ.get("MAP_ATTRIBUTION", "").strip()
     if not attribution:
         _fail("Missing required staging map attribution: MAP_ATTRIBUTION.")
@@ -105,6 +100,11 @@ def check_production() -> None:
             f"got {os.environ.get('APP_ENV', '')!r}."
         )
     _check_endpoint_set("production")
+
+    pmtiles_url = os.environ.get("MAP_PMTILES_URL", "").strip()
+    if not pmtiles_url:
+        _fail("Missing required production PMTiles URL: MAP_PMTILES_URL.")
+    _validate_https("MAP_PMTILES_URL", pmtiles_url)
 
     attribution = os.environ.get("MAP_ATTRIBUTION", "").strip()
     if not attribution:
