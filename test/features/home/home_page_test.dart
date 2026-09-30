@@ -10,19 +10,14 @@ void main() {
 
     expect(find.text('Explora España'), findsOneWidget);
 
-    final scrollable = find.byType(CustomScrollView);
-    await tester.scrollUntilVisible(
-      find.text('Rutas'),
-      400,
-      scrollable: scrollable,
+    final homeScrollView = find.byType(CustomScrollView);
+    await tester.drag(
+      homeScrollView,
+      const Offset(0, -450),
     );
-    expect(find.text('Rutas'), findsOneWidget);
+    await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.text('Mapa'),
-      300,
-      scrollable: scrollable,
-    );
+    expect(find.text('Rutas'), findsOneWidget);
     expect(find.text('Mapa'), findsOneWidget);
   });
 }
