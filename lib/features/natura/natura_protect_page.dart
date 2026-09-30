@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../app/photo_atlas.dart';
+
+import '../../app/outdoor_visuals.dart';
 
 class NaturaProtectPage extends StatelessWidget {
   const NaturaProtectPage({super.key});
@@ -35,7 +36,7 @@ class NaturaProtectPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          OutdoorPhotoHero(index: 6, title: 'NATURA 2000', subtitle: 'Espacios protegidos y navegación responsable.'),
+          const OutdoorVisualHero(asset: 'assets/visuals/hero_natura.svg', title: 'NATURA 2000', subtitle: 'Espacios protegidos y navegación responsable.'),
           const SizedBox(height: 18),
           Card(
             color: theme.colorScheme.primaryContainer,
