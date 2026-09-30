@@ -25,7 +25,7 @@ class MapPage extends ConsumerStatefulWidget {
 }
 
 class _MapPageState extends ConsumerState<MapPage> {
-  late final Future<vt.Style> _styleFuture;
+  late Future<vt.Style> _styleFuture;
 
   @override
   void initState() {
@@ -45,12 +45,12 @@ class _MapPageState extends ConsumerState<MapPage> {
       );
     }
 
-    final catalog = jsonDecode(catalogResponse.body);
-    if (catalog is! Map<String, dynamic>) {
+    final decoded = jsonDecode(catalogResponse.body);
+    if (decoded is! Map<String, dynamic>) {
       throw StateError('El catálogo cartográfico no tiene un formato válido.');
     }
 
-    final downloadUrl = catalog['downloadUrl'];
+    final downloadUrl = decoded['downloadUrl'];
     if (downloadUrl is! String || !downloadUrl.startsWith('https://')) {
       throw StateError('El catálogo no contiene un downloadUrl HTTPS válido.');
     }
@@ -60,9 +60,9 @@ class _MapPageState extends ConsumerState<MapPage> {
       logger: const vt.Logger.console(),
     );
 
-    // OpenFreeMap supplies only the visual style/sprites/glyphs. The actual
-    // vector tiles are replaced with our own verified Spain PMTiles archive.
-    // This keeps the renderer independent from the tile storage backend.
+    // The visual style is independent from the tile storage. OpenFreeMap
+    // provides the Liberty style/sprites/glyphs; our verified Spain PMTiles
+    // archive supplies the actual vector tiles through HTTP Range Requests.
     return vt.StyleReader(
       uri: 'https://tiles.openfreemap.org/styles/liberty',
       resolveProvider: (sourceId) async {
@@ -171,7 +171,10 @@ class _MapPageState extends ConsumerState<MapPage> {
             bottom: 16,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Padding(
