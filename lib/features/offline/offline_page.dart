@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../app/outdoor_visuals.dart';
-import '../../app/photo_atlas.dart';
 import '../../core/offline/offline_region.dart';
 import '../../core/offline/offline_region_catalog.dart';
 import '../../core/offline/offline_region_downloader.dart';
@@ -170,7 +169,7 @@ class _OfflinePageState extends State<OfflinePage> {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'El mapa principal utiliza PMTiles con flutter_map_vector_tiles. No depende de Agus Maps.',
+                  'El mapa principal utiliza PMTiles con flutter_map_vector_tiles.',
                 ),
               ],
             );
