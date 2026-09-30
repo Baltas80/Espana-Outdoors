@@ -16,7 +16,6 @@ final class AgusMapsRuntime {
   String? _dataPath;
   String? _worldPath;
   String? _worldCoastsPath;
-  int? _bundledVersion;
   bool _initialized = false;
   bool _surfaceReady = false;
   Future<void>? _registrationFuture;
@@ -55,8 +54,13 @@ final class AgusMapsRuntime {
       expectedSha1: 'cfd2cce0526ca92cf03c1cc784e12d433bf590d9',
     );
 
-    _bundledVersion = await _readBundledMwmVersion(dataPath);
-    agus.initWithPaths(dataPath, dataPath);
+    // initWithPaths() only prepares the native platform. The Android Agus
+    // bridge creates the Framework when the SurfaceProducer surface exists.
+    // At that point CoMaps scans this same writable directory and registers
+    // World.mwm/WorldCoasts.mwm once. Do not register those bundled maps a
+    // second time from Dart: duplicate RegisterMap calls are unnecessary and
+    // can race the native renderer during its first frame.
+    await agus.initWithPaths(dataPath, dataPath);
     _initialized = true;
   }
 
@@ -76,37 +80,21 @@ final class AgusMapsRuntime {
   }
 
   Future<void> _registerDownloadedMapsSafely() async {
-    await _registerBundledMap(_worldPath);
-    await _registerBundledMap(_worldCoastsPath);
+    // Bundled MWM files are already visible to the native Framework when
+    // AgusMap creates the Surface. Only maps added after startup need explicit
+    // registration here.
     await registerAllMaps();
 
-    // The native engine is created before bundled/downloaded maps are
-    // registered. Force a redraw after registration so the first viewport is
-    // recalculated against the complete registered map set.
-    try {
-      agus.invalidateMap();
-      agus.forceRedraw();
-    } on Object catch (error, stackTrace) {
-      debugPrint('[AgusMapsRuntime] redraw after map registration failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
-  }
-
-  Future<void> _registerBundledMap(String? filePath) async {
-    if (filePath == null || !await File(filePath).exists()) return;
-
-    final result = _bundledVersion == null
-        ? agus.registerSingleMap(filePath)
-        : agus.registerSingleMapWithVersion(filePath, _bundledVersion!);
-
-    debugPrint(
-      '[AgusMapsRuntime] bundled map registration result=' + result.toString(),
-    );
-
-    if (result != 0) {
-      debugPrint(
-        '[AgusMapsRuntime] bundled map was not registered: ' + filePath,
-      );
+    // Registration of downloaded maps changes the datasource after the engine
+    // exists. A lightweight viewport invalidation is sufficient and avoids the
+    // heavier SetMapStyle()/forceRedraw path during initial map startup.
+    if (_surfaceReady) {
+      try {
+        agus.invalidateMap();
+      } on Object catch (error, stackTrace) {
+        debugPrint('[AgusMapsRuntime] map invalidation failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
     }
   }
 
@@ -176,9 +164,6 @@ final class AgusMapsRuntime {
       );
     }
     agus.invalidateMap();
-    try {
-      agus.forceRedraw();
-    } catch (_) {}
 
     return result;
   }
@@ -296,23 +281,6 @@ final class AgusMapsRuntime {
     }
 
     return true;
-  }
-
-  Future<int?> _readBundledMwmVersion(String dataPath) async {
-    try {
-      final file = File(dataPath + '/countries.txt');
-      if (!await file.exists()) return null;
-
-      final contents = await file.readAsString();
-      final match = RegExp(r'"v"\s*:\s*(\d+)').firstMatch(contents);
-      return match == null ? null : int.tryParse(match.group(1)!);
-    } catch (error) {
-      debugPrint(
-        '[AgusMapsRuntime] could not read bundled MWM version: ' +
-            error.toString(),
-      );
-      return null;
-    }
   }
 
   Future<void> _validatePersistedMaps() async {
