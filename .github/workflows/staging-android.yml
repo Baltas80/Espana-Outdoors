@@ -104,14 +104,15 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           script: bash tool/smoke_android_map.sh build/app/outputs/flutter-apk/app-release.apk
-      - name: Upload Android map smoke log
+      - name: Upload Android map smoke evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: android-map-smoke-log-${{ github.run_id }}
+          name: android-map-smoke-${{ github.run_id }}
           path: |
             ${{ runner.temp }}/espana-outdoor-map-logcat.txt
             ${{ runner.temp }}/espana-window.xml
+            ${{ runner.temp }}/espana-outdoor-map.png
           if-no-files-found: ignore
       - name: Fail staging when native map smoke fails
         if: steps.android_map_smoke.outcome == 'failure'
