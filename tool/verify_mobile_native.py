@@ -19,18 +19,6 @@ ANDROID_PERMISSIONS = {
 }
 
 
-def verify_agus_maps_assets() -> None:
-    required = (
-        ROOT / "assets" / "maps" / "icudt75l.dat",
-        ROOT / "assets" / "comaps_data" / "countries.txt",
-    )
-    missing = [str(path) for path in required if not path.exists()]
-    if missing:
-        raise SystemExit(
-            "Agus Maps SDK assets are incomplete: " + ", ".join(missing)
-        )
-
-
 def verify_android() -> None:
     manifest = ROOT / "android" / "app" / "src" / "main" / "AndroidManifest.xml"
     if not manifest.exists():
@@ -60,19 +48,12 @@ def verify_android() -> None:
     if not re.search(r"minSdk(?:Version\s+|\s*=\s*)24\b", content):
         raise SystemExit("Android minSdk 24 was not enforced by native configuration.")
 
-    if not re.search(
-        r'android:name="io\.flutter\.embedding\.android\.EnableImpeller"\s+'
-        r'android:value="false"',
-        text,
-    ):
-        raise SystemExit(
-            "Flutter Impeller must be disabled for the Agus Maps Android renderer."
-        )
+    if "agus_maps_flutter" in content.lower() or "comaps" in content.lower():
+        raise SystemExit("Forbidden Agus/CoMaps Android configuration detected.")
 
     print("android_manifest=verified")
     print("android_permissions=verified")
     print("android_min_sdk=24")
-    print("android_impeller=disabled")
 
 
 def verify_ios() -> None:
@@ -107,7 +88,6 @@ def main() -> int:
     parser.add_argument("--platform", choices=("android", "ios"), required=True)
     args = parser.parse_args()
 
-    verify_agus_maps_assets()
     if args.platform == "android":
         verify_android()
     else:
