@@ -1,13 +1,21 @@
-import 'dart:async';
+import 'dart:convert';
 
-import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
-import '../../core/maps/agus_maps_runtime.dart';
+
+const _catalogUrl = String.fromEnvironment('OFFLINE_CATALOG_URL');
+const _mapAttribution = String.fromEnvironment(
+  'MAP_ATTRIBUTION',
+  defaultValue: '© OpenStreetMap contributors',
+);
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -17,30 +25,60 @@ class MapPage extends ConsumerStatefulWidget {
 }
 
 class _MapPageState extends ConsumerState<MapPage> {
-  final agus.AgusMapController _controller = agus.AgusMapController();
-  Future<void>? _runtimeFuture;
-  double _initialLat = 40.4168;
-  double _initialLon = -3.7038;
-  int _initialZoom = 7;
+  late final Future<vt.Style> _styleFuture;
 
   @override
   void initState() {
     super.initState();
-    // Capture the first usable GPS fix once. Do not feed subsequent location
-    // updates into AgusMap's initial* properties while its native surface is
-    // being created; that can cause an unsafe widget/native lifecycle race.
-    final initialPosition = ref.read(locationControllerProvider).position;
-    if (initialPosition != null) {
-      _initialLat = initialPosition.latitude;
-      _initialLon = initialPosition.longitude;
-      _initialZoom = 14;
+    _styleFuture = _loadStyle();
+  }
+
+  Future<vt.Style> _loadStyle() async {
+    if (_catalogUrl.isEmpty) {
+      throw StateError('OFFLINE_CATALOG_URL no está configurado.');
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        _runtimeFuture = AgusMapsRuntime.instance.ensureInitialized();
-      });
-    });
+
+    final catalogResponse = await http.get(Uri.parse(_catalogUrl));
+    if (catalogResponse.statusCode != 200) {
+      throw StateError(
+        'No se pudo cargar el catálogo cartográfico (${catalogResponse.statusCode}).',
+      );
+    }
+
+    final catalog = jsonDecode(catalogResponse.body);
+    if (catalog is! Map<String, dynamic>) {
+      throw StateError('El catálogo cartográfico no tiene un formato válido.');
+    }
+
+    final downloadUrl = catalog['downloadUrl'];
+    if (downloadUrl is! String || !downloadUrl.startsWith('https://')) {
+      throw StateError('El catálogo no contiene un downloadUrl HTTPS válido.');
+    }
+
+    final provider = await vt.PmTilesVectorTileProvider.open(
+      downloadUrl,
+      logger: const vt.Logger.console(),
+    );
+
+    // OpenFreeMap supplies only the visual style/sprites/glyphs. The actual
+    // vector tiles are replaced with our own verified Spain PMTiles archive.
+    // This keeps the renderer independent from the tile storage backend.
+    return vt.StyleReader(
+      uri: 'https://tiles.openfreemap.org/styles/liberty',
+      resolveProvider: (sourceId) async {
+        if (sourceId == 'openmaptiles') {
+          return provider;
+        }
+        return null;
+      },
+      logger: const vt.Logger.console(),
+    ).read();
+  }
+
+  @override
+  void dispose() {
+    _styleFuture.then((style) => style.dispose());
+    super.dispose();
   }
 
   @override
@@ -68,36 +106,39 @@ class _MapPageState extends ConsumerState<MapPage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: FutureBuilder<void>(
-              future: _runtimeFuture,
+            child: FutureBuilder<vt.Style>(
+              future: _styleFuture,
               builder: (context, snapshot) {
-                if (_runtimeFuture == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
                 if (snapshot.hasError) {
                   return _MapMessage(
-                    title: 'No se puede iniciar la cartografía',
+                    title: 'No se pudo cargar el mapa',
                     message: snapshot.error.toString(),
-                    actionLabel: 'Mapas offline',
-                    onAction: () => context.push('/offline'),
+                    onRetry: () => setState(() {
+                      _styleFuture = _loadStyle();
+                    }),
                   );
                 }
-                if (snapshot.connectionState != ConnectionState.done) {
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                // Hito 1: Agus Maps registers the bundled World/WorldCoasts
-                // files while the native Framework is created. Do not call
-                // registerAllMaps() from onMapReady here; that introduces a
-                // Dart/native race during the first render.
-                return agus.AgusMap(
-                  key: const ValueKey('espana-outdoor-native-map'),
-                  controller: _controller,
-                  initialLat: _initialLat,
-                  initialLon: _initialLon,
-                  initialZoom: _initialZoom,
-                  userScale: 1,
-                  isVisible: true,
+                final style = snapshot.data!;
+                return FlutterMap(
+                  options: const MapOptions(
+                    initialCenter: LatLng(40.4168, -3.7038),
+                    initialZoom: 6.2,
+                    minZoom: 3,
+                    maxZoom: 18,
+                  ),
+                  children: [
+                    vt.VectorTileLayer(
+                      theme: style.theme,
+                      tileProviders: style.providers,
+                      rasterSources: style.rasterSources,
+                      sprites: style.sprites,
+                      logger: const vt.Logger.console(),
+                    ),
+                  ],
                 );
               },
             ),
@@ -108,14 +149,10 @@ class _MapPageState extends ConsumerState<MapPage> {
             top: 16,
             child: Card(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    Icon(
-                      recording.isRecording
-                          ? Icons.fiber_manual_record
-                          : Icons.map_outlined,
-                    ),
+                    const Icon(Icons.map_outlined),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -130,11 +167,24 @@ class _MapPageState extends ConsumerState<MapPage> {
             ),
           ),
           Positioned(
+            left: 16,
+            bottom: 16,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                child: Text(_mapAttribution, style: TextStyle(fontSize: 11)),
+              ),
+            ),
+          ),
+          Positioned(
             right: 16,
             bottom: 88,
             child: FloatingActionButton(
-              tooltip:
-                  recording.isRecording ? 'Detener grabación' : 'Grabar ruta',
+              tooltip: recording.isRecording ? 'Detener grabación' : 'Grabar ruta',
               onPressed: () async {
                 try {
                   if (recording.isRecording) {
@@ -184,14 +234,12 @@ class _MapMessage extends StatelessWidget {
   const _MapMessage({
     required this.title,
     required this.message,
-    required this.actionLabel,
-    required this.onAction,
+    required this.onRetry,
   });
 
   final String title;
   final String message;
-  final String actionLabel;
-  final VoidCallback onAction;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -214,9 +262,9 @@ class _MapMessage extends StatelessWidget {
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 18),
             FilledButton.icon(
-              onPressed: onAction,
-              icon: const Icon(Icons.download_outlined),
-              label: Text(actionLabel),
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reintentar'),
             ),
           ],
         ),
