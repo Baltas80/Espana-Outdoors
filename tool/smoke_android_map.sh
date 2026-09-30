@@ -18,9 +18,7 @@ adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
   exit 1
 }
 
-echo "Waiting for normal home screen..."
 sleep 5
-
 window_file="${RUNNER_TEMP:-/tmp}/espana-window.xml"
 adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator.err >"${window_file}" || true
 
@@ -92,5 +90,22 @@ if grep -Eiq "FATAL EXCEPTION|Fatal signal [0-9]+ \((SIGSEGV|SIGABRT)\)|Abort me
   exit 1
 fi
 
-echo "PASS: application remained alive after tapping Mapa; screenshot captured for visual QA."
+# The map must not merely keep the Flutter process alive: the PMTiles screen
+# itself must be visible and must not expose the loader error/retry state.
+post_window="${RUNNER_TEMP:-/tmp}/espana-window-post-map.xml"
+adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator-post.err >"${post_window}" || true
+if grep -Fq 'No se pudo cargar el mapa' "${post_window}" || grep -Fq 'Reintentar' "${post_window}"; then
+  echo "FAIL: PMTiles map is showing the map loader error state."
+  cat "${post_window}"
+  grep -Ein "StyleReaderException|PmTilesException|HTTP [0-9]{3}|Range|flutter_map|PMTiles|VectorTile" "${logcat_file}" | tail -n 500 || true
+  exit 1
+fi
+
+if grep -Eiq "StyleReaderException|PmTilesException" "${logcat_file}"; then
+  echo "FAIL: PMTiles/style exception detected."
+  grep -Ein "StyleReaderException|PmTilesException|HTTP [0-9]{3}|Range|flutter_map|PMTiles|VectorTile" "${logcat_file}" | tail -n 500 || true
+  exit 1
+fi
+
+echo "PASS: PMTiles map remained alive and the visible UI is not in the loader error state."
 grep -Ei "flutter_map|PMTiles|VectorTile|tile|Range" "${logcat_file}" | tail -n 200 || true
