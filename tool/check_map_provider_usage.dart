@@ -2,8 +2,6 @@ import 'dart:io';
 
 const forbiddenTileHost = 'tile.openstreetmap.org';
 const forbiddenImports = <String>{
-  'package:flutter_map/',
-  'package:flutter_map_vector_tiles/',
   'package:maplibre_gl/',
   'package:maplibre_gl_platform_interface/',
   'package:pmtiles/',
@@ -29,7 +27,7 @@ void main() {
 
     for (final importPrefix in forbiddenImports) {
       if (content.contains("'$importPrefix")) {
-        violations.add('$path: legacy map import $importPrefix');
+        violations.add('$path: forbidden map import $importPrefix');
       }
     }
   }
@@ -40,13 +38,13 @@ void main() {
       stderr.writeln(' - $violation');
     }
     stderr.writeln(
-      'España Outdoor Android uses Agus Maps/CoMaps as the map renderer. '
-      'PMTiles is infrastructure input only and must not be coupled to the '
-      'native map widget.',
+      'España Outdoor uses flutter_map_vector_tiles as the renderer and '\
+      'PMTiles/R2 as the cartographic data source. Direct OSM tile endpoints '\
+      'and MapLibre native bindings are forbidden.',
     );
     exitCode = 1;
     return;
   }
 
-  stdout.writeln('Map provider usage guard passed.');
+  stdout.writeln('Map provider usage guard passed: PMTiles renderer architecture.');
 }
