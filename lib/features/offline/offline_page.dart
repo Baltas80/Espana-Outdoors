@@ -5,6 +5,7 @@ import '../../core/maps/pmtiles_local_source.dart';
 import '../../core/offline/offline_region.dart';
 import '../../core/offline/offline_region_catalog.dart';
 import '../../core/offline/offline_region_downloader.dart';
+import '../../core/offline/offline_region_store.dart';
 
 const _catalogUrl = String.fromEnvironment('OFFLINE_CATALOG_URL');
 
@@ -27,16 +28,49 @@ class _OfflinePageState extends State<OfflinePage> {
   }
 
   Future<List<OfflineRegion>> _loadCatalog() async {
-    if (_catalogUrl.isEmpty) {
-      throw StateError('OFFLINE_CATALOG_URL no está configurado.');
+    try {
+      if (_catalogUrl.isEmpty) {
+        throw StateError('OFFLINE_CATALOG_URL no está configurado.');
+      }
+
+      final regions = await OfflineRegionCatalog(
+        endpoint: Uri.parse(_catalogUrl),
+      ).fetch();
+
+      await _refreshReady(regions);
+      return regions;
+    } on Object catch (error) {
+      // The catalog is remote metadata. A verified local package is sufficient
+      // to keep the offline screen useful when the device has no connectivity.
+      final localReady = await _hasVerifiedLocalSpain();
+      if (!localReady) rethrow;
+
+      if (mounted) {
+        setState(() {
+          _readyIds.add('spain');
+          _status = 'España disponible sin conexión. Catálogo remoto no disponible.';
+        });
+      }
+      return const <OfflineRegion>[];
+    }
+  }
+
+  Future<bool> _hasVerifiedLocalSpain() async {
+    final record = OfflineRegionStore().get('spain');
+    if (record == null || !record.hasValidArtifact) return false;
+
+    final path = record.localPath?.trim();
+    final sha256 = record.sha256?.trim().toLowerCase();
+    if (path == null || path.isEmpty || sha256 == null || sha256.length != 64) {
+      return false;
     }
 
-    final regions = await OfflineRegionCatalog(
-      endpoint: Uri.parse(_catalogUrl),
-    ).fetch();
-
-    await _refreshReady(regions);
-    return regions;
+    final fileName = path.split(RegExp(r'[/\\]')).last;
+    return await findValidLocalPmTiles(
+          expectedFileName: fileName,
+          expectedSha256: sha256,
+        ) !=
+        null;
   }
 
   Future<void> _refreshReady(List<OfflineRegion> regions) async {
@@ -142,6 +176,26 @@ class _OfflinePageState extends State<OfflinePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (regions.isEmpty && _readyIds.contains('spain')) ...[
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(18),
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle_outline, size: 42),
+                            SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                'España está descargada, verificada y disponible sin conexión. No se necesita el catálogo remoto para utilizar el mapa local.',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   for (final region in regions) ...[
                     Card(
                       child: Padding(
