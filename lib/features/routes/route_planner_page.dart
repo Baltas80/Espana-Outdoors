@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart' hide RoutingConfig;
@@ -8,7 +5,6 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/contracts/routing_service.dart';
 import '../../core/location/location_controller.dart';
-import '../../core/maps/agus_maps_runtime.dart';
 import '../../core/routing/routing_config.dart';
 import '../../infrastructure/routing/valhalla_routing_service.dart';
 
@@ -20,18 +16,9 @@ class RoutePlannerPage extends ConsumerStatefulWidget {
 }
 
 class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
-  final _controller = agus.AgusMapController();
-  late final Future<void> _runtimeFuture;
-
   LatLng? _destination;
   RouteResult? _route;
   bool _busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _runtimeFuture = AgusMapsRuntime.instance.ensureInitialized();
-  }
 
   Future<void> _showDestinationDialog() async {
     final existing = _destination;
@@ -105,11 +92,6 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       _destination = destination;
       _route = null;
     });
-    _controller.moveToLocation(
-      destination.latitude,
-      destination.longitude,
-      14,
-    );
   }
 
   Future<void> _calculate() async {
@@ -180,37 +162,16 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: FutureBuilder<void>(
-              future: _runtimeFuture,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        'No se pudo iniciar la cartografía: ${snapshot.error}',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  );
-                }
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                return agus.AgusMap(
-                  controller: _controller,
-                  initialLat: center.latitude,
-                  initialLon: center.longitude,
-                  initialZoom: destination == null ? 12 : 14,
-                  onMapReady: () =>
-                      unawaited(AgusMapsRuntime.instance.onMapReady()),
-                  userScale: 1.0,
-                  isVisible: true,
-                );
-              },
+            child: PmTilesMapViewport(
+              key: ValueKey(
+                center.latitude.toString() + ':' + center.longitude.toString(),
+              ),
+              initialCenter: center,
+              initialZoom: destination == null ? 12 : 14,
             ),
           ),
+        ],
+      ),
           Positioned(
             left: 16,
             right: 16,
