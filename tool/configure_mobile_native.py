@@ -1,79 +1,10 @@
 from __future__ import annotations
 
 import argparse
-import os
 import plistlib
-import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def prepare_agus_maps_assets() -> None:
-    sdk_home_value = os.environ.get("AGUS_MAPS_HOME", "").strip()
-    if not sdk_home_value:
-        print("Agus Maps SDK asset preparation skipped: AGUS_MAPS_HOME is not set.")
-        return
-
-    sdk_home = Path(sdk_home_value).expanduser()
-    sdk_asset_candidates = (sdk_home / "assets", sdk_home / "example" / "assets")
-    sdk_assets = next((path for path in sdk_asset_candidates if path.exists()), None)
-    if sdk_assets is None:
-        raise SystemExit(
-            "Agus Maps SDK has no assets directory (checked assets and example/assets)."
-        )
-
-    data_source = sdk_assets / "comaps_data"
-    if not data_source.exists():
-        raise SystemExit(f"Agus Maps SDK is missing comaps_data: {data_source}")
-
-    maps_target = ROOT / "assets" / "maps"
-    data_target = ROOT / "assets" / "comaps_data"
-    maps_target.mkdir(parents=True, exist_ok=True)
-
-    # World.mwm and WorldCoasts.mwm are prepared and cryptographically
-    # verified by ops/offline/prepare-agus-base-maps.sh before this script
-    # runs. They are deliberately not expected inside the Agus SDK archive:
-    # the pinned SDK 0.1.18 package does not ship those base-map snapshots.
-    required_map_names = ("World.mwm", "WorldCoasts.mwm")
-    missing_maps = [name for name in required_map_names if not (maps_target / name).is_file()]
-    if missing_maps:
-        raise SystemExit(
-            "Agus Maps base maps were not prepared before native configuration: "
-            + ", ".join(missing_maps)
-        )
-
-    # ICU is SDK data rather than a downloaded base-map snapshot. Accept the
-    # SDK's common locations and fall back to a recursive lookup so packaging
-    # layout changes do not break staging.
-    icu_target = maps_target / "icudt75l.dat"
-    if not icu_target.is_file():
-        icu_candidates = (
-            sdk_assets / "maps" / "icudt75l.dat",
-            sdk_assets / "icudt75l.dat",
-        )
-        icu_source = next((path for path in icu_candidates if path.is_file()), None)
-        if icu_source is None:
-            icu_source = next(sdk_home.rglob("icudt75l.dat"), None)
-        if icu_source is None:
-            raise SystemExit(
-                "Agus Maps SDK is missing ICU data: icudt75l.dat was not found in the SDK archive."
-            )
-        shutil.copy2(icu_source, icu_target)
-
-    shutil.copytree(data_source, data_target, dirs_exist_ok=True)
-
-    required = (
-        maps_target / "World.mwm",
-        maps_target / "WorldCoasts.mwm",
-        maps_target / "icudt75l.dat",
-        data_target / "countries.txt",
-    )
-    missing = [str(path) for path in required if not path.exists()]
-    if missing:
-        raise SystemExit("Agus Maps assets incomplete: " + ", ".join(missing))
-
-    print("agus_maps_sdk_assets=verified")
 
 
 def patch_android() -> None:
@@ -102,27 +33,14 @@ def patch_android() -> None:
             insertion.append(declaration)
 
     if insertion:
-        text = text[: marker_end + 1] + "\n" + "\n".join(insertion) + text[marker_end + 1 :]
+        text = (
+            text[: marker_end + 1]
+            + "\n"
+            + "\n".join(insertion)
+            + text[marker_end + 1 :]
+        )
 
-    # Agus Maps uses its own OpenGL ES renderer through Flutter's
-    # SurfaceProducer. Disable Flutter Impeller on Android for this app to
-    # avoid known SurfaceProducer/Impeller GPU compatibility crashes.
-    impeller = """    <meta-data
-        android:name="io.flutter.embedding.android.EnableImpeller"
-        android:value="false" />
-"""
-    if 'android:name="io.flutter.embedding.android.EnableImpeller"' not in text:
-        application_marker = "    <application"
-        application_start = text.find(application_marker)
-        if application_start < 0:
-            raise SystemExit("Android manifest has no <application> element.")
-        application_tag_end = text.find(">", application_start)
-        if application_tag_end < 0:
-            raise SystemExit("Invalid Android application element.")
-        text = text[: application_tag_end + 1] + "\n" + impeller.rstrip() + text[application_tag_end + 1 :]
-
-    if "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity" not in text:
-        callback = """    <activity
+    callback = """    <activity
         android:name="io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity"
         android:exported="true">
       <intent-filter>
@@ -134,6 +52,7 @@ def patch_android() -> None:
           android:host="oauth2redirect" />
       </intent-filter>
     </activity>"""
+    if "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity" not in text:
         application_end = text.rfind("</application>")
         if application_end < 0:
             raise SystemExit("Android manifest has no </application> element.")
@@ -151,10 +70,7 @@ def patch_android() -> None:
 
     gradle = gradle_path.read_text(encoding="utf-8")
     if gradle_path.suffix == ".kts":
-        gradle = gradle.replace(
-            "minSdk = flutter.minSdkVersion",
-            "minSdk = 24",
-        )
+        gradle = gradle.replace("minSdk = flutter.minSdkVersion", "minSdk = 24")
     else:
         gradle = gradle.replace(
             "minSdkVersion flutter.minSdkVersion",
@@ -196,14 +112,12 @@ def parse_args() -> argparse.Namespace:
         "--platform",
         choices=("android", "ios", "all"),
         default="all",
-        help="Platform to configure; defaults to all for local use.",
     )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    prepare_agus_maps_assets()
     if args.platform in ("android", "all"):
         patch_android()
     if args.platform in ("ios", "all"):
