@@ -142,24 +142,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Download Agus Maps SDK
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="0.1.18"
-          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
-          root="$RUNNER_TEMP/agus-maps-sdk"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 \
-            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
-            -o "$archive"
-          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | shasum -a 256 -c -
-          rm -rf "$root"
-          mkdir -p "$root"
-          unzip -q "$archive" -d "$root"
-          sdk_home="$(find "$root" -type d -path '*/ios/Frameworks/CoMaps.xcframework' -print -quit)"
-          test -n "$sdk_home"
-          sdk_home="${sdk_home%/ios/Frameworks/CoMaps.xcframework}"
-          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -177,11 +160,7 @@ jobs:
           cp "$RUNNER_TEMP/pubspec.yaml" pubspec.yaml
           cp "$RUNNER_TEMP/main.dart" lib/main.dart
           if [[ -f "$RUNNER_TEMP/analysis_options.yaml" ]]; then cp "$RUNNER_TEMP/analysis_options.yaml" analysis_options.yaml; fi
-      - name: Prepare CoMaps base maps
-        shell: bash
-        run: |
-          set -euo pipefail
-          COMAPS_BASE_SNAPSHOT=260106 bash ops/offline/prepare-agus-base-maps.sh
+
       - name: Apply iOS native configuration
         run: python3 tool/configure_mobile_native.py --platform ios
       - name: Verify iOS native configuration
