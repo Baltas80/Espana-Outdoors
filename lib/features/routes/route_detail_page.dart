@@ -34,7 +34,11 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
     final track = widget.track;
     final route = widget.route;
     final title = track?.name ?? route?.name ?? 'Detalle de ruta';
-    final List<LatLng> points = track?.points ?? const <LatLng>[];
+    final List<LatLng> points = track == null
+        ? const <LatLng>[]
+        : track.points
+            .map((point) => LatLng(point.latitude, point.longitude))
+            .toList(growable: false);
     final center = points.isNotEmpty ? points[points.length ~/ 2] : null;
     return Scaffold(
       appBar: AppBar(title: Text(title), actions: [if (track != null) IconButton(tooltip: 'Exportar GPX', onPressed: _exportTrack, icon: const Icon(Icons.file_download_outlined))]),
