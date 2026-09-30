@@ -10,6 +10,7 @@ on:
       - 'test/**'
       - 'assets/**'
       - 'pubspec.yaml'
+      - 'ops/offline/**'
       - '.github/workflows/staging-android.yml'
 
 concurrency:
@@ -50,6 +51,25 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Download Agus Maps SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="0.1.18"
+          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
+          root="$RUNNER_TEMP/agus-maps-sdk"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 \
+            "https://github.com/agus-works/agus-maps-flutter/releases/download/v${version}/agus-maps-sdk-v${version}.zip" \
+            -o "$archive"
+          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | sha256sum -c -
+          rm -rf "$root"
+          mkdir -p "$root"
+          unzip -q "$archive" -d "$root"
+          sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"
+          test -n "$sdk_home"
+          sdk_home="${sdk_home%/android/prebuilt}"
+          test -d "$sdk_home/assets" || test -d "$sdk_home/example/assets"
+          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -60,9 +80,24 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          cp pubspec.yaml "$RUNNER_TEMP/pubspec.yaml"
+          cp lib/main.dart "$RUNNER_TEMP/main.dart"
+          if [[ -f analysis_options.yaml ]]; then cp analysis_options.yaml "$RUNNER_TEMP/analysis_options.yaml"; fi
           flutter --version
           flutter create . --platforms=android --org com.espanaoutdoors --overwrite
+          cp "$RUNNER_TEMP/pubspec.yaml" pubspec.yaml
+          cp "$RUNNER_TEMP/main.dart" lib/main.dart
+          if [[ -f "$RUNNER_TEMP/analysis_options.yaml" ]]; then cp "$RUNNER_TEMP/analysis_options.yaml" analysis_options.yaml; fi
           test -f android/app/build.gradle.kts || test -f android/app/build.gradle
+      - name: Prepare CoMaps base maps
+        shell: bash
+        run: |
+          set -euo pipefail
+          COMAPS_BASE_SNAPSHOT=260106 bash ops/offline/prepare-agus-base-maps.sh
+      - name: Apply Android native configuration
+        run: python3 tool/configure_mobile_native.py --platform android
+      - name: Verify Android native configuration
+        run: python3 tool/verify_mobile_native.py --platform android
       - name: Dependencies
         run: flutter pub get
       - name: Analyze and test
@@ -87,11 +122,12 @@ jobs:
           test -n "$apk"
           python3 tool/verify_android_release.py --apk "$apk"
       - name: Upload Android staging APK
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: android-staging-apk
           path: build/app/outputs/flutter-apk/*.apk
-          if-no-files-found: error
+          if-no-files-found: ignore
       - name: Android map native smoke
         id: android_map_smoke
         continue-on-error: true
