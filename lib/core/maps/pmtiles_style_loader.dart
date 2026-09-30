@@ -74,10 +74,13 @@ Future<OfflineRegion> _loadCatalogRegion() async {
         .whereType<Map>()
         .map((item) => Map<String, Object?>.from(item))
         .toList(growable: false);
-    raw = entries
-        .where((item) => item['id']?.toString().toLowerCase() == 'spain')
-        .firstOrNull ??
-        (entries.isEmpty ? null : entries.first);
+    for (final entry in entries) {
+      if (entry['id']?.toString().toLowerCase() == 'spain') {
+        raw = entry;
+        break;
+      }
+    }
+    raw ??= entries.isEmpty ? null : entries.first;
   }
 
   if (raw == null) {
