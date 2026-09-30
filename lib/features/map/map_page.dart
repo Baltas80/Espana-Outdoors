@@ -43,12 +43,6 @@ class _MapPageState extends ConsumerState<MapPage> {
     });
   }
 
-  void _onMapReady() {
-    // Registration is intentionally deferred until AgusMap reports that its
-    // native surface/framework exists. No immediate camera mutation here.
-    unawaited(AgusMapsRuntime.instance.onMapReady());
-  }
-
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(locationControllerProvider);
@@ -92,13 +86,16 @@ class _MapPageState extends ConsumerState<MapPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
+                // Hito 1: Agus Maps registers the bundled World/WorldCoasts
+                // files while the native Framework is created. Do not call
+                // registerAllMaps() from onMapReady here; that introduces a
+                // Dart/native race during the first render.
                 return agus.AgusMap(
                   key: const ValueKey('espana-outdoor-native-map'),
                   controller: _controller,
                   initialLat: _initialLat,
                   initialLon: _initialLon,
                   initialZoom: _initialZoom,
-                  onMapReady: _onMapReady,
                   userScale: 1,
                   isVisible: true,
                 );
