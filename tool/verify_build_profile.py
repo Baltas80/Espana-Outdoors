@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Validate CI and Android production build configuration profiles.
 
-Android uses Agus Maps/CoMaps MWM files. PMTiles is deliberately excluded from
-this mobile build profile; any legacy web PMTiles deployment is outside the
-Android runtime path.
+Android uses flutter_map_vector_tiles with PMTiles/R2 as the cartographic
+data source. There is no native map SDK dependency in the build profile.
 """
 
 from __future__ import annotations
@@ -72,9 +71,6 @@ def check_ci() -> None:
                 "Use the Android staging/release workflow instead."
             )
 
-    if os.environ.get("MAP_PMTILES_URL", "").strip():
-        _fail("Android CI must not receive legacy MAP_PMTILES_URL.")
-
     print("profile=ci")
     print("android_production_endpoints=absent")
 
@@ -87,8 +83,10 @@ def check_staging() -> None:
         )
     _check_endpoint_set("staging")
 
-    if os.environ.get("MAP_PMTILES_URL", "").strip():
-        _fail("Android staging must not configure MAP_PMTILES_URL.")
+    pmtiles_url = os.environ.get("MAP_PMTILES_URL", "").strip()
+    if not pmtiles_url:
+        _fail("Missing required production PMTiles URL: MAP_PMTILES_URL.")
+    _validate_https("MAP_PMTILES_URL", pmtiles_url)
 
     attribution = os.environ.get("MAP_ATTRIBUTION", "").strip()
     if not attribution:
@@ -107,9 +105,6 @@ def check_production() -> None:
             f"got {os.environ.get('APP_ENV', '')!r}."
         )
     _check_endpoint_set("production")
-
-    if os.environ.get("MAP_PMTILES_URL", "").strip():
-        _fail("Android production must not configure MAP_PMTILES_URL.")
 
     attribution = os.environ.get("MAP_ATTRIBUTION", "").strip()
     if not attribution:
