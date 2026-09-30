@@ -1,17 +1,14 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
+import '../../core/maps/pmtiles_style_loader.dart';
 
-const _catalogUrl = String.fromEnvironment('OFFLINE_CATALOG_URL');
 const _mapAttribution = String.fromEnvironment(
   'MAP_ATTRIBUTION',
   defaultValue: '© OpenStreetMap contributors',
@@ -30,49 +27,11 @@ class _MapPageState extends ConsumerState<MapPage> {
   @override
   void initState() {
     super.initState();
-    _styleFuture = _loadStyle();
+    _styleFuture = loadPmTilesStyle();
   }
 
-  Future<vt.Style> _loadStyle() async {
-    if (_catalogUrl.isEmpty) {
-      throw StateError('OFFLINE_CATALOG_URL no está configurado.');
-    }
-
-    final catalogResponse = await http.get(Uri.parse(_catalogUrl));
-    if (catalogResponse.statusCode != 200) {
-      throw StateError(
-        'No se pudo cargar el catálogo cartográfico (${catalogResponse.statusCode}).',
-      );
-    }
-
-    final decoded = jsonDecode(catalogResponse.body);
-    if (decoded is! Map<String, dynamic>) {
-      throw StateError('El catálogo cartográfico no tiene un formato válido.');
-    }
-
-    final downloadUrl = decoded['downloadUrl'];
-    if (downloadUrl is! String || !downloadUrl.startsWith('https://')) {
-      throw StateError('El catálogo no contiene un downloadUrl HTTPS válido.');
-    }
-
-    final provider = await vt.PmTilesVectorTileProvider.open(
-      downloadUrl,
-      logger: const vt.Logger.console(),
-    );
-
-    // The visual style is independent from the tile storage. OpenFreeMap
-    // provides the Liberty style/sprites/glyphs; our verified Spain PMTiles
-    // archive supplies the actual vector tiles through HTTP Range Requests.
-    return vt.StyleReader(
-      uri: 'https://tiles.openfreemap.org/styles/liberty',
-      resolveProvider: (sourceId) async {
-        if (sourceId == 'openmaptiles') {
-          return provider;
-        }
-        return null;
-      },
-      logger: const vt.Logger.console(),
-    ).read();
+  void _retry() {
+    setState(() => _styleFuture = loadPmTilesStyle());
   }
 
   @override
@@ -113,32 +72,16 @@ class _MapPageState extends ConsumerState<MapPage> {
                   return _MapMessage(
                     title: 'No se pudo cargar el mapa',
                     message: snapshot.error.toString(),
-                    onRetry: () => setState(() {
-                      _styleFuture = _loadStyle();
-                    }),
+                    onRetry: _retry,
                   );
                 }
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
-                final style = snapshot.data!;
-                return FlutterMap(
-                  options: const MapOptions(
-                    initialCenter: LatLng(40.4168, -3.7038),
-                    initialZoom: 6.2,
-                    minZoom: 3,
-                    maxZoom: 18,
-                  ),
-                  children: [
-                    vt.VectorTileLayer(
-                      theme: style.theme,
-                      tileProviders: style.providers,
-                      rasterSources: style.rasterSources,
-                      sprites: style.sprites,
-                      logger: const vt.Logger.console(),
-                    ),
-                  ],
+                return _PmTilesLayer(
+                  style: snapshot.data!,
+                  center: const LatLng(40.4168, -3.7038),
+                  zoom: 6.2,
                 );
               },
             ),
@@ -171,10 +114,7 @@ class _MapPageState extends ConsumerState<MapPage> {
             bottom: 16,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surface
-                    .withValues(alpha: 0.92),
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Padding(
@@ -202,9 +142,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                   );
                 }
               },
-              child: Icon(
-                recording.isRecording ? Icons.stop : Icons.fiber_manual_record,
-              ),
+              child: Icon(recording.isRecording ? Icons.stop : Icons.fiber_manual_record),
             ),
           ),
           Positioned(
@@ -233,60 +171,94 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
 }
 
-class _MapMessage extends StatelessWidget {
-  const _MapMessage({
-    required this.title,
-    required this.message,
-    required this.onRetry,
+class _PmTilesLayer extends StatelessWidget {
+  const _PmTilesLayer({
+    required this.style,
+    required this.center,
+    required this.zoom,
+    this.routePoints = const <LatLng>[],
   });
+
+  final vt.Style style;
+  final LatLng center;
+  final double zoom;
+  final List<LatLng> routePoints;
+
+  @override
+  Widget build(BuildContext context) => FlutterMap(
+        options: MapOptions(
+          initialCenter: center,
+          initialZoom: zoom,
+          minZoom: 3,
+          maxZoom: 18,
+        ),
+        children: [
+          vt.VectorTileLayer(
+            theme: style.theme,
+            tileProviders: style.providers,
+            rasterSources: style.rasterSources,
+            sprites: style.sprites,
+            logger: const vt.Logger.console(),
+          ),
+          if (routePoints.length >= 2)
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: routePoints,
+                  strokeWidth: 5,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+            ),
+        ],
+      );
+}
+
+class _MapMessage extends StatelessWidget {
+  const _MapMessage({required this.title, required this.message, required this.onRetry});
 
   final String title;
   final String message;
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.map_outlined, size: 52),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.map_outlined, size: 52),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              Text(message, textAlign: TextAlign.center),
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
-}
+      );
 
-
-/// Reusable PMTiles viewport for secondary screens.
 class PmTilesMapViewport extends StatefulWidget {
   const PmTilesMapViewport({
     super.key,
     this.initialCenter = const LatLng(40.4168, -3.7038),
     this.initialZoom = 7,
+    this.routePoints = const <LatLng>[],
   });
 
   final LatLng initialCenter;
   final double initialZoom;
+  final List<LatLng> routePoints;
 
   @override
   State<PmTilesMapViewport> createState() => _PmTilesMapViewportState();
@@ -298,43 +270,7 @@ class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
   @override
   void initState() {
     super.initState();
-    _styleFuture = _loadStyle();
-  }
-
-  Future<vt.Style> _loadStyle() async {
-    if (_catalogUrl.isEmpty) {
-      throw StateError('OFFLINE_CATALOG_URL no está configurado.');
-    }
-
-    final response = await http.get(Uri.parse(_catalogUrl));
-    if (response.statusCode != 200) {
-      throw StateError(
-        'No se pudo cargar el catálogo cartográfico: ' +
-            response.statusCode.toString(),
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map<String, dynamic>) {
-      throw StateError('El catálogo cartográfico no tiene un formato válido.');
-    }
-
-    final downloadUrl = decoded['downloadUrl'];
-    if (downloadUrl is! String || !downloadUrl.startsWith('https://')) {
-      throw StateError('El catálogo no contiene un downloadUrl HTTPS válido.');
-    }
-
-    final provider = await vt.PmTilesVectorTileProvider.open(
-      downloadUrl,
-      logger: const vt.Logger.console(),
-    );
-
-    return vt.StyleReader(
-      uri: 'https://tiles.openfreemap.org/styles/liberty',
-      resolveProvider: (sourceId) async =>
-          sourceId == 'openmaptiles' ? provider : null,
-      logger: const vt.Logger.console(),
-    ).read();
+    _styleFuture = loadPmTilesStyle();
   }
 
   @override
@@ -344,42 +280,25 @@ class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<vt.Style>(
-      future: _styleFuture,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _MapMessage(
-            title: 'No se pudo cargar el mapa',
-            message: snapshot.error.toString(),
-            onRetry: () => setState(() {
-              _styleFuture = _loadStyle();
-            }),
+  Widget build(BuildContext context) => FutureBuilder<vt.Style>(
+        future: _styleFuture,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return _MapMessage(
+              title: 'No se pudo cargar el mapa',
+              message: snapshot.error.toString(),
+              onRetry: () => setState(() => _styleFuture = loadPmTilesStyle()),
+            );
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return _PmTilesLayer(
+            style: snapshot.data!,
+            center: widget.initialCenter,
+            zoom: widget.initialZoom,
+            routePoints: widget.routePoints,
           );
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final style = snapshot.data!;
-        return FlutterMap(
-          options: MapOptions(
-            initialCenter: widget.initialCenter,
-            initialZoom: widget.initialZoom,
-            minZoom: 3,
-            maxZoom: 18,
-          ),
-          children: [
-            vt.VectorTileLayer(
-              theme: style.theme,
-              tileProviders: style.providers,
-              rasterSources: style.rasterSources,
-              sprites: style.sprites,
-              logger: const vt.Logger.console(),
-            ),
-          ],
-        );
-      },
-    );
-  }
+        },
+      );
 }
