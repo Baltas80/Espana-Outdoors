@@ -46,23 +46,6 @@ jobs:
       - name: Verify production build profile
         run: python3 tool/verify_build_profile.py --profile production
 
-      - name: Prepare Agus Maps SDK
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="0.1.18"
-          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
-          root="$RUNNER_TEMP/agus-maps-sdk"
-          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/344609201"
-          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 -H "Accept: application/octet-stream" -o "$archive" "$url"
-          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | sha256sum -c -
-          rm -rf "$root"
-          mkdir -p "$root"
-          unzip -q "$archive" -d "$root"
-          sdk_home="$(find "$root" -type d -path '*/android/prebuilt' -print -quit)"
-          test -n "$sdk_home"
-          sdk_home="${sdk_home%/android/prebuilt}"
-          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
 
       - name: Apply Android native configuration
         run: python3 tool/configure_mobile_native.py --platform android
@@ -167,23 +150,6 @@ jobs:
       - name: Verify production build profile
         run: python3 tool/verify_build_profile.py --profile production
 
-      - name: Prepare Agus Maps SDK
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="0.1.18"
-          archive="$RUNNER_TEMP/agus-maps-sdk-v${version}.zip"
-          root="$RUNNER_TEMP/agus-maps-sdk"
-          url="https://api.github.com/repos/agus-works/agus-maps-flutter/releases/assets/344609201"
-          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 --max-time 900 -H "Accept: application/octet-stream" -o "$archive" "$url"
-          echo "490578c67efc25fac35ca7c160a4e2a75bd3a870b38aa2393e53a55e5158210f  $archive" | shasum -a 256 -c
-          rm -rf "$root"
-          mkdir -p "$root"
-          unzip -q "$archive" -d "$root"
-          sdk_home="$(find "$root" -type d -path '*/ios/Frameworks/CoMaps.xcframework' -print -quit)"
-          test -n "$sdk_home"
-          sdk_home="${sdk_home%/ios/Frameworks/CoMaps.xcframework}"
-          echo "AGUS_MAPS_HOME=$sdk_home" >> "$GITHUB_ENV"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
