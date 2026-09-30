@@ -24,30 +24,42 @@ def prepare_agus_maps_assets() -> None:
         )
 
     data_source = sdk_assets / "comaps_data"
-    maps_source = sdk_assets / "maps"
     if not data_source.exists():
         raise SystemExit(f"Agus Maps SDK is missing comaps_data: {data_source}")
-    if not maps_source.exists():
-        raise SystemExit(f"Agus Maps SDK is missing maps: {maps_source}")
 
     maps_target = ROOT / "assets" / "maps"
     data_target = ROOT / "assets" / "comaps_data"
     maps_target.mkdir(parents=True, exist_ok=True)
 
-    # The base CoMaps runtime requires these two MWM files to be packaged
-    # into the Flutter asset bundle. They are supplied by the pinned Agus
-    # Maps SDK and must not be replaced by remote tiles or PMTiles.
+    # World.mwm and WorldCoasts.mwm are prepared and cryptographically
+    # verified by ops/offline/prepare-agus-base-maps.sh before this script
+    # runs. They are deliberately not expected inside the Agus SDK archive:
+    # the pinned SDK 0.1.18 package does not ship those base-map snapshots.
     required_map_names = ("World.mwm", "WorldCoasts.mwm")
-    for map_name in required_map_names:
-        source = maps_source / map_name
-        if not source.exists():
-            raise SystemExit(f"Agus Maps SDK is missing base map: {source}")
-        shutil.copy2(source, maps_target / map_name)
+    missing_maps = [name for name in required_map_names if not (maps_target / name).is_file()]
+    if missing_maps:
+        raise SystemExit(
+            "Agus Maps base maps were not prepared before native configuration: "
+            + ", ".join(missing_maps)
+        )
 
-    icu = maps_source / "icudt75l.dat"
-    if not icu.exists():
-        raise SystemExit(f"Agus Maps SDK is missing ICU data: {icu}")
-    shutil.copy2(icu, maps_target / "icudt75l.dat")
+    # ICU is SDK data rather than a downloaded base-map snapshot. Accept the
+    # SDK's maps/icudt75l.dat location when present, while also supporting an
+    # already-prepared Flutter asset from a previous setup.
+    icu_target = maps_target / "icudt75l.dat"
+    if not icu_target.is_file():
+        icu_candidates = (
+            sdk_assets / "maps" / "icudt75l.dat",
+            sdk_assets / "icudt75l.dat",
+        )
+        icu_source = next((path for path in icu_candidates if path.is_file()), None)
+        if icu_source is None:
+            raise SystemExit(
+                "Agus Maps SDK is missing ICU data: expected icudt75l.dat in "
+                "assets/maps or assets."
+            )
+        shutil.copy2(icu_source, icu_target)
+
     shutil.copytree(data_source, data_target, dirs_exist_ok=True)
 
     required = (
@@ -58,7 +70,7 @@ def prepare_agus_maps_assets() -> None:
     )
     missing = [str(path) for path in required if not path.exists()]
     if missing:
-        raise SystemExit("Agus Maps SDK assets incomplete: " + ", ".join(missing))
+        raise SystemExit("Agus Maps assets incomplete: " + ", ".join(missing))
 
     print("agus_maps_sdk_assets=verified")
 
