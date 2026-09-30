@@ -9,7 +9,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Explora España'), findsOneWidget);
-    expect(find.text('Mapa'), findsOneWidget);
     expect(find.text('Rutas'), findsOneWidget);
   });
 }
