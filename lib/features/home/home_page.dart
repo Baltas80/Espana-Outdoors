@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/brand.dart';
-import '../../app/photo_atlas.dart';
+import '../../app/outdoor_visuals.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -19,189 +19,125 @@ class HomePage extends StatelessWidget {
               centerTitle: false,
               title: Row(
                 children: [
-                  OutdoorBrandMark(size: 42, dark: dark),
+                  OutdoorBrandMark(size: 46, dark: dark),
                   const SizedBox(width: 10),
                   const Text('ESPAÑA OUTDOOR'),
                 ],
               ),
+              actions: [
+                IconButton(
+                  tooltip: 'Perfil',
+                  onPressed: () => context.go('/profile'),
+                  icon: const Icon(Icons.person_outline),
+                ),
+              ],
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
                   [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: AspectRatio(
-                        aspectRatio: 0.82,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            const OutdoorPhotoTile(
-                              index: 0,
-                              width: double.infinity,
-                              height: double.infinity,
-                              borderRadius: 0,
-                            ),
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  stops: const [0.25, 0.72, 1],
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.05),
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.92),
+                    const OutdoorVisualHero(
+                      asset: 'assets/visuals/hero_routes.svg',
+                      title: 'Explora España',
+                      subtitle: 'Rutas, naturaleza y seguridad en una sola experiencia.',
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Todo lo que necesitas para salir preparado',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 14),
+                    _FeatureGrid(
+                      items: [
+                        _HomeFeature(
+                          asset: 'assets/visuals/icons/routes.svg',
+                          label: 'Rutas',
+                          onTap: () => context.go('/routes'),
+                        ),
+                        _HomeFeature(
+                          asset: 'assets/visuals/icons/map.svg',
+                          label: 'Mapa',
+                          onTap: () => context.go('/map'),
+                        ),
+                        _HomeFeature(
+                          asset: 'assets/visuals/icons/offline.svg',
+                          label: 'Offline',
+                          onTap: () => context.go('/offline'),
+                        ),
+                        _HomeFeature(
+                          asset: 'assets/visuals/icons/pets.svg',
+                          label: 'Mascotas',
+                          onTap: () => context.go('/pets'),
+                        ),
+                        _HomeFeature(
+                          asset: 'assets/visuals/icons/wildlife.svg',
+                          label: 'Fauna',
+                          onTap: () => context.go('/wildlife'),
+                        ),
+                        _HomeFeature(
+                          asset: 'assets/visuals/icons/natura.svg',
+                          label: 'Natura 2000',
+                          onTap: () => context.go('/natura'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () => context.go('/safety'),
+                        child: Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .errorContainer,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const OutdoorAssetIcon(
+                                  asset: 'assets/visuals/icons/safety.svg',
+                                  size: 44,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Centro de seguridad',
+                                      style: TextStyle(fontWeight: FontWeight.w900),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text('SOS, ubicación, contactos y preparación.'),
                                   ],
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              left: 20,
-                              right: 20,
-                              top: 22,
-                              child: Text(
-                                'NATURALEZA · RUTAS · AVENTURA',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.92),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.4,
-                                ),
-                              ),
-                            ),
-                            const Positioned(
-                              left: 20,
-                              right: 20,
-                              bottom: 88,
-                              child: Text(
-                                'Explora\nDescubre\nVive España',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 33,
-                                  height: 0.98,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 18,
-                              right: 18,
-                              bottom: 18,
-                              child: Material(
-                                color: Colors.black.withValues(alpha: 0.48),
-                                borderRadius: BorderRadius.circular(18),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(18),
-                                  onTap: () => context.go('/map'),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 14,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.search, color: Colors.white),
-                                        SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            'Buscar lugares, rutas, pueblos…',
-                                            style: TextStyle(color: Colors.white),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                              const Icon(Icons.chevron_right),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _HomeAction(
-                            icon: Icons.route_outlined,
-                            label: 'Rutas',
-                            onTap: () => context.go('/routes'),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _HomeAction(
-                            icon: Icons.map_outlined,
-                            label: 'Mapa',
-                            onTap: () => context.go('/map'),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _HomeAction(
-                            icon: Icons.download_for_offline_outlined,
-                            label: 'Offline',
-                            onTap: () => context.go('/offline'),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 20),
+                    Text(
+                      'Antes de salir',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w900),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _HomeAction(
-                            icon: Icons.pets_outlined,
-                            label: 'Fauna',
-                            onTap: () => context.go('/wildlife'),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _HomeAction(
-                            icon: Icons.eco_outlined,
-                            label: 'Natura 2000',
-                            onTap: () => context.go('/natura'),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _HomeAction(
-                            icon: Icons.location_city_outlined,
-                            label: 'Pueblos',
-                            onTap: () => context.go('/explore'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Destacados',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        TextButton(
-                          onPressed: () => context.go('/explore'),
-                          child: const Text('Ver todos'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    OutdoorImageCard(
-                      index: 3,
-                      height: 190,
-                      title: 'Costa Brava',
-                      subtitle: 'Rutas entre calas y acantilados',
-                      meta: 'MODERADA · 8,3 km · 2–3 h',
-                      onTap: () => context.go('/routes'),
-                    ),
+                    const SizedBox(height: 12),
+                    const _ReadinessCard(),
                   ],
                 ),
               ),
@@ -213,14 +149,36 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _HomeAction extends StatelessWidget {
-  const _HomeAction({
-    required this.icon,
+class _FeatureGrid extends StatelessWidget {
+  const _FeatureGrid({required this.items});
+
+  final List<_HomeFeature> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.55,
+      ),
+      itemBuilder: (context, index) => items[index],
+    );
+  }
+}
+
+class _HomeFeature extends StatelessWidget {
+  const _HomeFeature({
+    required this.asset,
     required this.label,
     required this.onTap,
   });
 
-  final IconData icon;
+  final String asset;
   final String label;
   final VoidCallback onTap;
 
@@ -230,23 +188,91 @@ class _HomeAction extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 27,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 7),
-              Text(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            OutdoorAssetIcon(asset: asset, size: 36),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
                 label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                style: const TextStyle(fontWeight: FontWeight.w900),
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadinessCard extends StatelessWidget {
+  const _ReadinessCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            _ReadinessRow(
+              asset: 'assets/visuals/icons/offline.svg',
+              label: 'Mapa offline',
+              value: 'Preparar',
+              onTap: () => context.go('/offline'),
+            ),
+            const Divider(height: 24),
+            const _ReadinessRow(
+              asset: 'assets/visuals/icons/map.svg',
+              label: 'Ubicación',
+              value: 'Disponible',
+            ),
+            const Divider(height: 24),
+            _ReadinessRow(
+              asset: 'assets/visuals/icons/safety.svg',
+              label: 'Contacto de confianza',
+              value: 'Configurar',
+              onTap: () => context.go('/safety/contacts'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadinessRow extends StatelessWidget {
+  const _ReadinessRow({
+    required this.asset,
+    required this.label,
+    required this.value,
+    this.onTap,
+  });
+
+  final String asset;
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            OutdoorAssetIcon(asset: asset, size: 30),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label)),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ],
         ),
       ),
     );
