@@ -275,3 +275,111 @@ class _MapMessage extends StatelessWidget {
     );
   }
 }
+
+
+/// Reusable PMTiles viewport for secondary screens.
+class PmTilesMapViewport extends StatefulWidget {
+  const PmTilesMapViewport({
+    super.key,
+    this.initialCenter = const LatLng(40.4168, -3.7038),
+    this.initialZoom = 7,
+  });
+
+  final LatLng initialCenter;
+  final double initialZoom;
+
+  @override
+  State<PmTilesMapViewport> createState() => _PmTilesMapViewportState();
+}
+
+class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
+  late Future<vt.Style> _styleFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _styleFuture = _loadStyle();
+  }
+
+  Future<vt.Style> _loadStyle() async {
+    if (_catalogUrl.isEmpty) {
+      throw StateError('OFFLINE_CATALOG_URL no está configurado.');
+    }
+
+    final response = await http.get(Uri.parse(_catalogUrl));
+    if (response.statusCode != 200) {
+      throw StateError(
+        'No se pudo cargar el catálogo cartográfico: ' +
+            response.statusCode.toString(),
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw StateError('El catálogo cartográfico no tiene un formato válido.');
+    }
+
+    final downloadUrl = decoded['downloadUrl'];
+    if (downloadUrl is! String || !downloadUrl.startsWith('https://')) {
+      throw StateError('El catálogo no contiene un downloadUrl HTTPS válido.');
+    }
+
+    final provider = await vt.PmTilesVectorTileProvider.open(
+      downloadUrl,
+      logger: const vt.Logger.console(),
+    );
+
+    return vt.StyleReader(
+      uri: 'https://tiles.openfreemap.org/styles/liberty',
+      resolveProvider: (sourceId) async =>
+          sourceId == 'openmaptiles' ? provider : null,
+      logger: const vt.Logger.console(),
+    ).read();
+  }
+
+  @override
+  void dispose() {
+    _styleFuture.then((style) => style.dispose());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<vt.Style>(
+      future: _styleFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _MapMessage(
+            title: 'No se pudo cargar el mapa',
+            message: snapshot.error.toString(),
+            onRetry: () => setState(() {
+              _styleFuture = _loadStyle();
+            }),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final style = snapshot.data!;
+        return FlutterMap(
+          options: MapOptions(
+            initialCenter: widget.initialCenter,
+            initialZoom: widget.initialZoom,
+            minZoom: 3,
+            maxZoom: 18,
+          ),
+          children: [
+            vt.VectorTileLayer(
+              theme: style.theme,
+              tileProviders: style.providers,
+              rasterSources: style.rasterSources,
+              sprites: style.sprites,
+              logger: const vt.Logger.console(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
