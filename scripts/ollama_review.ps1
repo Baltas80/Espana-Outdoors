@@ -7,11 +7,13 @@ param(
 $ErrorActionPreference = "Stop"
 $ollama = "http://127.0.0.1:11434/api/generate"
 
-if (-not (Test-Path $Repo)) { throw "Repository not found: $Repo" }
+if (-not (Test-Path -LiteralPath $Repo -PathType Container)) {
+  throw "Repository not found: $Repo"
+}
 
 $files = Get-ChildItem -Path $Repo -Recurse -File |
   Where-Object {
-    $_.FullName -notmatch '\\.git\\|\\build\\|\\.dart_tool\\|\\node_modules\\|\\android\\\.gradle\\|\\data\\.*\\.pmtiles$' -and
+    $_.FullName -notmatch '\\.git\\|\\build\\|\\.dart_tool\\|\\node_modules\\|android\\\.gradle\\|data\\.*\\.pmtiles$' -and
     $_.Extension -in '.dart','.yaml','.yml','.md','.json','.toml','.sh','.ps1','.gradle','.properties'
   } |
   Select-Object -First 80
@@ -42,13 +44,28 @@ Rules:
 5. Keep Android as MVP priority; do not prioritize iOS.
 "@
 
-$body = @{
+# Build the request as a real PowerShell object and serialize it once.
+# This avoids malformed JSON caused by manually interpolating the prompt.
+$request = [ordered]@{
   model = $Model
   prompt = $fullPrompt
   stream = $false
-  options = @{ temperature = 0.1 }
-} | ConvertTo-Json -Depth 8
+  options = [ordered]@{
+    temperature = 0.1
+  }
+}
 
-$response = Invoke-RestMethod -Uri $ollama -Method Post -ContentType 'application/json' -Body $body
+$body = $request | ConvertTo-Json -Depth 8 -Compress
+
+try {
+  $response = Invoke-RestMethod -Uri $ollama -Method Post -ContentType 'application/json; charset=utf-8' -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
+} catch {
+  throw "Ollama request failed. Verify that 'ollama serve' is running and that model '$Model' is available. Original error: $($_.Exception.Message)"
+}
+
+if ([string]::IsNullOrWhiteSpace($response.response)) {
+  throw "Ollama returned an empty response."
+}
+
 $response.response | Set-Content -LiteralPath (Join-Path $Repo 'ollama-review.md') -Encoding UTF8
 Write-Host "Ollama review written to ollama-review.md using $Model"
