@@ -1,12 +1,9 @@
-import 'dart:async';
-
-import 'package:agus_maps_flutter/agus_maps_flutter.dart' as agus;
 import 'package:flutter/material.dart';
 
 import '../../core/gpx/gpx_export_service.dart';
 import '../../core/gpx/gpx_import_service.dart';
-import '../../core/maps/agus_maps_runtime.dart';
 import '../../core/models/route_summary.dart';
+import '../map/map_page.dart';
 
 class RouteDetailPage extends StatefulWidget {
   const RouteDetailPage({super.key, this.route, this.track});
@@ -20,15 +17,6 @@ class RouteDetailPage extends StatefulWidget {
 
 class _RouteDetailPageState extends State<RouteDetailPage> {
   final _exporter = const GpxExportService();
-  final _controller = agus.AgusMapController();
-  late final Future<void> _runtimeFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _runtimeFuture = AgusMapsRuntime.instance.ensureInitialized();
-  }
-
   Future<void> _exportTrack() async {
     final track = widget.track;
     if (track == null) return;
@@ -77,35 +65,12 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
             height: 300,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: FutureBuilder<void>(
-                future: _runtimeFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'No se pudo iniciar la cartografía: ${snapshot.error}',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  return agus.AgusMap(
-                    controller: _controller,
-                    initialLat: center?.latitude ?? 40.4168,
-                    initialLon: center?.longitude ?? -3.7038,
-                    initialZoom: center == null ? 7 : 14,
-                    onMapReady: () =>
-                        unawaited(AgusMapsRuntime.instance.onMapReady()),
-                    userScale: 1.0,
-                    isVisible: true,
-                  );
-                },
+              child: PmTilesMapViewport(
+                initialCenter: LatLng(
+                  center?.latitude ?? 40.4168,
+                  center?.longitude ?? -3.7038,
+                ),
+                initialZoom: center == null ? 7 : 14,
               ),
             ),
           ),
