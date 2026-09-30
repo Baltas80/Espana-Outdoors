@@ -44,8 +44,8 @@ def prepare_agus_maps_assets() -> None:
         )
 
     # ICU is SDK data rather than a downloaded base-map snapshot. Accept the
-    # SDK's maps/icudt75l.dat location when present, while also supporting an
-    # already-prepared Flutter asset from a previous setup.
+    # SDK's common locations and fall back to a recursive lookup so packaging
+    # layout changes do not break staging.
     icu_target = maps_target / "icudt75l.dat"
     if not icu_target.is_file():
         icu_candidates = (
@@ -54,9 +54,10 @@ def prepare_agus_maps_assets() -> None:
         )
         icu_source = next((path for path in icu_candidates if path.is_file()), None)
         if icu_source is None:
+            icu_source = next(sdk_home.rglob("icudt75l.dat"), None)
+        if icu_source is None:
             raise SystemExit(
-                "Agus Maps SDK is missing ICU data: expected icudt75l.dat in "
-                "assets/maps or assets."
+                "Agus Maps SDK is missing ICU data: icudt75l.dat was not found in the SDK archive."
             )
         shutil.copy2(icu_source, icu_target)
 
