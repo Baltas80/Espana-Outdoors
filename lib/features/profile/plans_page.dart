@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../app/outdoor_visuals.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
+import '../../app/outdoor_visuals.dart';
 import '../../domain/subscriptions/entitlements.dart';
 import '../../infrastructure/subscriptions/revenuecat_subscription_service.dart';
 
@@ -13,22 +13,46 @@ class PlansPage extends StatefulWidget {
 }
 
 class _PlansPageState extends State<PlansPage> {
-
   final _subscriptions = RevenueCatSubscriptionService.fromEnvironment();
+  OutdoorPlan _selectedPlan = OutdoorPlan.free;
 
   static const _features = <({String label, OutdoorEntitlement entitlement})>[
-    (label: 'Descubrimiento y planificación de rutas', entitlement: OutdoorEntitlement.routeDiscovery),
-    (label: 'GPS y grabación', entitlement: OutdoorEntitlement.gpsRecording),
-    (label: 'Importar y exportar GPX', entitlement: OutdoorEntitlement.gpxImportExport),
-    (label: 'Mapas offline avanzados', entitlement: OutdoorEntitlement.advancedOfflineMaps),
-    (label: 'Evaluación de seguridad de ruta', entitlement: OutdoorEntitlement.routeSafetyAssessment),
+    (
+      label: 'Descubrimiento y planificación de rutas',
+      entitlement: OutdoorEntitlement.routeDiscovery
+    ),
+    (
+      label: 'GPS y grabación',
+      entitlement: OutdoorEntitlement.gpsRecording
+    ),
+    (
+      label: 'Importar y exportar GPX',
+      entitlement: OutdoorEntitlement.gpxImportExport
+    ),
+    (
+      label: 'Mapas offline avanzados',
+      entitlement: OutdoorEntitlement.advancedOfflineMaps
+    ),
+    (
+      label: 'Evaluación de seguridad de ruta',
+      entitlement: OutdoorEntitlement.routeSafetyAssessment
+    ),
     (label: 'Modo Mascota', entitlement: OutdoorEntitlement.petMode),
     (label: 'Guía de fauna', entitlement: OutdoorEntitlement.faunaGuide),
     (label: 'NATURA PROTECT', entitlement: OutdoorEntitlement.naturaProtect),
     (label: 'Rescue Link', entitlement: OutdoorEntitlement.rescueLink),
-    (label: 'Alertas avanzadas', entitlement: OutdoorEntitlement.advancedAlerts),
-    (label: 'Datos profesionales', entitlement: OutdoorEntitlement.professionalData),
-    (label: 'API y analítica avanzada', entitlement: OutdoorEntitlement.apiAccess),
+    (
+      label: 'Alertas avanzadas',
+      entitlement: OutdoorEntitlement.advancedAlerts
+    ),
+    (
+      label: 'Datos profesionales',
+      entitlement: OutdoorEntitlement.professionalData
+    ),
+    (
+      label: 'API y analítica avanzada',
+      entitlement: OutdoorEntitlement.apiAccess
+    ),
   ];
 
   String _planName(OutdoorPlan plan) => switch (plan) {
@@ -37,19 +61,55 @@ class _PlansPageState extends State<PlansPage> {
         OutdoorPlan.professional => 'PROFESSIONAL',
       };
 
-  Future<void> _openPremium() async {
+  Future<void> _selectPlan(OutdoorPlan plan) async {
+    if (plan == OutdoorPlan.free) {
+      setState(() => _selectedPlan = plan);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plan FREE seleccionado.')),
+      );
+      return;
+    }
+
+    const apiKey = String.fromEnvironment('REVENUECAT_API_KEY');
+    if (apiKey.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'El catálogo de compras todavía no está configurado en este APK.',
+          ),
+        ),
+      );
+      return;
+    }
+
     try {
+      setState(() => _selectedPlan = plan);
       await _subscriptions.configure();
-      await RevenueCatUI.presentPaywallIfNeeded('premium');
+
+      final entitlement =
+          plan == OutdoorPlan.premium ? 'premium' : 'professional';
+      await RevenueCatUI.presentPaywallIfNeeded(entitlement);
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Suscripciones no disponibles: $error')),
+        SnackBar(content: Text('No se pudo abrir la suscripción: $error')),
       );
     }
   }
 
   Future<void> _restore() async {
+    const apiKey = String.fromEnvironment('REVENUECAT_API_KEY');
+    if (apiKey.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Las compras todavía no están configuradas en este APK.',
+          ),
+        ),
+      );
+      return;
+    }
+
     try {
       await _subscriptions.configure();
       await _subscriptions.restorePurchases();
@@ -60,7 +120,9 @@ class _PlansPageState extends State<PlansPage> {
     } on Object catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudieron restaurar las compras: $error')),
+        SnackBar(
+          content: Text('No se pudieron restaurar las compras: $error'),
+        ),
       );
     }
   }
@@ -72,66 +134,124 @@ class _PlansPageState extends State<PlansPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          OutdoorVisualHero(asset: 'assets/visuals/hero_plans.svg', title: 'Planes', subtitle: 'Capacidades claras para cada forma de explorar.'),
+          const OutdoorVisualHero(
+            asset: 'assets/visuals/hero_plans.svg',
+            title: 'Planes',
+            subtitle: 'Capacidades claras para cada forma de explorar.',
+          ),
           const SizedBox(height: 18),
-          Text('Elige cómo quieres explorar',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  )),
-          const SizedBox(height: 8),
-          const Text('Las capacidades se controlan mediante entitlements, no mediante comprobaciones dispersas en la interfaz.'),
-          FilledButton.icon(
-            onPressed: _openPremium,
-            icon: const OutdoorAssetIcon(asset: 'assets/visuals/icons/plans.svg', size: 38),
-            label: const Text('Ver opciones de suscripción'),
+          Text(
+            'Elige cómo quieres explorar',
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
+          const Text(
+            'FREE funciona sin compra. PREMIUM y PROFESSIONAL se conectan al catálogo de la tienda cuando RevenueCat está configurado.',
+          ),
+          const SizedBox(height: 14),
+          for (final plan in OutdoorPlan.values) ...[
+            _PlanCard(
+              plan: plan,
+              selected: _selectedPlan == plan,
+              planName: _planName(plan),
+              features: _features,
+              onPressed: () => _selectPlan(plan),
+            ),
+            const SizedBox(height: 12),
+          ],
           OutlinedButton.icon(
             onPressed: _restore,
             icon: const Icon(Icons.restore),
             label: const Text('Restaurar compras'),
           ),
-          const SizedBox(height: 20),
-          for (final plan in OutdoorPlan.values) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_planName(plan),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.1,
-                            )),
-                    const SizedBox(height: 12),
-                    for (final feature in _features)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          children: [
-                            Icon(
-                              EntitlementCatalog.allows(plan, feature.entitlement)
-                                  ? Icons.check_circle_outline
-                                  : Icons.remove_circle_outline,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(child: Text(feature.label)),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
+          const SizedBox(height: 14),
           Text(
-            'Las funciones críticas de emergencia no deben depender de una suscripción para funcionar. Los productos comerciales y entitlements se activarán mediante RevenueCat cuando las cuentas de tienda y backend estén configuradas.',
+            'Las funciones críticas de emergencia no dependen de la suscripción.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.plan,
+    required this.selected,
+    required this.planName,
+    required this.features,
+    required this.onPressed,
+  });
+
+  final OutdoorPlan plan;
+  final bool selected;
+  final String planName;
+  final List<({String label, OutdoorEntitlement entitlement})> features;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final allowed = features
+        .where(
+          (feature) => EntitlementCatalog.allows(plan, feature.entitlement),
+        )
+        .map((feature) => feature.label)
+        .take(4)
+        .toList(growable: false);
+
+    return Card(
+      color: selected
+          ? Theme.of(context).colorScheme.primaryContainer
+          : null,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    planName,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                if (selected)
+                  Icon(
+                    Icons.check_circle,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            for (final feature in allowed)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(feature)),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onPressed,
+                child: Text(plan == OutdoorPlan.free ? 'Usar FREE' : 'Continuar con $planName'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
