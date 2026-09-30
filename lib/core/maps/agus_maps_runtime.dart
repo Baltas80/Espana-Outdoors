@@ -14,8 +14,6 @@ final class AgusMapsRuntime {
   Future<void>? _initializing;
   agus.MwmStorage? _storage;
   String? _dataPath;
-  String? _worldPath;
-  String? _worldCoastsPath;
   bool _initialized = false;
   bool _surfaceReady = false;
   Future<void>? _registrationFuture;
@@ -43,12 +41,12 @@ final class AgusMapsRuntime {
     await _validatePersistedMaps();
 
     await agus.extractMap('assets/maps/icudt75l.dat');
-    _worldPath = await _ensureBundledMap(
+    await _ensureBundledMap(
       assetPath: 'assets/maps/World.mwm',
       expectedSize: 53029018,
       expectedSha1: '7a588f8c9d81ae26eb509b4b00ac8f790b2f5054',
     );
-    _worldCoastsPath = await _ensureBundledMap(
+    await _ensureBundledMap(
       assetPath: 'assets/maps/WorldCoasts.mwm',
       expectedSize: 8505665,
       expectedSha1: 'cfd2cce0526ca92cf03c1cc784e12d433bf590d9',
