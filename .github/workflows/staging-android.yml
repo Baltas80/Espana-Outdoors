@@ -16,6 +16,7 @@ on:
       - 'tool/verify_valhalla_route.py'
       - 'tool/verify_build_profile.py'
       - 'tool/patch_agus_maps_android_lifecycle.py'
+      - 'tool/smoke_android_map.sh'
       - 'ops/offline/prepare-agus-base-maps.sh'
       - 'test/**'
       - 'assets/**'
