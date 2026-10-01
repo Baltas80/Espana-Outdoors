@@ -21,6 +21,9 @@ def varint(value: int) -> bytes:
 
 
 def build_fixture() -> bytes:
+    # A minimal valid vector-tile Layer. The layer name matches one of the
+    # production offline style source layers; no features are required for the
+    # smoke test because the test is about opening the verified archive offline.
     layer = (
         b"\x0a\x0ftransportation"
         b"\x78\x02"
@@ -28,17 +31,23 @@ def build_fixture() -> bytes:
     )
     tile = b"\x1a" + varint(len(layer)) + layer
 
+    # PMTiles v3 directory entries are delta-encoded tile IDs followed by
+    # run-length, length and offset. Keep two real entries and one deduplicated
+    # tile blob. The previous fixture put the tile count into a run-length
+    # field, producing a structurally invalid directory that could build but
+    # could not be consumed reliably by the native PMTiles provider.
+    tile_length = len(tile)
     root = b"".join(
         (
-            varint(2),
-            varint(0),
-            varint(2026),
-            varint(1),
-            varint(1),
-            varint(len(tile)),
-            varint(len(tile)),
-            varint(1),
-            varint(0),
+            varint(2),  # number of directory entries
+            varint(0),  # first tile-id delta
+            varint(1),  # first run length
+            varint(tile_length),
+            varint(0),  # first tile-data offset
+            varint(1),  # second tile-id delta
+            varint(1),  # second run length
+            varint(tile_length),
+            varint(tile_length),  # second tile-data offset
         )
     )
 
@@ -53,7 +62,7 @@ def build_fixture() -> bytes:
             "maxzoom": 6,
             "bounds": [-18, 35, 5, 44],
             "center": [-3.7038, 40.4168, 6],
-            "vector_layers": [{"id": "test", "fields": {}}],
+            "vector_layers": [{"id": "transportation", "fields": {}}],
         },
         separators=(",", ":"),
     ).encode("utf-8")
@@ -67,7 +76,7 @@ def build_fixture() -> bytes:
     metadata_offset = root_offset + root_length
     metadata_length = len(metadata)
     tile_data_offset = metadata_offset + metadata_length
-    tile_data_length = len(tile) * 2
+    tile_data_length = tile_length * 2
 
     values = (
         root_offset,
@@ -120,6 +129,13 @@ def main() -> int:
     metadata_offset = int.from_bytes(data[24:32], "little")
     metadata_length = int.from_bytes(data[32:40], "little")
     json.loads(data[metadata_offset : metadata_offset + metadata_length].decode("utf-8"))
+
+    root_offset = int.from_bytes(data[8:16], "little")
+    root_length = int.from_bytes(data[16:24], "little")
+    root_bytes = data[root_offset : root_offset + root_length]
+    if root_bytes[:1] != b"\x02":
+        raise SystemExit("Generated PMTiles root directory does not contain two entries.")
+
     print(f"Generated {output} ({len(data)} bytes)")
     return 0
 
