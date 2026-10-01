@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/brand.dart';
 import '../../app/outdoor_visuals.dart';
+import '../shop/shop_entry_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -128,6 +129,8 @@ class HomePage extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    const ShopEntryCard(),
                     const SizedBox(height: 20),
                     Text(
                       'Antes de salir',
