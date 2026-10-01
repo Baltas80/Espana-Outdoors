@@ -67,6 +67,74 @@ void main() {
     expect(result.steps.single.instruction, 'Gira a la derecha');
     expect(result.steps.single.distanceMeters, 500);
   });
+
+  test('normalizes maneuver shape indexes across multiple legs', () async {
+    final client = _FakeClient({
+      'trip': {
+        'legs': [
+          {
+            'summary': {'length': 1.0, 'time': 60},
+            'maneuvers': [
+              {
+                'instruction': 'Continúa',
+                'length': 0.4,
+                'time': 20,
+                'begin_shape_index': 0,
+                'end_shape_index': 1,
+              },
+            ],
+            'shape': {
+              'type': 'LineString',
+              'coordinates': [
+                [-3.70, 40.41],
+                [-3.69, 40.42],
+              ],
+            },
+          },
+          {
+            'summary': {'length': 2.0, 'time': 120},
+            'maneuvers': [
+              {
+                'instruction': 'Gira a la izquierda',
+                'length': 1.1,
+                'time': 70,
+                'begin_shape_index': 0,
+                'end_shape_index': 2,
+              },
+            ],
+            'shape': {
+              'type': 'LineString',
+              'coordinates': [
+                [-3.69, 40.42],
+                [-3.68, 40.43],
+                [-3.67, 40.44],
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    final service = ValhallaRoutingService(
+      baseUri: Uri.parse('https://routing.example.com/'),
+      client: client,
+    );
+    final result = await service.route(
+      const RouteRequest(
+        points: [LatLng(40.41, -3.70), LatLng(40.44, -3.67)],
+      ),
+    );
+
+    expect(result.points, hasLength(5));
+    expect(result.steps, hasLength(2));
+    expect(result.steps.first.beginShapeIndex, 0);
+    expect(result.steps.first.endShapeIndex, 1);
+    expect(result.steps.last.beginShapeIndex, 2);
+    expect(result.steps.last.endShapeIndex, 4);
+    expect(result.distanceMeters, 3000);
+    expect(result.durationSeconds, 180);
+  });
+
   test('Valhalla route decodes polyline6 shapes', () async {
     final client = _FakeClient({
       'trip': {
