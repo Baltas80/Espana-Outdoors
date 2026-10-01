@@ -23,6 +23,7 @@ class MapPage extends ConsumerStatefulWidget {
 class _MapPageState extends ConsumerState<MapPage> {
   late Future<vt.Style> _styleFuture;
   final MapController _mapController = MapController();
+  final MapController _mapController = MapController();
   @override
   void initState() {
     super.initState();
@@ -223,10 +224,21 @@ class _PmTilesLayer extends StatelessWidget {
 }
 
 class PmTilesMapViewport extends StatefulWidget {
-  const PmTilesMapViewport({super.key, this.initialCenter = const LatLng(40.4168, -3.7038), this.initialZoom = 7, this.routePoints = const <LatLng>[]});
+  const PmTilesMapViewport({
+    super.key,
+    this.initialCenter = const LatLng(40.4168, -3.7038),
+    this.initialZoom = 7,
+    this.routePoints = const <LatLng>[],
+    this.currentPosition,
+    this.destination,
+    this.onTap,
+  });
   final LatLng initialCenter;
   final double initialZoom;
   final List<LatLng> routePoints;
+  final LatLng? currentPosition;
+  final LatLng? destination;
+  final ValueChanged<LatLng>? onTap;
   @override
   State<PmTilesMapViewport> createState() => _PmTilesMapViewportState();
 }
@@ -249,7 +261,16 @@ class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
     builder: (context, snapshot) {
       if (snapshot.hasError) return _MapMessage(title: 'No se pudo cargar el mapa', message: snapshot.error.toString(), onRetry: () => setState(() => _styleFuture = loadPmTilesStyle()));
       if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-      return _PmTilesLayer(style: snapshot.data!, center: widget.initialCenter, zoom: widget.initialZoom, routePoints: widget.routePoints);
+      return _PmTilesLayer(
+        style: snapshot.data!,
+        center: widget.initialCenter,
+        zoom: widget.initialZoom,
+        mapController: _mapController,
+        currentPosition: widget.currentPosition,
+        destination: widget.destination,
+        routePoints: widget.routePoints,
+        onTap: widget.onTap,
+      );
     },
   );
 }
