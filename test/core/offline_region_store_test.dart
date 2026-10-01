@@ -34,6 +34,7 @@ void main() {
       region: _region,
       status: OfflineRegionStatus.ready,
       bytesDownloaded: 100,
+      localPath: '/offline/spain.pmtiles',
       artifactVersion: '2026-10-01',
       sha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     );
@@ -46,6 +47,7 @@ void main() {
       region: _region,
       status: OfflineRegionStatus.ready,
       bytesDownloaded: 100,
+      localPath: '/offline/spain.pmtiles',
       artifactVersion: '2026-10-01',
       sha256: 'not-a-sha256',
     );
