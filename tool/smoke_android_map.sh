@@ -2,6 +2,7 @@
 set -euo pipefail
 
 apk_path="${1:?APK path required}"
+offline_mode="${2:-online}"
 aapt_path="$(find "${ANDROID_HOME}/build-tools" -maxdepth 2 -type f -name aapt -print | sort -V | tail -n 1)"
 test -x "${aapt_path}"
 package_name="$("${aapt_path}" dump badging "${apk_path}" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -n 1)"
@@ -10,34 +11,30 @@ test -n "${package_name}"
 echo "Installing ${package_name}"
 adb wait-for-device
 adb install -r "${apk_path}"
-adb shell am force-stop "${package_name}"
-adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
-  cat /tmp/espana-monkey.log
-  exit 1
+
+ui_dump() {
+  local file="$1"
+  adb exec-out uiautomator dump /dev/tty 2>/dev/null >"${file}" || true
 }
 
-dismiss_system_anr() {
-  local tmp_dir="\${RUNNER_TEMP:-/tmp}"
-  local dialog_file="\${tmp_dir}/espana-system-dialog.xml"
-  local result_file="\${tmp_dir}/espana-system-anr.txt"
+wait_outside_anr() {
+  local file="${RUNNER_TEMP:-/tmp}/espana-system-dialog.xml"
+  local result="${RUNNER_TEMP:-/tmp}/espana-system-anr.txt"
   local attempt
-  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
-    : >"\${result_file}"
-    adb exec-out uiautomator dump /dev/tty 2>/dev/null >"\${dialog_file}" || true
-
-    if ! grep -Fq "isn't responding" "\${dialog_file}" && \
-       ! grep -Fq "isn\u0027t responding" "\${dialog_file}"; then
+  for attempt in $(seq 1 12); do
+    ui_dump "${file}"
+    if ! grep -Fq "isn't responding" "${file}" && ! grep -Fq "isn\u0027t responding" "${file}"; then
       return 0
     fi
 
-    python3 - "\${dialog_file}" "\${package_name}" >"\${result_file}" <<'PY'
+    set +e
+    python3 - "${file}" "${package_name}" >"${result}" <<'PY'
 import re
 import sys
 import xml.etree.ElementTree as ET
 
-path = sys.argv[1]
-target_package = sys.argv[2]
-raw = open(path, "rb").read().decode("utf-8", errors="replace")
+path, target = sys.argv[1:]
+raw = open(path, encoding="utf-8", errors="replace").read()
 start = raw.find("<?xml")
 if start < 0:
     start = raw.find("<hierarchy")
@@ -45,102 +42,86 @@ end = raw.find("</hierarchy>", start)
 if start < 0 or end < 0:
     raise SystemExit(2)
 root = ET.fromstring(raw[start:end + len("</hierarchy>")])
-titles = []
-wait_bounds = None
 for node in root.iter("node"):
     text = (node.attrib.get("text") or "").strip()
-    if "isn't responding" in text or "isn\u0027t responding" in text:
-        titles.append(text)
-    if text == "Wait":
-        match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
-        if match and wait_bounds is None:
-            wait_bounds = tuple(map(int, match.groups()))
-if not titles:
-    raise SystemExit(0)
-title = titles[0]
-suffixes = (" isn't responding", " isn\u0027t responding")
-owner = next((title[:-len(s)] for s in suffixes if title.endswith(s)), title)
-if owner == target_package:
-    print(f"APP_ANR|{title}")
-    raise SystemExit(3)
-if wait_bounds is not None:
-    x1, y1, x2, y2 = wait_bounds
-    print(f"SYSTEM_ANR|{owner}|{(x1 + x2) // 2}|{(y1 + y2) // 2}")
-else:
+    if "isn't responding" not in text and "isn\u0027t responding" not in text:
+        continue
+    suffix = " isn't responding" if text.endswith(" isn't responding") else " isn\u0027t responding"
+    owner = text[:-len(suffix)]
+    if owner == target:
+        print(f"APP_ANR|{text}")
+        raise SystemExit(3)
+    for child in root.iter("node"):
+        if (child.attrib.get("text") or "").strip() != "Wait":
+            continue
+        match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", child.attrib.get("bounds", ""))
+        if match:
+            x1, y1, x2, y2 = map(int, match.groups())
+            print(f"SYSTEM_ANR|{owner}|{(x1+x2)//2}|{(y1+y2)//2}")
+            raise SystemExit(0)
     print(f"SYSTEM_ANR|{owner}||")
+    raise SystemExit(0)
+raise SystemExit(1)
 PY
-
     rc=$?
-    if test "\${rc}" -eq 3; then
-      echo "FAIL: application ANR detected before map smoke: \$(cat "\${result_file}")"
-      cat "\${dialog_file}"
+    set -e
+    if test "${rc}" -eq 3; then
+      echo "FAIL: application ANR detected: $(cat "${result}")"
+      cat "${file}"
       exit 1
     fi
-    if test "\${rc}" -ne 0; then
-      echo "FAIL: could not classify the Android ANR dialog safely."
-      cat "\${dialog_file}"
+    if test "${rc}" -ne 0; then
+      echo "FAIL: could not classify Android ANR dialog safely."
+      cat "${file}"
       exit 1
     fi
-    IFS='|' read -r kind owner wait_x wait_y <"\${result_file}"
-    if test "\${kind:-}" != "SYSTEM_ANR"; then
-      echo "FAIL: unexpected Android system dialog state."
-      cat "\${dialog_file}"
-      exit 1
-    fi
-    if test -n "\${wait_x:-}" && test -n "\${wait_y:-}"; then
-      echo "Dismissing system ANR for \${owner} with Wait at \${wait_x},\${wait_y}"
-      adb shell input tap "\${wait_x}" "\${wait_y}"
+
+    IFS='|' read -r kind owner wait_x wait_y <"${result}"
+    test "${kind}" = "SYSTEM_ANR"
+    if test -n "${wait_x}" && test -n "${wait_y}"; then
+      echo "Dismissing system ANR for ${owner} with Wait"
+      adb shell input tap "${wait_x}" "${wait_y}"
     else
-      echo "Dismissing system ANR for \${owner} with BACK"
       adb shell input keyevent 4
     fi
     sleep 2
   done
-  adb exec-out uiautomator dump /dev/tty 2>/dev/null >"\${dialog_file}" || true
-  if grep -Fq "isn't responding" "\${dialog_file}" || grep -Fq "isn\u0027t responding" "\${dialog_file}"; then
+  ui_dump "${file}"
+  if grep -Fq "isn't responding" "${file}" || grep -Fq "isn\u0027t responding" "${file}"; then
     echo "FAIL: Android ANR dialog remained after bounded stabilization."
-    cat "\${dialog_file}"
+    cat "${file}"
     exit 1
   fi
-  return 0
 }
 
-dismiss_system_anr
-sleep 5
+launch_app() {
+  adb shell am force-stop "${package_name}"
+  adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
+    cat /tmp/espana-monkey.log
+    exit 1
+  }
+  sleep 3
+  wait_outside_anr
+}
 
-offline_mode="${2:-online}"
+launch_app
+
 if test "${offline_mode}" = "offline"; then
-  echo "Enabling airplane mode before offline map restart."
+  echo "Enabling airplane mode before offline restart."
   adb shell cmd connectivity airplane-mode enable || {
     adb shell settings put global airplane_mode_on 1
     adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true >/dev/null
   }
-  airplane_state="$(adb shell settings get global airplane_mode_on 2>/dev/null | tr -d '\r' | tr -d '\n' || true)"
+  airplane_state="$(adb shell settings get global airplane_mode_on 2>/dev/null | tr -d '\r\n' || true)"
   test "${airplane_state}" = "1"
   echo "Restarting application with network disabled."
-  adb shell am force-stop "${package_name}"
-  adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey-offline.log 2>&1 || {
-    cat /tmp/espana-monkey-offline.log
-    exit 1
-  }
-  sleep 5
-fi
-
-dismiss_system_anr
-after_launch_window="${RUNNER_TEMP:-/tmp}/espana-window-pre-map.xml"
-adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator-pre.err >"${after_launch_window}" || true
-if grep -Fq "isn't responding" "${after_launch_window}" || grep -Fq "isn\u0027t responding" "${after_launch_window}"; then
-  echo "FAIL: a system ANR dialog is still blocking the app UI."
-  cat "${after_launch_window}"
-  exit 1
+  launch_app
 fi
 
 window_file="${RUNNER_TEMP:-/tmp}/espana-window.xml"
-adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator.err >"${window_file}" || true
+ui_dump "${window_file}"
 if ! grep -q '<hierarchy' "${window_file}"; then
   echo "FAIL: UIAutomator did not return a hierarchy."
-  cat /tmp/espana-uiautomator.err || true
-  head -c 2000 "${window_file}" || true
   exit 1
 fi
 
@@ -149,39 +130,28 @@ read -r tap_x tap_y < <(
 import re
 import sys
 import xml.etree.ElementTree as ET
-path = sys.argv[1]
-raw = open(path, "rb").read().decode("utf-8", errors="replace")
+raw = open(sys.argv[1], encoding="utf-8", errors="replace").read()
 start = raw.find("<?xml")
-if start < 0:
-    start = raw.find("<hierarchy")
-if start < 0:
-    raise SystemExit("Could not locate UIAutomator XML hierarchy")
+if start < 0: start = raw.find("<hierarchy")
 end = raw.find("</hierarchy>", start)
-if end < 0:
-    raise SystemExit("UIAutomator hierarchy is incomplete")
 root = ET.fromstring(raw[start:end + len("</hierarchy>")])
 candidates = []
 for node in root.iter("node"):
-    text = (node.attrib.get("text") or "").strip()
-    desc = (node.attrib.get("content-desc") or "").strip()
-    if text != "Mapa" and desc != "Mapa":
+    if (node.attrib.get("text") or "").strip() != "Mapa" and (node.attrib.get("content-desc") or "").strip() != "Mapa":
         continue
-    bounds = node.attrib.get("bounds", "")
-    match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", bounds)
-    if not match:
-        continue
-    x1, y1, x2, y2 = map(int, match.groups())
-    candidates.append(((y1 + y2) // 2, (x1 + x2) // 2))
+    match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
+    if match:
+        x1, y1, x2, y2 = map(int, match.groups())
+        candidates.append(((y1+y2)//2, (x1+x2)//2))
 if not candidates:
     raise SystemExit("Could not find visible Mapa navigation destination")
-cy, cx = max(candidates)
-print(cx, cy)
+y, x = max(candidates)
+print(x, y)
 PY
 )
 
 echo "Tapping Mapa at ${tap_x},${tap_y}"
 adb shell input tap "${tap_x}" "${tap_y}"
-echo "Waiting for PMTiles map startup..."
 sleep 15
 
 logcat_file="${RUNNER_TEMP:-/tmp}/espana-outdoor-map-logcat.txt"
@@ -189,21 +159,24 @@ screenshot_file="${RUNNER_TEMP:-/tmp}/espana-outdoor-map.png"
 adb logcat -d >"${logcat_file}"
 adb exec-out screencap -p >"${screenshot_file}"
 test -s "${screenshot_file}"
-pid="$(adb shell pidof "${package_name}" 2>/dev/null | tr -d '\r' | tr -d '\n' || true)"
-if test -z "${pid}"; then
+
+pid="$(adb shell pidof "${package_name}" 2>/dev/null | tr -d '\r\n' || true)"
+test -n "${pid}" || {
   echo "FAIL: application process is not alive after tapping Mapa."
   grep -Ein "FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|Abort message:|backtrace:|AndroidRuntime|flutter_map|PMTiles|VectorTile" "${logcat_file}" | tail -n 400 || true
   exit 1
-fi
+}
+
 if grep -Eiq "FATAL EXCEPTION|Fatal signal [0-9]+ \((SIGSEGV|SIGABRT)\)|Abort message:|backtrace:" "${logcat_file}"; then
   echo "FAIL: native/application crash detected after tapping Mapa."
   grep -Ein "FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|Abort message:|backtrace:|AndroidRuntime|flutter_map|PMTiles|VectorTile" "${logcat_file}" | tail -n 500 || true
   exit 1
 fi
+
 post_window="${RUNNER_TEMP:-/tmp}/espana-window-post-map.xml"
-adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator-post.err >"${post_window}" || true
+ui_dump "${post_window}"
 if grep -Fq 'No se pudo cargar el mapa' "${post_window}" || grep -Fq 'Reintentar' "${post_window}"; then
-  echo "FAIL: PMTiles map is showing the map loader error state."
+  echo "FAIL: PMTiles map is showing the loader error state."
   cat "${post_window}"
   grep -Ein "StyleReaderException|PmTilesException|HTTP [0-9]{3}|Range|flutter_map|PMTiles|VectorTile" "${logcat_file}" | tail -n 500 || true
   exit 1
@@ -213,5 +186,6 @@ if grep -Eiq "StyleReaderException|PmTilesException" "${logcat_file}"; then
   grep -Ein "StyleReaderException|PmTilesException|HTTP [0-9]{3}|Range|flutter_map|PMTiles|VectorTile" "${logcat_file}" | tail -n 500 || true
   exit 1
 fi
+
 echo "PASS: PMTiles map remained alive and the visible UI is not in the loader error state."
 grep -Ei "flutter_map|PMTiles|VectorTile|tile|Range" "${logcat_file}" | tail -n 200 || true
