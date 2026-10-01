@@ -6,8 +6,7 @@
   <meta name="theme-color" content="#071511">
   <meta name="description" content="Tienda España Outdoor — equipamiento para montaña, trekking, camping, navegación y seguridad al aire libre.">
   <meta property="og:title" content="Tienda | España Outdoor">
-  <meta property="og:description" content="Equípate para salir ahí fuera."
-  >
+  <meta property="og:description" content="Equípate para salir ahí fuera.">
   <meta property="og:type" content="website">
   <link rel="icon" href="./assets/brand/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
@@ -24,19 +23,20 @@
   </script>
   <style>
     .store-page{background:var(--cream);min-height:100vh;padding-top:84px}
-    .store-hero{position:relative;overflow:hidden;background:linear-gradient(115deg,#071511 0%,#103c2d 58%,#145a43 100%);color:#fff;padding:88px 0 76px}
-    .store-hero:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 25%,rgba(245,181,27,.2),transparent 28%),linear-gradient(90deg,rgba(7,21,17,.2),rgba(7,21,17,.05));pointer-events:none}
-    .store-hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.15fr .85fr;gap:50px;align-items:center}
+    .store-hero{position:relative;overflow:hidden;background:#071511;color:#fff;padding:0}
+    .store-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,21,17,.92) 0%,rgba(7,21,17,.72) 45%,rgba(7,21,17,.18) 100%);pointer-events:none}
+    .store-hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72}
+    .store-hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.05fr .95fr;gap:50px;align-items:center;min-height:590px;padding-top:78px;padding-bottom:78px}
+    .store-copy{max-width:700px}
     .store-kicker{text-transform:uppercase;letter-spacing:.22em;font-size:11px;font-weight:900;color:#bfe6d0;margin:0 0 14px}
     .store-hero h1{font-size:clamp(48px,6vw,82px);line-height:.92;letter-spacing:-.055em;margin:0 0 20px}
     .store-hero h1 em{color:var(--gold);font-style:normal}
-    .store-lead{max-width:640px;color:rgba(255,255,255,.78);font-size:18px;line-height:1.6;margin:0}
+    .store-lead{max-width:640px;color:rgba(255,255,255,.82);font-size:18px;line-height:1.6;margin:0}
     .store-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
-    .store-visual{min-height:360px;border-radius:28px;background:linear-gradient(145deg,rgba(255,255,255,.1),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.25)}
-    .store-visual:before,.store-visual:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(245,181,27,.22)}
-    .store-visual:before{width:310px;height:310px}.store-visual:after{width:190px;height:190px}
-    .store-visual-mark{position:relative;z-index:2;width:116px;height:116px;border-radius:34px;background:var(--gold);display:grid;place-items:center;color:#10130f;font-size:48px;font-weight:900;box-shadow:0 18px 50px rgba(0,0,0,.24)}
-    .store-visual-label{position:absolute;left:24px;bottom:22px;text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:rgba(255,255,255,.58)}
+    .store-visual{min-height:410px;border-radius:28px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.18);box-shadow:0 30px 80px rgba(0,0,0,.28);background:#173d30}
+    .store-visual img{width:100%;height:100%;min-height:410px;object-fit:cover;display:block}
+    .store-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,21,17,.02),rgba(7,21,17,.68))}
+    .store-visual-label{position:absolute;z-index:2;left:24px;bottom:22px;text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:#fff;font-weight:800}
     .store-content{padding:84px 0 110px}
     .store-section-head{display:flex;justify-content:space-between;gap:40px;align-items:end;margin-bottom:34px}
     .store-section-head h2{font-size:clamp(32px,4vw,52px);line-height:1;letter-spacing:-.045em;margin:0}
@@ -44,108 +44,68 @@
     .store-categories{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
     .store-category{position:relative;min-height:230px;border-radius:22px;padding:25px;background:#fff;border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 10px 30px rgba(16,35,30,.06);transition:transform .18s,box-shadow .18s,border-color .18s}
     .store-category:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(16,35,30,.12);border-color:rgba(20,90,67,.28)}
-    .store-category .store-icon{position:absolute;top:22px;left:22px;width:54px;height:54px;border-radius:17px;background:#e9f2ec;color:var(--forest);display:grid;place-items:center;font-size:24px;font-weight:900}
+    .store-category .store-icon{position:absolute;top:22px;left:22px;width:54px;height:54px;border-radius:17px;background:#e9f2ec;color:var(--forest);display:grid;place-items:center;font-size:22px;font-weight:900}
     .store-category h3{margin:0 0 5px;font-size:22px;letter-spacing:-.02em}
     .store-category p{margin:0;color:var(--muted);font-size:13px;line-height:1.4;max-width:230px}
     .store-category span{position:absolute;right:20px;top:22px;font-size:20px;color:#9aa59f}
+    .store-category:focus-visible{outline:3px solid rgba(245,181,27,.55);outline-offset:3px}
     .store-model{margin-top:70px;padding:36px;border-radius:26px;background:#10251d;color:#fff;display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px}
     .store-model h2{grid-column:1/-1;font-size:30px;line-height:1.05;margin:0 0 4px;letter-spacing:-.03em}
     .store-model-card{padding:23px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:rgba(255,255,255,.035)}
     .store-model-card strong{display:block;font-size:17px;margin-bottom:8px}.store-model-card p{margin:0;color:rgba(255,255,255,.65);font-size:13px;line-height:1.55}
     .store-empty{margin-top:54px;text-align:center;padding:54px 25px;border:1px dashed rgba(12,25,21,.2);border-radius:24px;background:rgba(255,255,255,.42)}
     .store-empty h2{margin:0 0 8px;font-size:28px}.store-empty p{margin:0 auto;max-width:650px;color:var(--muted);font-size:14px}
-    @media (max-width:1000px){.store-hero-inner{grid-template-columns:1fr}.store-visual{min-height:280px}.store-categories{grid-template-columns:repeat(2,1fr)}.store-model{grid-template-columns:1fr}}
-    @media (max-width:680px){.store-page{padding-top:72px}.store-hero{padding:64px 0}.store-categories{grid-template-columns:1fr}.store-section-head{display:block}.store-section-head p{margin-top:14px}.store-model{padding:24px}.store-visual{min-height:230px}.store-visual-mark{width:90px;height:90px;border-radius:28px;font-size:38px}}
+    .store-note{margin-top:14px;font-size:12px;color:rgba(255,255,255,.58)}
+    @media (max-width:1000px){.store-hero-inner{grid-template-columns:1fr}.store-visual{min-height:300px}.store-visual img{min-height:300px}.store-categories{grid-template-columns:repeat(2,1fr)}.store-model{grid-template-columns:1fr}}
+    @media (max-width:680px){.store-page{padding-top:72px}.store-hero-inner{padding-top:62px;padding-bottom:62px}.store-hero{min-height:0}.store-categories{grid-template-columns:1fr}.store-section-head{display:block}.store-section-head p{margin-top:14px}.store-model{padding:24px}.store-visual{min-height:230px}.store-visual img{min-height:230px}.store-hero h1{font-size:52px}}
   </style>
 </head>
 <body>
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
-
 <header class="site-header" data-header>
   <div class="shell header-inner">
-    <a class="brand" href="./index.html" aria-label="España Outdoor">
-      <img src="./assets/brand/mark.svg" alt="" width="48" height="48">
-      <span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span>
-    </a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" data-menu>
-      <span></span><span></span><span></span><span class="sr-only">Abrir menú</span>
-    </button>
+    <a class="brand" href="./index.html" aria-label="España Outdoor"><img src="./assets/brand/mark.svg" alt="" width="48" height="48"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" data-menu><span></span><span></span><span></span><span class="sr-only">Abrir menú</span></button>
     <nav id="main-nav" class="main-nav" aria-label="Principal">
-      <a href="./index.html">Inicio</a>
-      <a href="./mapa.html">Mapa</a>
-      <a href="./rutas.html">Rutas</a>
-      <a href="./naturaleza.html">Naturaleza</a>
-      <a href="./seguridad.html">Seguridad</a>
-      <a href="./app.html">App</a>
-      <a href="./blog.html">Blog</a>
-      <a href="./contacto.html">Contacto</a>
-      <a class="nav-download" href="./app.html">Descargar App</a>
+      <a href="./index.html">Inicio</a><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./seguridad.html">Seguridad</a><a class="active" href="./tienda.html" aria-current="page">Tienda</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a><a class="nav-download" href="./app.html">Descargar App</a>
     </nav>
   </div>
 </header>
-
 <main id="contenido" class="store-page">
   <section class="store-hero">
+    <img class="store-hero-photo" src="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=2200&q=86" alt="Equipamiento de montaña durante una ruta" fetchpriority="high">
     <div class="shell store-hero-inner">
-      <div>
+      <div class="store-copy">
         <p class="store-kicker">España Outdoor · Equipamiento</p>
         <h1>Equípate para<br><em>salir ahí fuera.</em></h1>
         <p class="store-lead">Una tienda pensada alrededor de la experiencia outdoor: material para montaña, trekking, camping, navegación y seguridad, organizado para que encuentres lo que necesitas antes de salir.</p>
-        <div class="store-hero-actions">
-          <a class="button button-gold" href="#categorias">Explorar categorías</a>
-          <a class="button button-outline" href="./rutas.html">Ver rutas</a>
-        </div>
+        <div class="store-hero-actions"><a class="button button-gold" href="#categorias">Explorar categorías</a><a class="button button-outline" href="./rutas.html">Ver rutas</a></div>
+        <p class="store-note">Catálogo comercial en preparación · sin inventario propio en esta fase.</p>
       </div>
-      <div class="store-visual" aria-hidden="true">
-        <div class="store-visual-mark">+</div>
-        <span class="store-visual-label">Outdoor gear · España</span>
-      </div>
+      <div class="store-visual"><img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1200&q=84" alt="Mochila de montaña y equipamiento outdoor" loading="eager"><span class="store-visual-label">Outdoor gear · España</span></div>
     </div>
   </section>
-
   <section id="categorias" class="store-content">
     <div class="shell">
-      <div class="store-section-head">
-        <div><p class="kicker">Tienda</p><h2>Todo para tu próxima salida.</h2></div>
-        <p>La estructura queda preparada para incorporar productos reales, marcas y proveedores sin cambiar la arquitectura de la tienda.</p>
-      </div>
-
+      <div class="store-section-head"><div><p class="kicker">Tienda</p><h2>Todo para tu próxima salida.</h2></div><p>La estructura queda preparada para incorporar productos reales, marcas y proveedores sin cambiar la arquitectura de la tienda.</p></div>
       <div class="store-categories">
-        <a class="store-category" href="#catalogo"><div class="store-icon">▣</div><span>→</span><h3>Mochilas</h3><p>Mochilas de día, trekking y travesía.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">⌁</div><span>→</span><h3>Calzado</h3><p>Senderismo, montaña y aproximación.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">◆</div><span>→</span><h3>Ropa outdoor</h3><p>Capas, protección y prendas técnicas.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">△</div><span>→</span><h3>Trekking</h3><p>Bastones, accesorios y material de ruta.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">⌂</div><span>→</span><h3>Camping</h3><p>Tiendas, sacos, cocina y descanso.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">◉</div><span>→</span><h3>Hidratación</h3><p>Botellas, filtros y sistemas de hidratación.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">⌖</div><span>→</span><h3>Navegación</h3><p>GPS, brújulas y accesorios de orientación.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">+</div><span>→</span><h3>Seguridad</h3><p>Primeros auxilios, emergencia y prevención.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">◐</div><span>→</span><h3>Iluminación</h3><p>Frontales y soluciones para baja luz.</p></a>
-        <a class="store-category" href="#catalogo"><div class="store-icon">●</div><span>→</span><h3>Accesorios</h3><p>Pequeño material para completar tu equipo.</p></a>
+        <a class="store-category" href="#catalogo" data-category="mochilas"><div class="store-icon">▣</div><span>→</span><h3>Mochilas</h3><p>Mochilas de día, trekking y travesía.</p></a>
+        <a class="store-category" href="#catalogo" data-category="calzado"><div class="store-icon">⌁</div><span>→</span><h3>Calzado</h3><p>Senderismo, montaña y aproximación.</p></a>
+        <a class="store-category" href="#catalogo" data-category="ropa"><div class="store-icon">◆</div><span>→</span><h3>Ropa outdoor</h3><p>Capas, protección y prendas técnicas.</p></a>
+        <a class="store-category" href="#catalogo" data-category="trekking"><div class="store-icon">△</div><span>→</span><h3>Trekking</h3><p>Bastones, accesorios y material de ruta.</p></a>
+        <a class="store-category" href="#catalogo" data-category="camping"><div class="store-icon">⌂</div><span>→</span><h3>Camping</h3><p>Tiendas, sacos, cocina y descanso.</p></a>
+        <a class="store-category" href="#catalogo" data-category="hidratacion"><div class="store-icon">◉</div><span>→</span><h3>Hidratación</h3><p>Botellas, filtros y sistemas de hidratación.</p></a>
+        <a class="store-category" href="#catalogo" data-category="navegacion"><div class="store-icon">⌖</div><span>→</span><h3>Navegación</h3><p>GPS, brújulas y accesorios de orientación.</p></a>
+        <a class="store-category" href="#catalogo" data-category="seguridad"><div class="store-icon">+</div><span>→</span><h3>Seguridad</h3><p>Primeros auxilios, emergencia y prevención.</p></a>
+        <a class="store-category" href="#catalogo" data-category="iluminacion"><div class="store-icon">◐</div><span>→</span><h3>Iluminación</h3><p>Frontales y soluciones para baja luz.</p></a>
+        <a class="store-category" href="#catalogo" data-category="accesorios"><div class="store-icon">●</div><span>→</span><h3>Accesorios</h3><p>Pequeño material para completar tu equipo.</p></a>
       </div>
-
-      <div id="catalogo" class="store-empty">
-        <h2>Catálogo en preparación</h2>
-        <p>La tienda ya está integrada en España Outdoor. Ahora podemos seleccionar productos y proveedores reales y conectarlos con el catálogo comercial, inicialmente mediante afiliación y más adelante con acuerdos directos si conviene.</p>
-      </div>
-
-      <div class="store-model">
-        <h2>Una tienda conectada con la experiencia outdoor.</h2>
-        <div class="store-model-card"><strong>Ruta → equipamiento</strong><p>Las futuras recomendaciones podrán relacionar una ruta, su dificultad y condiciones con el material adecuado.</p></div>
-        <div class="store-model-card"><strong>Catálogo → proveedor</strong><p>La arquitectura permite empezar sin stock y evolucionar hacia proveedores y marcas directas cuando haya datos suficientes.</p></div>
-        <div class="store-model-card"><strong>Datos → decisiones</strong><p>Mediremos clics e interés por categoría para priorizar productos con demanda real antes de invertir en inventario.</p></div>
-      </div>
+      <div id="catalogo" class="store-empty"><h2>Catálogo en preparación</h2><p>La tienda ya está integrada en España Outdoor. Ahora podemos seleccionar productos y proveedores reales y conectarlos con el catálogo comercial, inicialmente mediante afiliación y más adelante con acuerdos directos si conviene.</p></div>
+      <div class="store-model"><h2>Una tienda conectada con la experiencia outdoor.</h2><div class="store-model-card"><strong>Ruta → equipamiento</strong><p>Las futuras recomendaciones podrán relacionar una ruta, su dificultad y condiciones con el material adecuado.</p></div><div class="store-model-card"><strong>Catálogo → proveedor</strong><p>La arquitectura permite empezar sin stock y evolucionar hacia proveedores y marcas directas cuando haya datos suficientes.</p></div><div class="store-model-card"><strong>Datos → decisiones</strong><p>Mediremos clics e interés por categoría para priorizar productos con demanda real antes de invertir en inventario.</p></div></div>
     </div>
   </section>
 </main>
-
-<footer class="site-footer">
-  <div class="shell footer-inner">
-    <div class="brand footer-brand"><img src="./assets/brand/mark.svg" alt="" width="40"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></div>
-    <div class="footer-links"><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./flora-fauna.html">Flora y Fauna</a><a href="./seguridad.html">Seguridad</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a></div>
-    <div class="footer-copy">© <span data-year></span> España Outdoor<br><small>Grupo PAGREY · Todos los derechos reservados</small></div>
-  </div>
-</footer>
-
+<footer class="site-footer"><div class="shell footer-inner"><div class="brand footer-brand"><img src="./assets/brand/mark.svg" alt="" width="40"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></div><div class="footer-links"><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./flora-fauna.html">Flora y Fauna</a><a href="./seguridad.html">Seguridad</a><a href="./tienda.html">Tienda</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a></div><div class="footer-copy">© <span data-year></span> España Outdoor<br><small>Grupo PAGREY · Todos los derechos reservados</small></div></div></footer>
 <script src="./app.js" defer></script>
 </body>
 </html>
