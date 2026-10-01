@@ -125,30 +125,61 @@ if ! grep -q '<hierarchy' "${window_file}"; then
   exit 1
 fi
 
-read -r tap_x tap_y < <(
+find_mapa_coordinates() {
   python3 - "${window_file}" <<'PY'
 import re
 import sys
 import xml.etree.ElementTree as ET
 raw = open(sys.argv[1], encoding="utf-8", errors="replace").read()
 start = raw.find("<?xml")
-if start < 0: start = raw.find("<hierarchy")
+if start < 0:
+    start = raw.find("<hierarchy")
 end = raw.find("</hierarchy>", start)
+if start < 0 or end < 0:
+    raise SystemExit(2)
 root = ET.fromstring(raw[start:end + len("</hierarchy>")])
 candidates = []
 for node in root.iter("node"):
-    if (node.attrib.get("text") or "").strip() != "Mapa" and (node.attrib.get("content-desc") or "").strip() != "Mapa":
+    text = (node.attrib.get("text") or "").strip()
+    desc = (node.attrib.get("content-desc") or "").strip()
+    if text != "Mapa" and desc != "Mapa":
         continue
     match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
     if match:
         x1, y1, x2, y2 = map(int, match.groups())
         candidates.append(((y1+y2)//2, (x1+x2)//2))
 if not candidates:
-    raise SystemExit("Could not find visible Mapa navigation destination")
+    raise SystemExit(1)
 y, x = max(candidates)
 print(x, y)
 PY
-)
+}
+
+# A cold Android emulator can spend several seconds rendering Flutter after
+# boot/restart. Wait for the actual navigation target rather than assuming
+# that a single UIAutomator dump immediately after launch is sufficient.
+map_found=0
+for attempt in $(seq 1 30); do
+  wait_outside_anr
+  ui_dump "${window_file}"
+  if coords="$(find_mapa_coordinates 2>/dev/null)"; then
+    read -r tap_x tap_y <<<"${coords}"
+    map_found=1
+    break
+  fi
+  if ! adb shell pidof "${package_name}" >/dev/null 2>&1; then
+    echo "FAIL: application process disappeared while waiting for Mapa."
+    exit 1
+  fi
+  echo "Mapa not visible yet; waiting (${attempt}/30)."
+  sleep 2
+ done
+
+if test "${map_found}" -ne 1; then
+  echo "FAIL: Could not find visible Mapa navigation destination after bounded startup wait."
+  cat "${window_file}"
+  exit 1
+fi
 
 echo "Tapping Mapa at ${tap_x},${tap_y}"
 adb shell input tap "${tap_x}" "${tap_y}"
