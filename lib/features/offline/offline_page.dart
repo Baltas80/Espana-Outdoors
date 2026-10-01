@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../app/outdoor_visuals.dart';
+import '../../core/map/map_service.dart';
 import '../../core/maps/pmtiles_local_source.dart';
 import '../../core/offline/offline_region.dart';
 import '../../core/offline/offline_region_catalog.dart';
@@ -28,18 +31,6 @@ class _OfflinePageState extends State<OfflinePage> {
   }
 
   Future<List<OfflineRegion>> _loadCatalog() async {
-    // A verified local package is enough to use the offline map. Do not block
-    // the screen on remote catalog DNS/network when Spain is already stored.
-    if (await _hasVerifiedLocalSpain()) {
-      if (mounted) {
-        setState(() {
-          _readyIds.add('spain');
-          _status = 'España disponible sin conexión.';
-        });
-      }
-      return const <OfflineRegion>[];
-    }
-
     try {
       if (_catalogUrl.isEmpty) {
         throw StateError('OFFLINE_CATALOG_URL no está configurado.');
@@ -51,8 +42,19 @@ class _OfflinePageState extends State<OfflinePage> {
 
       await _refreshReady(regions);
       return regions;
-    } on Object {
-      rethrow;
+    } on Object catch (error) {
+      // The catalog is remote metadata. A verified local package is sufficient
+      // to keep the offline screen useful when the device has no connectivity.
+      final localReady = await _hasVerifiedLocalSpain();
+      if (!localReady) rethrow;
+
+      if (mounted) {
+        setState(() {
+          _readyIds.add('spain');
+          _status = 'España disponible sin conexión. Catálogo remoto no disponible.';
+        });
+      }
+      return const <OfflineRegion>[];
     }
   }
 
@@ -94,6 +96,38 @@ class _OfflinePageState extends State<OfflinePage> {
     }
   }
 
+  Future<void> _persistVerifiedDownload(
+    OfflineRegion region,
+    File file,
+  ) async {
+    final bytes = await file.length();
+    final record = OfflineRegionRecord(
+      region: OfflineMapRegion(
+        id: region.id,
+        name: region.name,
+        bounds: const MapBounds(
+          west: -18.2,
+          south: 27.5,
+          east: 4.6,
+          north: 43.9,
+        ),
+        minZoom: 3,
+        maxZoom: 18,
+        providerId: region.providerId,
+        styleVersion: region.updatedAt.toIso8601String(),
+      ),
+      status: OfflineRegionStatus.ready,
+      progress: 1,
+      bytesDownloaded: bytes,
+      bytesTotal: bytes,
+      localPath: file.path,
+      sha256: region.sha256,
+      artifactVersion: region.updatedAt.toIso8601String(),
+      updatedAt: DateTime.now().toUtc(),
+    );
+    await OfflineRegionStore().put(record);
+  }
+
   Future<void> _downloadRegion(OfflineRegion region) async {
     if (_downloading) return;
 
@@ -103,12 +137,13 @@ class _OfflinePageState extends State<OfflinePage> {
     });
 
     try {
-      await const OfflineRegionDownloader().startAndVerify(region);
+      final file = await const OfflineRegionDownloader().startAndVerify(region);
+      await _persistVerifiedDownload(region, file);
       await _refreshReady([region]);
       if (!mounted) return;
       setState(() {
         _downloading = false;
-        _status = '${region.name} descargada y verificada.';
+        _status = '${region.name} descargada, verificada y registrada para uso offline.';
       });
     } on Object catch (error) {
       if (!mounted) return;
