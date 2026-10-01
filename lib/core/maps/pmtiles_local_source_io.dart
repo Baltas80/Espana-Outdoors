@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:path_provider/path_provider.dart';
 
 import '../offline/offline_package_verifier.dart';
@@ -111,7 +110,10 @@ Future<void> _serve(HttpServer server, File file) async {
       }
 
       final length = await file.length();
-      final range = _parseRange(request.headers.value(HttpHeaders.rangeHeader), length);
+      final range = _parseRange(
+        request.headers.value(HttpHeaders.rangeHeader),
+        length,
+      );
       request.response.headers
         ..set(HttpHeaders.acceptRangesHeader, 'bytes')
         ..set(HttpHeaders.contentTypeHeader, 'application/octet-stream');
