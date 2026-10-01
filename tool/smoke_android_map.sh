@@ -16,11 +16,12 @@ adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
   exit 1
 }
 
-# Android emulators can surface a system-level "application isn't responding"
-# dialog for the launcher immediately after boot. That dialog blocks the
-# accessibility tree and can make a healthy app look invisible to UIAutomator.
-# Dismiss only that known system dialog before asserting app navigation.
-dismiss_launcher_anr() {
+# Android emulators can surface transient system-level "application isn't
+# responding" dialogs after boot (for example Launcher or Google setup).
+# Such dialogs block the accessibility tree and can make a healthy app look
+# invisible to UIAutomator. Dismiss only these system dialogs; never dismiss
+# an ANR belonging to the application under test.
+dismiss_system_anr() {
   local dialog_file="${RUNNER_TEMP:-/tmp}/espana-system-dialog.xml"
   local attempt
   for attempt in 1 2 3 4 5 6; do
@@ -57,23 +58,26 @@ PY
     )
 
     if test -n "${wait_x:-}" && test -n "${wait_y:-}"; then
-      echo "Dismissing launcher ANR with Wait at ${wait_x},${wait_y}"
+      echo "Dismissing system ANR with Wait at ${wait_x},${wait_y}"
       adb shell input tap "${wait_x}" "${wait_y}"
     else
-      echo "Dismissing launcher ANR with BACK"
+      echo "Dismissing system ANR with BACK"
       adb shell input keyevent 4
     fi
     sleep 2
   done
 }
 
-dismiss_launcher_anr
+dismiss_system_anr
 sleep 5
+# A second system component can surface its own delayed ANR after the first
+# dialog is dismissed. Recheck immediately before inspecting the app UI.
+dismiss_system_anr
 
 after_launch_window="${RUNNER_TEMP:-/tmp}/espana-window-pre-map.xml"
 adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator-pre.err >"${after_launch_window}" || true
 if grep -Fq "isn't responding" "${after_launch_window}" || grep -Fq "isn\u0027t responding" "${after_launch_window}"; then
-  echo "FAIL: system launcher ANR dialog is still blocking the app UI."
+  echo "FAIL: a system ANR dialog is still blocking the app UI."
   cat "${after_launch_window}"
   exit 1
 fi
