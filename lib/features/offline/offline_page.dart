@@ -6,6 +6,7 @@ import '../../app/outdoor_visuals.dart';
 import '../../core/map/map_service.dart';
 import '../../core/maps/pmtiles_local_source.dart';
 import '../../core/offline/offline_region.dart';
+import '../../core/offline/offline_package_verifier.dart';
 import '../../core/offline/offline_region_catalog.dart';
 import '../../core/offline/offline_region_downloader.dart';
 import '../../core/offline/offline_region_store.dart';
@@ -68,17 +69,68 @@ class _OfflinePageState extends State<OfflinePage> {
       return false;
     }
 
-    final fileName = path.split(RegExp(r'[/\\]')).last;
-    return await findValidLocalPmTiles(
-          expectedFileName: fileName,
-          expectedSha256: sha256,
-        ) !=
-        null;
+    final file = File(path);
+    if (!await file.exists()) return false;
+    final stat = await file.stat();
+    if (stat.size != record.bytesDownloaded) return false;
+
+    final recordedModified = record.fileModifiedAt;
+    if (recordedModified == null) {
+      await OfflineRegionStore().put(record.copyWith(fileModifiedAt: stat.modified));
+      return true;
+    }
+    if (recordedModified.millisecondsSinceEpoch == stat.modified.millisecondsSinceEpoch) {
+      return true;
+    }
+
+    try {
+      await const OfflinePackageVerifier().verifyFile(file, expectedSha256: sha256);
+      await OfflineRegionStore().put(record.copyWith(fileModifiedAt: stat.modified));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
+  Future<bool> _hasUsableStoredArtifact(OfflineRegionRecord record) async {
+    if (!record.hasValidArtifact) return false;
+    final path = record.localPath?.trim();
+    if (path == null || path.isEmpty) return false;
+
+    final file = File(path);
+    if (!await file.exists()) return false;
+    final stat = await file.stat();
+    if (stat.size != record.bytesDownloaded) return false;
+
+    final modified = record.fileModifiedAt;
+    if (modified == null) {
+      await OfflineRegionStore().put(record.copyWith(fileModifiedAt: stat.modified));
+      return true;
+    }
+    if (modified.millisecondsSinceEpoch == stat.modified.millisecondsSinceEpoch) {
+      return true;
+    }
+
+    try {
+      await const OfflinePackageVerifier().verifyFile(
+        file,
+        expectedSha256: record.sha256,
+      );
+      await OfflineRegionStore().put(record.copyWith(fileModifiedAt: stat.modified));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
   Future<void> _refreshReady(List<OfflineRegion> regions) async {
     final ready = <String>{};
     for (final region in regions) {
+      final stored = OfflineRegionStore().get(region.id);
+      if (stored != null && await _hasUsableStoredArtifact(stored)) {
+        ready.add(region.id);
+        continue;
+      }
+
       final fileName =
           '${region.id}-${region.sha256.substring(0, 12)}.pmtiles';
       final path = await findValidLocalPmTiles(
@@ -123,6 +175,7 @@ class _OfflinePageState extends State<OfflinePage> {
       localPath: file.path,
       sha256: region.sha256,
       artifactVersion: region.updatedAt.toIso8601String(),
+      fileModifiedAt: (await file.stat()).modified,
       updatedAt: DateTime.now().toUtc(),
     );
     await OfflineRegionStore().put(record);
