@@ -2,6 +2,16 @@ name: Android staging
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'lib/**'
+      - 'tool/**'
+      - 'test/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'ops/offline/**'
+      - '.github/workflows/staging-android.yml'
   push:
     branches: [master]
     paths:
