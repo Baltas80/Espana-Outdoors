@@ -10,15 +10,74 @@ test -n "${package_name}"
 echo "Installing ${package_name}"
 adb wait-for-device
 adb install -r "${apk_path}"
-
-adb logcat -c
 adb shell am force-stop "${package_name}"
 adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
   cat /tmp/espana-monkey.log
   exit 1
 }
 
+# Android emulators can surface a system-level "application isn't responding"
+# dialog for the launcher immediately after boot. That dialog blocks the
+# accessibility tree and can make a healthy app look invisible to UIAutomator.
+# Dismiss only that known system dialog before asserting app navigation.
+dismiss_launcher_anr() {
+  local dialog_file="${RUNNER_TEMP:-/tmp}/espana-system-dialog.xml"
+  local attempt
+  for attempt in 1 2 3 4 5 6; do
+    adb exec-out uiautomator dump /dev/tty 2>/dev/null >"${dialog_file}" || true
+    if ! grep -Fq "isn't responding" "${dialog_file}" && ! grep -Fq "isn\u0027t responding" "${dialog_file}"; then
+      return 0
+    fi
+
+    read -r wait_x wait_y < <(
+      python3 - "${dialog_file}" <<'PY'
+import re
+import sys
+import xml.etree.ElementTree as ET
+
+path = sys.argv[1]
+raw = open(path, "rb").read().decode("utf-8", errors="replace")
+start = raw.find("<?xml")
+if start < 0:
+    start = raw.find("<hierarchy")
+end = raw.find("</hierarchy>", start)
+if start < 0 or end < 0:
+    raise SystemExit(0)
+root = ET.fromstring(raw[start:end + len("</hierarchy>")])
+for node in root.iter("node"):
+    if (node.attrib.get("text") or "").strip() != "Wait":
+        continue
+    match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
+    if not match:
+        continue
+    x1, y1, x2, y2 = map(int, match.groups())
+    print((x1 + x2) // 2, (y1 + y2) // 2)
+    raise SystemExit(0)
+PY
+    )
+
+    if test -n "${wait_x:-}" && test -n "${wait_y:-}"; then
+      echo "Dismissing launcher ANR with Wait at ${wait_x},${wait_y}"
+      adb shell input tap "${wait_x}" "${wait_y}"
+    else
+      echo "Dismissing launcher ANR with BACK"
+      adb shell input keyevent 4
+    fi
+    sleep 2
+  done
+}
+
+dismiss_launcher_anr
 sleep 5
+
+after_launch_window="${RUNNER_TEMP:-/tmp}/espana-window-pre-map.xml"
+adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator-pre.err >"${after_launch_window}" || true
+if grep -Fq "isn't responding" "${after_launch_window}" || grep -Fq "isn\u0027t responding" "${after_launch_window}"; then
+  echo "FAIL: system launcher ANR dialog is still blocking the app UI."
+  cat "${after_launch_window}"
+  exit 1
+fi
+
 window_file="${RUNNER_TEMP:-/tmp}/espana-window.xml"
 adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator.err >"${window_file}" || true
 
