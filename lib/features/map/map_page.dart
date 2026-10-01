@@ -69,8 +69,13 @@ class _MapPageState extends ConsumerState<MapPage> {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                 return _PmTilesLayer(
                   style: snapshot.data!,
-                  center: const LatLng(40.4168, -3.7038),
-                  zoom: 6.2,
+                  center: location.position == null
+                      ? const LatLng(40.4168, -3.7038)
+                      : LatLng(
+                          location.position!.latitude,
+                          location.position!.longitude,
+                        ),
+                  zoom: location.position == null ? 6.2 : 15,
                   mapController: _mapController,
                   currentPosition: location.position == null
                       ? null
@@ -205,6 +210,7 @@ class _PmTilesLayer extends StatelessWidget {
           rasterSources: style.rasterSources,
           sprites: style.sprites,
           logger: const vt.Logger.console(),
+          showLabels: true,
         ),
         if (routePoints.length >= 2)
           PolylineLayer(
