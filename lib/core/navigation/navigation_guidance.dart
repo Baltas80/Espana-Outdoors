@@ -70,20 +70,19 @@ final class NavigationGuidanceEngine {
         ? accuracyMeters
         : poorGpsAccuracyMeters;
 
-    if (safeAccuracy > poorGpsAccuracyMeters) {
-      final nearest = _nearestPoint(route.points, position);
-      return NavigationGuidance(
-        status: NavigationGuidanceStatus.gpsPoor,
-        distanceFromRouteMeters: nearest.distanceMeters,
-        offRouteThresholdMeters: _threshold(safeAccuracy),
-        nearestShapeIndex: nearest.index,
-        progressFraction: nearest.index / (route.points.length - 1),
-      );
-    }
-
     final nearest = _nearestPoint(route.points, position);
     final threshold = _threshold(safeAccuracy);
     final progress = nearest.index / (route.points.length - 1);
+
+    if (safeAccuracy > poorGpsAccuracyMeters) {
+      return NavigationGuidance(
+        status: NavigationGuidanceStatus.gpsPoor,
+        distanceFromRouteMeters: nearest.distanceMeters,
+        offRouteThresholdMeters: threshold,
+        nearestShapeIndex: nearest.index,
+        progressFraction: progress,
+      );
+    }
 
     final distanceToEnd = _pathDistance(
       route.points,
@@ -161,7 +160,67 @@ final class NavigationGuidanceEngine {
       }
     }
 
+    // A GPS fix commonly lands between two route vertices. Use the closest
+    // segment projection for off-route distance, while retaining the closest
+    // vertex index for progress and step lookup compatibility.
+    for (var index = 0; index < points.length - 1; index++) {
+      final distance = _distanceToSegmentMeters(
+        position,
+        points[index],
+        points[index + 1],
+      );
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        final toStart = Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          points[index].latitude,
+          points[index].longitude,
+        );
+        final toEnd = Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          points[index + 1].latitude,
+          points[index + 1].longitude,
+        );
+        bestIndex = toStart <= toEnd ? index : index + 1;
+      }
+    }
+
     return _NearestPoint(index: bestIndex, distanceMeters: bestDistance);
+  }
+
+  double _distanceToSegmentMeters(GeoPoint position, LatLng start, LatLng end) {
+    const earthRadiusMeters = 6371008.8;
+    final latitudeScale = math.pi / 180;
+    final meanLatitude =
+        ((start.latitude + end.latitude + position.latitude) / 3) * latitudeScale;
+    final cosLatitude = math.cos(meanLatitude).clamp(0.01, 1.0);
+    final toRadians = latitudeScale;
+
+    final x = (position.longitude - start.longitude) * toRadians * cosLatitude;
+    final y = (position.latitude - start.latitude) * toRadians;
+    final dx = (end.longitude - start.longitude) * toRadians * cosLatitude;
+    final dy = (end.latitude - start.latitude) * toRadians;
+    final lengthSquared = dx * dx + dy * dy;
+
+    if (lengthSquared == 0) {
+      return Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        start.latitude,
+        start.longitude,
+      );
+    }
+
+    final projection = ((x * dx) + (y * dy)) / lengthSquared;
+    final t = projection.clamp(0.0, 1.0);
+    final projectedX = t * dx;
+    final projectedY = t * dy;
+    return math.sqrt(
+          math.pow(x - projectedX, 2) + math.pow(y - projectedY, 2),
+        ) *
+        earthRadiusMeters;
   }
 
   double _pathDistance(
