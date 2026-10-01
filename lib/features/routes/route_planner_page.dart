@@ -140,6 +140,16 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
               initialCenter: center,
               initialZoom: destination == null ? 12 : 14,
               routePoints: _route?.points ?? const <LatLng>[],
+              currentPosition: location == null
+                  ? null
+                  : LatLng(location.latitude, location.longitude),
+              destination: destination,
+              onTap: _busy
+                  ? null
+                  : (point) => setState(() {
+                        _destination = point;
+                        _route = null;
+                      }),
             ),
           ),
           Positioned(
@@ -155,7 +165,13 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                     const Text('Ruta de senderismo', style: TextStyle(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
                     Text(destinationLabel),
-                    if (_route != null) ...[
+                    if (destination == null)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Toca un punto del mapa para colocar el destino.',
+                        ),
+                      ),                    if (_route != null) ...[
                       const SizedBox(height: 6),
                       Text(
                         '${((_route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((_route!.durationSeconds ?? 0) / 60).round()} min',

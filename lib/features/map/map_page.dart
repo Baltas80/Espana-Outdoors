@@ -22,12 +22,23 @@ class MapPage extends ConsumerStatefulWidget {
 
 class _MapPageState extends ConsumerState<MapPage> {
   late Future<vt.Style> _styleFuture;
+  final MapController _mapController = MapController();
   @override
   void initState() {
     super.initState();
     _styleFuture = loadPmTilesStyle();
   }
   void _retry() => setState(() => _styleFuture = loadPmTilesStyle());
+  Future<void> _useLocation() async {
+    await ref.read(locationControllerProvider.notifier).locate();
+    if (!mounted) return;
+    final position = ref.read(locationControllerProvider).position;
+    if (position == null) return;
+    _mapController.move(
+      LatLng(position.latitude, position.longitude),
+      15,
+    );
+  }
   @override
   void dispose() {
     _styleFuture.then((style) => style.dispose());
@@ -56,7 +67,23 @@ class _MapPageState extends ConsumerState<MapPage> {
                   return _MapMessage(title: 'No se pudo cargar el mapa', message: snapshot.error.toString(), onRetry: _retry);
                 }
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                return _PmTilesLayer(style: snapshot.data!, center: const LatLng(40.4168, -3.7038), zoom: 6.2);
+                return _PmTilesLayer(
+                  style: snapshot.data!,
+                  center: location.position == null
+                      ? const LatLng(40.4168, -3.7038)
+                      : LatLng(
+                          location.position!.latitude,
+                          location.position!.longitude,
+                        ),
+                  zoom: location.position == null ? 6.2 : 15,
+                  mapController: _mapController,
+                  currentPosition: location.position == null
+                      ? null
+                      : LatLng(
+                          location.position!.latitude,
+                          location.position!.longitude,
+                        ),
+                );
               },
             ),
           ),
@@ -104,7 +131,7 @@ class _MapPageState extends ConsumerState<MapPage> {
             ),
           ),
           Positioned(right: 16, bottom: 152, child: FloatingActionButton.small(tooltip: 'Navegación GPS', onPressed: () => context.push('/navigation'), child: const Icon(Icons.navigation_outlined))),
-          Positioned(right: 16, bottom: 24, child: FloatingActionButton(tooltip: 'Usar mi ubicación', onPressed: () async => ref.read(locationControllerProvider.notifier).locate(), child: const Icon(Icons.my_location))),
+          Positioned(right: 16, bottom: 24, child: FloatingActionButton(tooltip: 'Usar mi ubicación', onPressed: _useLocation, child: const Icon(Icons.my_location))),
         ],
       ),
     );
@@ -112,33 +139,118 @@ class _MapPageState extends ConsumerState<MapPage> {
 }
 
 class _PmTilesLayer extends StatelessWidget {
-  const _PmTilesLayer({required this.style, required this.center, required this.zoom, this.routePoints = const <LatLng>[]});
+  const _PmTilesLayer({
+    required this.style,
+    required this.center,
+    required this.zoom,
+    this.mapController,
+    this.currentPosition,
+    this.destination,
+    this.routePoints = const <LatLng>[],
+    this.onTap,
+  });
   final vt.Style style;
   final LatLng center;
   final double zoom;
+  final MapController? mapController;
+  final LatLng? currentPosition;
+  final LatLng? destination;
   final List<LatLng> routePoints;
+  final ValueChanged<LatLng>? onTap;
   @override
-  Widget build(BuildContext context) => FlutterMap(
-    options: MapOptions(initialCenter: center, initialZoom: zoom, minZoom: 3, maxZoom: 18),
-    children: [
-      vt.VectorTileLayer(theme: style.theme, tileProviders: style.providers, rasterSources: style.rasterSources, sprites: style.sprites, logger: const vt.Logger.console()),
-      if (routePoints.length >= 2)
-        PolylineLayer(polylines: [Polyline(points: routePoints, strokeWidth: 5, color: Theme.of(context).colorScheme.primary)]),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final markers = <Marker>[
+      if (currentPosition != null)
+        Marker(
+          point: currentPosition!,
+          width: 42,
+          height: 42,
+          child: Tooltip(
+            message: 'Mi posición',
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.my_location, color: Colors.black, size: 25),
+            ),
+          ),
+        ),
+      if (destination != null)
+        Marker(
+          point: destination!,
+          width: 42,
+          height: 48,
+          child: Tooltip(
+            message: 'Destino',
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.tertiary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.place, color: Colors.black, size: 27),
+            ),
+          ),
+        ),
+    ];
+
+    return FlutterMap(
+      mapController: mapController,
+      options: MapOptions(
+        initialCenter: center,
+        initialZoom: zoom,
+        minZoom: 3,
+        maxZoom: 18,
+        onTap: onTap == null ? null : (_, point) => onTap!(point),
+      ),
+      children: [
+        vt.VectorTileLayer(
+          theme: style.theme,
+          tileProviders: style.providers,
+          rasterSources: style.rasterSources,
+          sprites: style.sprites,
+          logger: const vt.Logger.console(),
+          showLabels: true,
+        ),
+        if (routePoints.length >= 2)
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: routePoints,
+                strokeWidth: 5,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ],
+          ),
+        if (markers.isNotEmpty) MarkerLayer(markers: markers),
+      ],
+    );
+  }
 }
 
 class PmTilesMapViewport extends StatefulWidget {
-  const PmTilesMapViewport({super.key, this.initialCenter = const LatLng(40.4168, -3.7038), this.initialZoom = 7, this.routePoints = const <LatLng>[]});
+  const PmTilesMapViewport({
+    super.key,
+    this.initialCenter = const LatLng(40.4168, -3.7038),
+    this.initialZoom = 7,
+    this.routePoints = const <LatLng>[],
+    this.currentPosition,
+    this.destination,
+    this.onTap,
+  });
   final LatLng initialCenter;
   final double initialZoom;
   final List<LatLng> routePoints;
+  final LatLng? currentPosition;
+  final LatLng? destination;
+  final ValueChanged<LatLng>? onTap;
   @override
   State<PmTilesMapViewport> createState() => _PmTilesMapViewportState();
 }
 
 class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
   late Future<vt.Style> _styleFuture;
+  final MapController _mapController = MapController();
   @override
   void initState() {
     super.initState();
@@ -155,7 +267,16 @@ class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
     builder: (context, snapshot) {
       if (snapshot.hasError) return _MapMessage(title: 'No se pudo cargar el mapa', message: snapshot.error.toString(), onRetry: () => setState(() => _styleFuture = loadPmTilesStyle()));
       if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-      return _PmTilesLayer(style: snapshot.data!, center: widget.initialCenter, zoom: widget.initialZoom, routePoints: widget.routePoints);
+      return _PmTilesLayer(
+        style: snapshot.data!,
+        center: widget.initialCenter,
+        zoom: widget.initialZoom,
+        mapController: _mapController,
+        currentPosition: widget.currentPosition,
+        destination: widget.destination,
+        routePoints: widget.routePoints,
+        onTap: widget.onTap,
+      );
     },
   );
 }

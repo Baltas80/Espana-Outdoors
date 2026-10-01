@@ -85,10 +85,34 @@ Future<String?> _findStoredVerifiedPmTiles() async {
   final file = File(path);
   if (!await file.exists()) return null;
 
+  final stat = await file.stat();
+  if (stat.size != record.bytesDownloaded) return null;
+
+  final recordedModified = record.fileModifiedAt;
+  if (recordedModified != null &&
+      stat.modified.millisecondsSinceEpoch ==
+          recordedModified.millisecondsSinceEpoch) {
+    return file.path;
+  }
+
+  // Legacy records may not contain the file timestamp. They were already
+  // cryptographically verified when downloaded, so avoid hashing 1.2 GB again
+  // just to open the map. Record the current filesystem fingerprint so future
+  // opens remain O(1); a changed timestamp/size falls back to full verification.
+  if (recordedModified == null) {
+    await OfflineRegionStore().put(
+      record.copyWith(fileModifiedAt: stat.modified),
+    );
+    return file.path;
+  }
+
   try {
     await const OfflinePackageVerifier().verifyFile(
       file,
       expectedSha256: sha256,
+    );
+    await OfflineRegionStore().put(
+      record.copyWith(fileModifiedAt: stat.modified),
     );
     return file.path;
   } on Object {

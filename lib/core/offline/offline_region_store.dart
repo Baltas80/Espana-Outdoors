@@ -14,6 +14,7 @@ class OfflineRegionRecord {
     this.localPath,
     this.sha256,
     this.artifactVersion,
+    this.fileModifiedAt,
     this.updatedAt,
     this.error,
   });
@@ -26,6 +27,7 @@ class OfflineRegionRecord {
   final String? localPath;
   final String? sha256;
   final String? artifactVersion;
+  final DateTime? fileModifiedAt;
   final DateTime? updatedAt;
   final String? error;
 
@@ -47,6 +49,7 @@ class OfflineRegionRecord {
     String? localPath,
     String? sha256,
     String? artifactVersion,
+    DateTime? fileModifiedAt,
     DateTime? updatedAt,
     String? error,
   }) {
@@ -59,6 +62,7 @@ class OfflineRegionRecord {
       localPath: localPath ?? this.localPath,
       sha256: sha256 ?? this.sha256,
       artifactVersion: artifactVersion ?? this.artifactVersion,
+      fileModifiedAt: fileModifiedAt ?? this.fileModifiedAt,
       updatedAt: updatedAt ?? this.updatedAt,
       error: error,
     );
@@ -82,6 +86,7 @@ class OfflineRegionRecord {
         'localPath': localPath,
         'sha256': sha256,
         'artifactVersion': artifactVersion,
+        'fileModifiedAt': fileModifiedAt?.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
         'error': error,
       };
@@ -118,6 +123,7 @@ class OfflineRegionRecord {
       localPath: value['localPath']?.toString(),
       sha256: value['sha256']?.toString(),
       artifactVersion: value['artifactVersion']?.toString(),
+      fileModifiedAt: DateTime.tryParse('${value['fileModifiedAt'] ?? ''}'),
       updatedAt: DateTime.tryParse('${value['updatedAt'] ?? ''}'),
       error: value['error']?.toString(),
     );
