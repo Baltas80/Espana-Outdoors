@@ -70,6 +70,18 @@ void main() {
     expect(result.status, NavigationGuidanceStatus.gpsPoor);
   });
 
+
+  test('stays on route when the GPS fix falls between vertices', () {
+    final result = engine.evaluate(
+      route: _route(),
+      position: const GeoPoint(latitude: 40.00025, longitude: -3.00040),
+      accuracyMeters: 5,
+    );
+
+    expect(result.status, NavigationGuidanceStatus.onRoute);
+    expect(result.distanceFromRouteMeters, lessThan(40));
+  });
+
   test('reports off-route when GPS is trustworthy and route separation is large', () {
     final result = engine.evaluate(
       route: _route(),
