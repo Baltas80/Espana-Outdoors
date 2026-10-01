@@ -21,21 +21,26 @@ def varint(value: int) -> bytes:
 
 
 def build_fixture() -> bytes:
-    # Minimal valid MVT tile: one empty layer named "test", MVT v2.
+    # Minimal valid MVT tile: one empty "transportation" layer, MVT v2.
     layer = (
-        b"\x0a\x04test"  # name
+        b"\x0a\x0ftransportation"  # name
         b"\x78\x02"  # version = 2
         b"\x28\x80\x20"  # extent = 4096
     )
     tile = b"\x1a" + varint(len(layer)) + layer
 
+    # Madrid at z6 is x=31, y=24; its PMTiles Hilbert tile ID is 2026.
     root = b"".join(
         (
-            varint(1),  # number of entries
-            varint(0),  # tile id delta
-            varint(1),  # run length
-            varint(len(tile)),  # tile length
-            varint(1),  # offset + 1 (first tile starts at 0)
+            varint(2),  # number of entries
+            varint(0),  # tile id delta for z0/x0/y0
+            varint(2026),  # delta to the Madrid z6 tile
+            varint(1),  # run length for z0 tile
+            varint(1),  # run length for z6 tile
+            varint(len(tile)),  # z0 tile length
+            varint(len(tile)),  # z6 tile length
+            varint(1),  # first tile offset + 1 (offset 0)
+            varint(0),  # second tile is contiguous with the first
         )
     )
 
@@ -47,9 +52,9 @@ def build_fixture() -> bytes:
             "version": "1",
             "type": "overlay",
             "minzoom": 0,
-            "maxzoom": 0,
+            "maxzoom": 6,
             "bounds": [-180, -85, 180, 85],
-            "center": [0, 0, 0],
+            "center": [-3.7038, 40.4168, 6],
             "vector_layers": [{"id": "test", "fields": {}}],
         },
         separators=(",", ":"),
@@ -91,14 +96,14 @@ def build_fixture() -> bytes:
     header[98] = 1  # Compression.None
     header[99] = 1  # MVT vector tile
     header[100] = 0
-    header[101] = 0
-    struct.pack_into("<i", header, 102, -1800000000)
-    struct.pack_into("<i", header, 106, -850000000)
-    struct.pack_into("<i", header, 110, 1800000000)
-    struct.pack_into("<i", header, 114, 850000000)
-    header[118] = 0
-    struct.pack_into("<i", header, 119, 0)
-    struct.pack_into("<i", header, 123, 0)
+    header[101] = 6
+    struct.pack_into("<i", header, 102, -180000000)
+    struct.pack_into("<i", header, 106, 350000000)
+    struct.pack_into("<i", header, 110, 50000000)
+    struct.pack_into("<i", header, 114, 440000000)
+    header[118] = 6
+    struct.pack_into("<i", header, 119, -37038000)
+    struct.pack_into("<i", header, 123, 404168000)
 
     return bytes(header) + root + metadata + tile
 
