@@ -53,7 +53,7 @@ def build_fixture() -> bytes:
             "type": "overlay",
             "minzoom": 0,
             "maxzoom": 6,
-            "bounds": [-180, -85, 180, 85],
+            "bounds": [-18, 35, 5, 44],
             "center": [-3.7038, 40.4168, 6],
             "vector_layers": [{"id": "test", "fields": {}}],
         },
@@ -69,7 +69,7 @@ def build_fixture() -> bytes:
     metadata_offset = root_offset + root_length
     metadata_length = len(metadata)
     tile_data_offset = metadata_offset + metadata_length
-    tile_data_length = len(tile)
+    tile_data_length = len(tile) * 2
 
     values = (
         root_offset,
@@ -105,7 +105,7 @@ def build_fixture() -> bytes:
     struct.pack_into("<i", header, 119, -37038000)
     struct.pack_into("<i", header, 123, 404168000)
 
-    return bytes(header) + root + metadata + tile
+    return bytes(header) + root + metadata + tile + tile
 
 
 def main() -> int:
