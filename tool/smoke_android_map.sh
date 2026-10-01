@@ -22,50 +22,103 @@ adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey.log 2>&1 || {
 # invisible to UIAutomator. Dismiss only these system dialogs; never dismiss
 # an ANR belonging to the application under test.
 dismiss_system_anr() {
-  local dialog_file="${RUNNER_TEMP:-/tmp}/espana-system-dialog.xml"
+  local tmp_dir="\${RUNNER_TEMP:-/tmp}"
+  local dialog_file="\${tmp_dir}/espana-system-dialog.xml"
+  local result_file="\${tmp_dir}/espana-system-anr.txt"
   local attempt
-  for attempt in 1 2 3 4 5 6; do
-    adb exec-out uiautomator dump /dev/tty 2>/dev/null >"${dialog_file}" || true
-    if ! grep -Fq "isn't responding" "${dialog_file}" && ! grep -Fq "isn\u0027t responding" "${dialog_file}"; then
+  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    : >"\${result_file}"
+    adb exec-out uiautomator dump /dev/tty 2>/dev/null >"\${dialog_file}" || true
+
+    if ! grep -Fq "isn't responding" "\${dialog_file}" && \
+       ! grep -Fq "isn\u0027t responding" "\${dialog_file}"; then
       return 0
     fi
 
-    read -r wait_x wait_y < <(
-      python3 - "${dialog_file}" <<'PY'
+    python3 - "\${dialog_file}" "\${package_name}" >"\${result_file}" <<'PY'
 import re
 import sys
 import xml.etree.ElementTree as ET
 
 path = sys.argv[1]
+target_package = sys.argv[2]
 raw = open(path, "rb").read().decode("utf-8", errors="replace")
 start = raw.find("<?xml")
 if start < 0:
     start = raw.find("<hierarchy")
 end = raw.find("</hierarchy>", start)
 if start < 0 or end < 0:
-    raise SystemExit(0)
-root = ET.fromstring(raw[start:end + len("</hierarchy>")])
-for node in root.iter("node"):
-    if (node.attrib.get("text") or "").strip() != "Wait":
-        continue
-    match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
-    if not match:
-        continue
-    x1, y1, x2, y2 = map(int, match.groups())
-    print((x1 + x2) // 2, (y1 + y2) // 2)
-    raise SystemExit(0)
-PY
-    )
+    raise SystemExit(2)
 
-    if test -n "${wait_x:-}" && test -n "${wait_y:-}"; then
-      echo "Dismissing system ANR with Wait at ${wait_x},${wait_y}"
-      adb shell input tap "${wait_x}" "${wait_y}"
+root = ET.fromstring(raw[start:end + len("</hierarchy>")])
+titles = []
+wait_bounds = None
+for node in root.iter("node"):
+    text = (node.attrib.get("text") or "").strip()
+    if "isn't responding" in text or "isn\u0027t responding" in text:
+        titles.append(text)
+    if text == "Wait":
+        match = re.fullmatch(
+            r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",
+            node.attrib.get("bounds", ""),
+        )
+        if match and wait_bounds is None:
+            wait_bounds = tuple(map(int, match.groups()))
+
+if not titles:
+    raise SystemExit(0)
+
+title = titles[0]
+suffixes = (" isn't responding", " isn\u0027t responding")
+owner = next((title[:-len(s)] for s in suffixes if title.endswith(s)), title)
+if owner == target_package:
+    print(f"APP_ANR|{title}")
+    raise SystemExit(3)
+
+if wait_bounds is not None:
+    x1, y1, x2, y2 = wait_bounds
+    print(f"SYSTEM_ANR|{owner}|{(x1 + x2) // 2}|{(y1 + y2) // 2}")
+else:
+    print(f"SYSTEM_ANR|{owner}||")
+PY
+
+    rc=$?
+    if test "\${rc}" -eq 3; then
+      echo "FAIL: application ANR detected before map smoke: \$(cat "\${result_file}")"
+      cat "\${dialog_file}"
+      exit 1
+    fi
+    if test "\${rc}" -ne 0; then
+      echo "FAIL: could not classify the Android ANR dialog safely."
+      cat "\${dialog_file}"
+      exit 1
+    fi
+
+    IFS='|' read -r kind owner wait_x wait_y <"\${result_file}"
+    if test "\${kind:-}" != "SYSTEM_ANR"; then
+      echo "FAIL: unexpected Android system dialog state."
+      cat "\${dialog_file}"
+      exit 1
+    fi
+
+    if test -n "\${wait_x:-}" && test -n "\${wait_y:-}"; then
+      echo "Dismissing system ANR for \${owner} with Wait at \${wait_x},\${wait_y}"
+      adb shell input tap "\${wait_x}" "\${wait_y}"
     else
-      echo "Dismissing system ANR with BACK"
+      echo "Dismissing system ANR for \${owner} with BACK"
       adb shell input keyevent 4
     fi
     sleep 2
   done
+
+  adb exec-out uiautomator dump /dev/tty 2>/dev/null >"\${dialog_file}" || true
+  if grep -Fq "isn't responding" "\${dialog_file}" || \
+     grep -Fq "isn\u0027t responding" "\${dialog_file}"; then
+    echo "FAIL: Android ANR dialog remained after bounded stabilization."
+    cat "\${dialog_file}"
+    exit 1
+  fi
+  return 0
 }
 
 dismiss_system_anr
@@ -73,7 +126,6 @@ sleep 5
 # A second system component can surface its own delayed ANR after the first
 # dialog is dismissed. Recheck immediately before inspecting the app UI.
 dismiss_system_anr
-
 after_launch_window="${RUNNER_TEMP:-/tmp}/espana-window-pre-map.xml"
 adb exec-out uiautomator dump /dev/tty 2>/tmp/espana-uiautomator-pre.err >"${after_launch_window}" || true
 if grep -Fq "isn't responding" "${after_launch_window}" || grep -Fq "isn\u0027t responding" "${after_launch_window}"; then
