@@ -78,6 +78,8 @@ jobs:
         run: python3 tool/verify_mobile_native.py --platform android
       - name: Dependencies
         run: flutter pub get
+      - name: Generate offline smoke PMTiles fixture
+        run: python3 tool/create_offline_smoke_fixture.py assets/testing/offline_smoke.pmtiles
       - name: Analyze and test
         run: |
           flutter analyze --no-fatal-infos
@@ -97,6 +99,7 @@ jobs:
             --dart-define=OIDC_CLIENT_ID="$OIDC_CLIENT_ID" \
             --dart-define=OIDC_REDIRECT_URI="$OIDC_REDIRECT_URI" \
             --dart-define=MAP_ATTRIBUTION="$MAP_ATTRIBUTION"
+            --dart-define=ANDROID_OFFLINE_SMOKE=true
       - name: Verify APK
         if: always()
         run: |
@@ -141,7 +144,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           emulator-boot-timeout: 900
-          script: bash tool/smoke_android_map.sh build/app/outputs/flutter-apk/app-release.apk
+          script: bash tool/smoke_android_map.sh build/app/outputs/flutter-apk/app-release.apk offline
       - name: Upload Android map smoke evidence
         if: always()
         uses: actions/upload-artifact@v7

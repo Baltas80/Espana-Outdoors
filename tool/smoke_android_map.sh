@@ -123,6 +123,26 @@ PY
 
 dismiss_system_anr
 sleep 5
+
+offline_mode="${2:-online}"
+if test "${offline_mode}" = "offline"; then
+  echo "Enabling airplane mode before offline map restart."
+  adb shell cmd connectivity airplane-mode enable || {
+    adb shell settings put global airplane_mode_on 1
+    adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true >/dev/null
+  }
+  airplane_state="$(adb shell settings get global airplane_mode_on 2>/dev/null | tr -d '\r' | tr -d '\n' || true)"
+  test "${airplane_state}" = "1"
+
+  echo "Restarting application with network disabled."
+  adb shell am force-stop "${package_name}"
+  adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey-offline.log 2>&1 || {
+    cat /tmp/espana-monkey-offline.log
+    exit 1
+  }
+  sleep 5
+fi
+
 # A second system component can surface its own delayed ANR after the first
 # dialog is dismissed. Recheck immediately before inspecting the app UI.
 dismiss_system_anr
