@@ -15,6 +15,7 @@ const _styleUrl = String.fromEnvironment(
   'MAP_STYLE_URL',
   defaultValue: 'asset://assets/maps/offline_style.json',
 );
+const _offlineStyleUrl = 'asset://assets/maps/offline_style.json';
 
 Future<vt.Style> loadPmTilesStyle() async {
   // A verified archive already stored on the device is authoritative for
@@ -46,7 +47,7 @@ Future<vt.Style> loadPmTilesStyle() async {
     sourceUrl,
     logger: const vt.Logger.console(),
   );
-  return _readStyleWithProvider(provider);
+  return _readStyleWithProvider(provider, styleUrl: _styleUrl);
 }
 
 Future<vt.Style> _readStyleFromLocal(String path) async {
@@ -54,12 +55,17 @@ Future<vt.Style> _readStyleFromLocal(String path) async {
     path,
     logger: const vt.Logger.console(),
   );
-  return _readStyleWithProvider(provider);
+  // A local PMTiles archive must never depend on a remotely configured style.
+  // Keep the complete offline rendering chain inside the application bundle.
+  return _readStyleWithProvider(provider, styleUrl: _offlineStyleUrl);
 }
 
-Future<vt.Style> _readStyleWithProvider(vt.VectorTileProvider provider) =>
+Future<vt.Style> _readStyleWithProvider(
+  vt.VectorTileProvider provider, {
+  required String styleUrl,
+}) =>
     vt.StyleReader(
-      uri: _styleUrl,
+      uri: styleUrl,
       resolveProvider: (sourceId) async =>
           sourceId == 'openmaptiles' ? provider : null,
       logger: const vt.Logger.console(),
