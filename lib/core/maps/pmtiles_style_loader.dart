@@ -51,8 +51,12 @@ Future<vt.Style> loadPmTilesStyle() async {
 }
 
 Future<vt.Style> _readStyleFromLocal(String path) async {
+  // The provider is mature and range-aware, but its public PMTiles opener is
+  // URL based. Expose the verified on-device archive through a loopback-only
+  // HTTP server rather than weakening the provider or copying the archive.
+  final localUrl = await serveLocalPmTiles(path);
   final provider = await vt.PmTilesVectorTileProvider.open(
-    path,
+    localUrl,
     logger: const vt.Logger.console(),
   );
   // A local PMTiles archive must never depend on a remotely configured style.

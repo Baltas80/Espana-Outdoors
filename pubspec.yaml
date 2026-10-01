@@ -50,6 +50,7 @@ flutter:
   assets:
     - assets/brand/
     - assets/maps/
+    - assets/testing/
     - assets/emergency/
     - assets/backgrounds/
     - assets/visuals/

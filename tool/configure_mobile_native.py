@@ -12,7 +12,6 @@ def patch_android() -> None:
     if not manifest.exists():
         raise SystemExit(f"Missing generated Android manifest: {manifest}")
 
-    text = manifest.read_text(encoding="utf-8")
     permissions = [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -22,6 +21,7 @@ def patch_android() -> None:
         "android.permission.INTERNET",
     ]
 
+    text = manifest.read_text(encoding="utf-8")
     marker_end = text.find(">")
     if marker_end < 0:
         raise SystemExit("Invalid Android manifest.")
@@ -38,6 +38,34 @@ def patch_android() -> None:
             + "\n"
             + "\n".join(insertion)
             + text[marker_end + 1 :]
+        )
+
+    network_security = ROOT / "android" / "app" / "src" / "main" / "res" / "xml" / "network_security_config.xml"
+    network_security.parent.mkdir(parents=True, exist_ok=True)
+    network_security.write_text(
+        '''<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <!-- The offline PMTiles renderer may use an on-device loopback server.
+       No remote cleartext traffic is permitted. -->
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="false">localhost</domain>
+  </domain-config>
+</network-security-config>
+''',
+        encoding="utf-8",
+    )
+
+    application_start = text.find("<application")
+    if application_start < 0:
+        raise SystemExit("Android manifest has no <application> element.")
+    application_end = text.find(">", application_start)
+    if application_end < 0:
+        raise SystemExit("Invalid Android <application> element.")
+    if "android:networkSecurityConfig=" not in text[application_start:application_end]:
+        text = (
+            text[:application_end]
+            + ' android:networkSecurityConfig="@xml/network_security_config"'
+            + text[application_end:]
         )
 
     callback = """    <activity
