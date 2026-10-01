@@ -42,7 +42,7 @@ class _OfflinePageState extends State<OfflinePage> {
 
       await _refreshReady(regions);
       return regions;
-    } on Object catch (error) {
+    } on Object {
       // The catalog is remote metadata. A verified local package is sufficient
       // to keep the offline screen useful when the device has no connectivity.
       final localReady = await _hasVerifiedLocalSpain();
