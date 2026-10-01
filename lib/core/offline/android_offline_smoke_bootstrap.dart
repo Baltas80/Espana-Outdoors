@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
@@ -18,8 +17,9 @@ Future<void> prepareAndroidOfflineSmoke() async {
 
   const assetPath = 'assets/testing/offline_smoke.pmtiles';
   final data = await rootBundle.load(assetPath);
-  final bytes = Uint8List.fromList(
-    data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+  final bytes = data.buffer.asUint8List(
+    data.offsetInBytes,
+    data.lengthInBytes,
   );
   if (bytes.isEmpty) {
     throw StateError('Android offline smoke fixture is empty.');
