@@ -23,7 +23,6 @@ class MapPage extends ConsumerStatefulWidget {
 class _MapPageState extends ConsumerState<MapPage> {
   late Future<vt.Style> _styleFuture;
   final MapController _mapController = MapController();
-  final MapController _mapController = MapController();
   @override
   void initState() {
     super.initState();
@@ -245,6 +244,7 @@ class PmTilesMapViewport extends StatefulWidget {
 
 class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
   late Future<vt.Style> _styleFuture;
+  final MapController _mapController = MapController();
   @override
   void initState() {
     super.initState();
