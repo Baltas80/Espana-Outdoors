@@ -80,9 +80,9 @@ def build_fixture() -> bytes:
         0,  # leaf directory length
         tile_data_offset,
         tile_data_length,
-        1,  # num addressed tiles
-        1,  # num tile entries
-        1,  # num tile contents
+        2,  # num addressed tiles: two run-length-one entries
+        2,  # num tile entries: two directory entries
+        1,  # num tile contents: one deduplicated tile blob
     )
     offset = 8
     for value in values:
@@ -90,8 +90,6 @@ def build_fixture() -> bytes:
         offset += 8
 
     header[96] = 1  # clustered
-    header[97] = 1  # internal compression: GZIP in the PMTiles enum, but we
-    # overwrite to NONE below; keep this comment aligned with the byte value.
     header[97] = 1  # Compression.None
     header[98] = 1  # Compression.None
     header[99] = 1  # MVT vector tile
