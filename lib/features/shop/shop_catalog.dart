@@ -3,11 +3,13 @@ class ShopCategory {
     required this.name,
     required this.description,
     required this.icon,
+    required this.slug,
   });
 
   final String name;
   final String description;
   final String icon;
+  final String slug;
 }
 
 class ShopProduct {
@@ -27,43 +29,18 @@ class ShopProduct {
 }
 
 const shopCategories = <ShopCategory>[
-  ShopCategory(
-    name: 'Mochilas',
-    description: 'Carga, hidratación y transporte para tus rutas.',
-    icon: 'backpack',
-  ),
-  ShopCategory(
-    name: 'Calzado',
-    description: 'Calzado para senderismo, trekking y montaña.',
-    icon: 'hiking',
-  ),
-  ShopCategory(
-    name: 'Trekking',
-    description: 'Equipamiento esencial para rutas y montaña.',
-    icon: 'terrain',
-  ),
-  ShopCategory(
-    name: 'Camping',
-    description: 'Refugio, descanso, cocina e iluminación.',
-    icon: 'camping',
-  ),
-  ShopCategory(
-    name: 'Navegación',
-    description: 'GPS, orientación y accesorios de navegación.',
-    icon: 'navigation',
-  ),
-  ShopCategory(
-    name: 'Seguridad',
-    description: 'Preparación y material para situaciones imprevistas.',
-    icon: 'health_and_safety',
-  ),
-  ShopCategory(
-    name: 'Accesorios',
-    description: 'Pequeño material que marca la diferencia en ruta.',
-    icon: 'category',
-  ),
+  ShopCategory(name: 'Mochilas', slug: 'mochilas', description: 'Mochilas de senderismo, trekking, montaña y uso diario.', icon: 'backpack'),
+  ShopCategory(name: 'Calzado', slug: 'calzado', description: 'Botas y zapatillas para senderismo, trekking y montaña.', icon: 'hiking'),
+  ShopCategory(name: 'Ropa outdoor', slug: 'ropa-outdoor', description: 'Capas, impermeables, forros, pantalones y protección.', icon: 'checkroom'),
+  ShopCategory(name: 'Trekking', slug: 'trekking', description: 'Equipamiento esencial para rutas y travesías.', icon: 'terrain'),
+  ShopCategory(name: 'Camping', slug: 'camping', description: 'Tiendas, sacos, descanso, cocina e iluminación.', icon: 'camping'),
+  ShopCategory(name: 'Hidratación', slug: 'hidratacion', description: 'Botellas, depósitos, filtros y sistemas de hidratación.', icon: 'water_drop'),
+  ShopCategory(name: 'Navegación', slug: 'navegacion', description: 'GPS, brújulas, orientación y accesorios de navegación.', icon: 'navigation'),
+  ShopCategory(name: 'Seguridad', slug: 'seguridad', description: 'Botiquines, señalización y material para emergencias.', icon: 'health_and_safety'),
+  ShopCategory(name: 'Iluminación', slug: 'iluminacion', description: 'Frontales, linternas y soluciones de iluminación.', icon: 'light_mode'),
+  ShopCategory(name: 'Accesorios', slug: 'accesorios', description: 'Pequeño material y complementos para tus salidas.', icon: 'category'),
 ];
 
-/// Product data is deliberately empty until a verified supplier/affiliate
-/// source is configured. No retailer, price or commission is invented here.
+/// Products stay empty until real Shopify/provider data is selected.
+/// Never invent prices, suppliers, commissions or affiliate URLs.
 const shopProducts = <ShopProduct>[];
