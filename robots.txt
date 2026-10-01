@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://espanaoutdoor.es/sitemap.xml
