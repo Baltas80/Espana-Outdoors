@@ -9,6 +9,24 @@ const onScroll = () => {
 window.addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
+// Tienda integrada en la navegación global de España Outdoor.
+if (nav && !nav.querySelector('a[href="./tienda.html"]')) {
+  const storeLink = document.createElement('a');
+  storeLink.href = './tienda.html';
+  storeLink.textContent = 'Tienda';
+  const appLink = Array.from(nav.querySelectorAll('a[href]')).find((link) => link.getAttribute('href') === './app.html');
+  if (appLink) nav.insertBefore(storeLink, appLink);
+  else nav.appendChild(storeLink);
+}
+
+const footerLinks = document.querySelector('.footer-links');
+if (footerLinks && !footerLinks.querySelector('a[href="./tienda.html"]')) {
+  const storeFooterLink = document.createElement('a');
+  storeFooterLink.href = './tienda.html';
+  storeFooterLink.textContent = 'Tienda';
+  footerLinks.appendChild(storeFooterLink);
+}
+
 const current = window.location.pathname.split('/').pop() || 'index.html';
 nav?.querySelectorAll('a[href]').forEach((link) => {
   const href = link.getAttribute('href') || '';
