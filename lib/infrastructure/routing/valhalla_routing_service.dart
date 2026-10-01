@@ -108,6 +108,9 @@ class ValhallaRoutingService implements RoutingService {
         durationSeconds += (summary['time'] as num?)?.toDouble() ?? 0;
       }
 
+      final shapePoints = _decodeShape(item['shape']).toList();
+      final shapeOffset = points.length;
+
       final maneuvers = item['maneuvers'];
       if (maneuvers is List) {
         for (final maneuver in maneuvers) {
@@ -119,15 +122,22 @@ class ValhallaRoutingService implements RoutingService {
               instruction: instruction,
               distanceMeters: _number(maneuver['length'], multiplier: 1000),
               durationSeconds: _number(maneuver['time']),
-              beginShapeIndex: (maneuver['begin_shape_index'] as num?)?.toInt(),
-              endShapeIndex: (maneuver['end_shape_index'] as num?)?.toInt(),
+              beginShapeIndex: _globalShapeIndex(
+                maneuver['begin_shape_index'],
+                shapeOffset,
+                shapePoints.length,
+              ),
+              endShapeIndex: _globalShapeIndex(
+                maneuver['end_shape_index'],
+                shapeOffset,
+                shapePoints.length,
+              ),
             ),
           );
         }
       }
 
-      final shape = item['shape'];
-      points.addAll(_decodeShape(shape));
+      points.addAll(shapePoints);
     }
 
     if (points.length < 2) {
@@ -140,6 +150,14 @@ class ValhallaRoutingService implements RoutingService {
       durationSeconds: durationSeconds,
       steps: List.unmodifiable(steps),
     );
+  }
+
+  int? _globalShapeIndex(Object? value, int offset, int shapeLength) {
+    final localIndex = (value as num?)?.toInt();
+    if (localIndex == null || localIndex < 0 || localIndex >= shapeLength) {
+      return null;
+    }
+    return offset + localIndex;
   }
 
   Iterable<LatLng> _decodeShape(Object? shape) {
