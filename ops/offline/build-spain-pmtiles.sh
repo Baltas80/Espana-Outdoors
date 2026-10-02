@@ -37,8 +37,12 @@ PBF="$DATA_DIR/spain.osm.pbf"
 JAR="$DATA_DIR/planetiler.jar"
 mkdir -p "$(dirname "$OUTPUT")"
 
-echo "Downloading OSM extract: $OSM_URL"
-curl --fail --location --retry 5 --retry-all-errors --output "$PBF" "$OSM_URL"
+if [[ -s "$PBF" ]]; then
+  echo "Using existing OSM extract: $PBF"
+else
+  echo "Downloading OSM extract: $OSM_URL"
+  curl --fail --location --retry 5 --retry-all-errors --output "$PBF" "$OSM_URL"
+fi
 sha256sum "$PBF" | tee "$PBF.sha256"
 
 echo "Downloading pinned Planetiler v$PLANETILER_VERSION"
