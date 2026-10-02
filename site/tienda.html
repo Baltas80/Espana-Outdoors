@@ -49,15 +49,31 @@
     .store-category p{margin:0;color:var(--muted);font-size:13px;line-height:1.4;max-width:230px}
     .store-category span{position:absolute;right:20px;top:22px;font-size:20px;color:#9aa59f}
     .store-category:focus-visible{outline:3px solid rgba(245,181,27,.55);outline-offset:3px}
-    .store-model{margin-top:70px;padding:36px;border-radius:26px;background:#10251d;color:#fff;display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px}
-    .store-model h2{grid-column:1/-1;font-size:30px;line-height:1.05;margin:0 0 4px;letter-spacing:-.03em}
-    .store-model-card{padding:23px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:rgba(255,255,255,.035)}
-    .store-model-card strong{display:block;font-size:17px;margin-bottom:8px}.store-model-card p{margin:0;color:rgba(255,255,255,.65);font-size:13px;line-height:1.55}
-    .store-empty{margin-top:54px;text-align:center;padding:54px 25px;border:1px dashed rgba(12,25,21,.2);border-radius:24px;background:rgba(255,255,255,.42)}
-    .store-empty h2{margin:0 0 8px;font-size:28px}.store-empty p{margin:0 auto;max-width:650px;color:var(--muted);font-size:14px}
-    .store-note{margin-top:14px;font-size:12px;color:rgba(255,255,255,.58)}
-    @media (max-width:1000px){.store-hero-inner{grid-template-columns:1fr}.store-visual{min-height:300px}.store-visual img{min-height:300px}.store-categories{grid-template-columns:repeat(2,1fr)}.store-model{grid-template-columns:1fr}}
-    @media (max-width:680px){.store-page{padding-top:72px}.store-hero-inner{padding-top:62px;padding-bottom:62px}.store-hero{min-height:0}.store-categories{grid-template-columns:1fr}.store-section-head{display:block}.store-section-head p{margin-top:14px}.store-model{padding:24px}.store-visual{min-height:230px}.store-visual img{min-height:230px}.store-hero h1{font-size:52px}}
+    .store-catalog{margin-top:64px}
+    .store-catalog-head{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:22px}
+    .store-catalog-head h2{margin:0 0 8px;font-size:clamp(30px,3.5vw,46px);line-height:1;letter-spacing:-.04em}
+    .store-catalog-intro{max-width:760px;color:var(--muted);margin:0}
+    .store-cart-button{border:1px solid var(--line);background:#fff;border-radius:13px;padding:12px 16px;font:inherit;font-weight:800;cursor:pointer;white-space:nowrap}
+    .store-cart-button span{display:inline-grid;place-items:center;min-width:24px;height:24px;margin-left:6px;border-radius:99px;background:var(--gold);color:#111;font-size:12px}
+    .store-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:14px;border:1px solid var(--line);background:rgba(255,255,255,.62);border-radius:18px;margin-bottom:20px}
+    .store-filters{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+    .store-filter{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:8px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+    .store-filter.is-active{background:var(--forest);border-color:var(--forest);color:#fff}
+    .store-search input,.store-sort select{height:38px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:0 11px;font:inherit;font-size:13px;color:var(--ink)}
+    .store-search input{min-width:220px}
+    .store-product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .store-product-card{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(16,35,30,.06)}
+    .store-product-media{height:220px;position:relative;background:#e9f2ec;overflow:hidden}
+    .store-product-media img{width:100%;height:100%;object-fit:cover}
+    .store-product-media span{position:absolute;left:14px;top:14px;background:rgba(7,21,17,.9);color:#fff;border-radius:999px;padding:6px 9px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+    .store-product-body{padding:18px}.store-product-body small{color:var(--muted);font-weight:700}.store-product-body h3{margin:5px 0 6px;font-size:20px}.store-product-body p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}.store-product-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px}.store-product-foot strong{font-size:18px}
+    .store-empty{margin-top:0;text-align:center;padding:54px 25px;border:1px dashed rgba(12,25,21,.2);border-radius:24px;background:rgba(255,255,255,.42)}
+    .store-empty h2{margin:0 0 8px;font-size:28px}.store-empty p{margin:0 auto;max-width:650px;color:var(--muted);font-size:14px}.store-empty-mark{display:grid;place-items:center;width:58px;height:58px;border-radius:18px;background:#e9f2ec;color:var(--forest);font-size:30px;font-weight:900;margin:0 auto 16px}
+    .store-catalog-empty{grid-column:1/-1}.store-cart{margin-top:18px;margin-left:auto;max-width:520px;background:#10251d;color:#fff;border-radius:20px;padding:20px;box-shadow:0 22px 60px rgba(7,21,16,.2)}
+    .store-cart-head{display:flex;justify-content:space-between;align-items:center;font-size:18px}.store-cart-head button{border:0;background:transparent;color:#fff;font-size:28px;cursor:pointer}.store-cart-line{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.09);font-size:13px}.store-cart-empty{color:rgba(255,255,255,.62);font-size:13px}.store-cart-foot{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:16px;align-items:center}.store-cart-foot .button{grid-column:1/-1}.store-cart-foot small{grid-column:1/-1;color:rgba(255,255,255,.58);font-size:11px}.store-model{margin-top:70px;padding:36px;border-radius:26px;background:#10251d;color:#fff;display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px}
+    .store-model h2{grid-column:1/-1;font-size:30px;line-height:1.05;margin:0 0 4px;letter-spacing:-.03em}.store-model-card{padding:23px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:rgba(255,255,255,.035)}.store-model-card strong{display:block;font-size:17px;margin-bottom:8px}.store-model-card p{margin:0;color:rgba(255,255,255,.65);font-size:13px;line-height:1.55}.store-note{margin-top:14px;font-size:12px;color:rgba(255,255,255,.58)}
+    @media (max-width:1000px){.store-hero-inner{grid-template-columns:1fr}.store-visual{min-height:300px}.store-visual img{min-height:300px}.store-categories{grid-template-columns:repeat(2,1fr)}.store-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.store-model{grid-template-columns:1fr}}
+    @media (max-width:680px){.store-page{padding-top:72px}.store-hero-inner{padding-top:62px;padding-bottom:62px}.store-hero{min-height:0}.store-categories{grid-template-columns:1fr}.store-product-grid{grid-template-columns:1fr}.store-section-head,.store-catalog-head{display:block}.store-section-head p,.store-catalog-head .store-cart-button{margin-top:14px}.store-model{padding:24px}.store-visual{min-height:230px}.store-visual img{min-height:230px}.store-hero h1{font-size:52px}.store-search,.store-search input,.store-sort,.store-sort select{width:100%}.store-search input{min-width:0}}
   </style>
 </head>
 <body>
@@ -100,12 +116,13 @@
         <a class="store-category" href="#catalogo" data-category="iluminacion"><div class="store-icon">◐</div><span>→</span><h3>Iluminación</h3><p>Frontales y soluciones para baja luz.</p></a>
         <a class="store-category" href="#catalogo" data-category="accesorios"><div class="store-icon">●</div><span>→</span><h3>Accesorios</h3><p>Pequeño material para completar tu equipo.</p></a>
       </div>
-      <div id="catalogo" class="store-empty"><h2>Catálogo en preparación</h2><p>La tienda ya está integrada en España Outdoor. Ahora podemos seleccionar productos y proveedores reales y conectarlos con el catálogo comercial, inicialmente mediante afiliación y más adelante con acuerdos directos si conviene.</p></div>
+      <div id="catalogo"></div>
       <div class="store-model"><h2>Una tienda conectada con la experiencia outdoor.</h2><div class="store-model-card"><strong>Ruta → equipamiento</strong><p>Las futuras recomendaciones podrán relacionar una ruta, su dificultad y condiciones con el material adecuado.</p></div><div class="store-model-card"><strong>Catálogo → proveedor</strong><p>La arquitectura permite empezar sin stock y evolucionar hacia proveedores y marcas directas cuando haya datos suficientes.</p></div><div class="store-model-card"><strong>Datos → decisiones</strong><p>Mediremos clics e interés por categoría para priorizar productos con demanda real antes de invertir en inventario.</p></div></div>
     </div>
   </section>
 </main>
 <footer class="site-footer"><div class="shell footer-inner"><div class="brand footer-brand"><img src="./assets/brand/mark.svg" alt="" width="40"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></div><div class="footer-links"><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./flora-fauna.html">Flora y Fauna</a><a href="./seguridad.html">Seguridad</a><a href="./tienda.html">Tienda</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a></div><div class="footer-copy">© <span data-year></span> España Outdoor<br><small>Grupo PAGREY · Todos los derechos reservados</small></div></div></footer>
 <script src="./app.js" defer></script>
+<script src="./tienda.js" defer></script>
 </body>
 </html>
