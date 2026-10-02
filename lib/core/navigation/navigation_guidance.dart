@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -84,6 +85,19 @@ final class NavigationGuidanceEngine {
       );
     }
 
+    // Never report arrival while the trustworthy GPS fix is outside the route.
+    // A fix near the route endpoint can otherwise satisfy the arrival distance
+    // while still being materially separated from the route itself.
+    if (nearest.distanceMeters > threshold) {
+      return NavigationGuidance(
+        status: NavigationGuidanceStatus.offRoute,
+        distanceFromRouteMeters: nearest.distanceMeters,
+        offRouteThresholdMeters: threshold,
+        nearestShapeIndex: nearest.index,
+        progressFraction: progress,
+      );
+    }
+
     final distanceToEnd = _pathDistance(
       route.points,
       nearest.index,
@@ -110,18 +124,6 @@ final class NavigationGuidanceEngine {
             nearest.index,
             stepShapeIndex.clamp(0, route.points.length - 1),
           );
-
-    if (nearest.distanceMeters > threshold) {
-      return NavigationGuidance(
-        status: NavigationGuidanceStatus.offRoute,
-        distanceFromRouteMeters: nearest.distanceMeters,
-        offRouteThresholdMeters: threshold,
-        nearestShapeIndex: nearest.index,
-        nextStep: nextStep,
-        distanceToNextStepMeters: distanceToStep,
-        progressFraction: progress,
-      );
-    }
 
     final status = distanceToStep != null &&
             distanceToStep <= turnApproachMeters
