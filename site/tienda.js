@@ -20,5 +20,34 @@
   function addToCart(id){const p=catalog.find(x=>x.id===id);if(!p)return;const l=state.cart.find(x=>x.variantId===p.variantId);if(l)l.qty+=1;else state.cart.push({variantId:p.variantId,qty:1,id:p.id});saveCart();updateCartUi(document.querySelector('#catalogo'))}
   function updateCartUi(h){if(!h)return;const count=state.cart.reduce((s,x)=>s+x.qty,0);const c=h.querySelector('[data-cart-count]');if(c)c.textContent=String(count);const items=h.querySelector('[data-store-cart-items]');const total=h.querySelector('[data-store-cart-total]');if(!items||!total)return;let sum=0;items.innerHTML=state.cart.map(l=>{const p=catalog.find(x=>x.variantId===l.variantId);if(!p)return'';sum+=p.price*l.qty;return`<div class="store-cart-line"><span>${escapeHtml(p.name)} × ${l.qty}</span><strong>${new Intl.NumberFormat('es-ES',{style:'currency',currency:p.currency||'EUR'}).format(p.price*l.qty)}</strong></div>`}).join('')||'<p class="store-cart-empty">El carrito está vacío.</p>';total.textContent=new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(sum)}
   async function checkout(){if(!state.cart.length)return;const b=document.querySelector('[data-store-checkout]');if(b){b.disabled=true;b.textContent='Preparando…'}try{const d=await shopify(`mutation CartCreate($input: CartInput!) { cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } } }`,{input:{lines:state.cart.map(l=>({merchandiseId:l.variantId,quantity:l.qty}))}});const r=d.cartCreate;if(r.userErrors?.length)throw new Error(r.userErrors.map(e=>e.message).join('; '));if(!r.cart?.checkoutUrl)throw new Error('Shopify no devolvió checkoutUrl.');window.location.href=r.cart.checkoutUrl}catch(e){alert(`No se pudo abrir el checkout: ${e.message}`);if(b){b.disabled=false;b.textContent='Ir al checkout'}}}
-  document.addEventListener('DOMContentLoaded',async()=>{const style=document.createElement('style');style.textContent='.store-product-description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;min-height:4.65em}';document.head.appendChild(style);if(!SHOPIFY_TOKEN){renderCatalog('Shopify aún no está configurado en el despliegue.');return}try{await loadProducts();renderCatalog()}catch(e){console.error(e);renderCatalog(e.message)}},{once:true});
+  document.addEventListener('DOMContentLoaded',async()=>{const style=document.createElement('style');style.textContent=`
+    .store-hero-inner{min-height:260px!important;padding-top:38px!important;padding-bottom:38px!important;grid-template-columns:minmax(0,1fr)!important}
+    .store-hero{min-height:0!important}
+    .store-copy{max-width:850px!important}
+    .store-hero h1{font-size:clamp(38px,4.4vw,60px)!important;margin-bottom:10px!important}
+    .store-lead{font-size:15px!important;line-height:1.45!important;max-width:720px!important}
+    .store-hero-actions{margin-top:16px!important}
+    .store-hero .store-note{margin-top:8px!important}
+    .store-visual{display:none!important}
+    .store-content{padding:34px 0 80px!important}
+    .store-section-head{margin-bottom:16px!important}
+    .store-section-head h2{font-size:32px!important}
+    .store-section-head>p{display:none!important}
+    .store-categories{display:flex!important;gap:8px!important;overflow-x:auto!important;padding:2px 0 8px!important}
+    .store-category{min-width:max-content!important;min-height:0!important;height:auto!important;padding:11px 16px!important;border-radius:999px!important;display:block!important;box-shadow:none!important}
+    .store-category .store-icon,.store-category span,.store-category p{display:none!important}
+    .store-category h3{margin:0!important;font-size:13px!important}
+    .store-catalog{margin-top:26px!important}
+    .store-catalog-head{margin-bottom:14px!important}
+    .store-catalog-head h2{font-size:32px!important}
+    .store-catalog-intro{font-size:13px!important}
+    .store-toolbar{padding:10px!important;margin-bottom:14px!important}
+    .store-product-grid{gap:14px!important}
+    .store-product-media{height:180px!important}
+    .store-product-body{padding:14px!important}
+    .store-product-body h3{font-size:17px!important}
+    .store-product-body p{font-size:12px!important}
+    .store-product-foot{margin-top:12px!important}
+    @media (max-width:680px){.store-hero-inner{padding-top:28px!important;padding-bottom:28px!important}.store-hero h1{font-size:40px!important}.store-hero-actions{margin-top:12px!important}.store-hero-actions .button{padding:10px 14px!important}.store-content{padding-top:24px!important}.store-product-media{height:210px!important}}
+  `;document.head.appendChild(style);if(!SHOPIFY_TOKEN){renderCatalog('Shopify aún no está configurado en el despliegue.');return}try{await loadProducts();renderCatalog()}catch(e){console.error(e);renderCatalog(e.message)}},{once:true});
 })();
