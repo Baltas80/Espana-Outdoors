@@ -49,7 +49,7 @@ class LocationController extends Notifier<LocationState> {
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
         ),
-      );
+      ).timeout(const Duration(seconds: 15));
       state = LocationState(
         position: position,
         message: 'Ubicación obtenida.',
