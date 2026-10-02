@@ -24,6 +24,8 @@ final class RemoteSourceGateway implements SourceGateway {
     }
   }
 
+  static const _requestTimeout = Duration(seconds: 20);
+
   final Uri baseUri;
   final http.Client _client;
   final AccessTokenProvider? accessTokenProvider;
@@ -32,10 +34,12 @@ final class RemoteSourceGateway implements SourceGateway {
   Future<SourceSnapshot> health(String sourceId) async {
     _validateSourceId(sourceId);
 
-    final response = await _client.get(
-      _uri('/v1/sources/$sourceId/health'),
-      headers: await _headers(),
-    );
+    final response = await _client
+        .get(
+          _uri('/v1/sources/$sourceId/health'),
+          headers: await _headers(),
+        )
+        .timeout(_requestTimeout);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
         'Source gateway health failed: HTTP ${response.statusCode}',
@@ -91,10 +95,12 @@ final class RemoteSourceGateway implements SourceGateway {
       for (final entry in parameters.entries)
         entry.key: '${entry.value}',
     };
-    final response = await _client.get(
-      _uri('/v1/sources/$sourceId', queryParameters: query),
-      headers: await _headers(),
-    );
+    final response = await _client
+        .get(
+          _uri('/v1/sources/$sourceId', queryParameters: query),
+          headers: await _headers(),
+        )
+        .timeout(_requestTimeout);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw StateError(
         'Source gateway fetch failed: HTTP ${response.statusCode}',
