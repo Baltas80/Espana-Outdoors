@@ -70,7 +70,6 @@ void main() {
     expect(result.status, NavigationGuidanceStatus.gpsPoor);
   });
 
-
   test('stays on route when the GPS fix falls between vertices', () {
     final result = engine.evaluate(
       route: _route(),
@@ -95,6 +94,17 @@ void main() {
       result.distanceFromRouteMeters,
       greaterThan(result.offRouteThresholdMeters),
     );
+  });
+
+  test('does not report arrival when the fix is off-route beside the endpoint', () {
+    final result = engine.evaluate(
+      route: _route(),
+      position: const GeoPoint(latitude: 40.0015, longitude: -3.0010),
+      accuracyMeters: 5,
+    );
+
+    expect(result.status, NavigationGuidanceStatus.offRoute);
+    expect(result.distanceFromRouteMeters, greaterThan(40));
   });
 
   test('reports arrival near the route end', () {
