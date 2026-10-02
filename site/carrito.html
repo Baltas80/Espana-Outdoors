@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071511">
+  <meta name="description" content="Carrito de compra de España Outdoor.">
+  <link rel="icon" href="./assets/brand/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Carrito | España Outdoor</title>
+  <style>
+    .cart-page{background:var(--cream);min-height:100vh;padding:120px 0 90px}.cart-shell{max-width:1000px}
+    .cart-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:28px}.cart-head h1{margin:0;font-size:clamp(38px,5vw,62px);line-height:.95;letter-spacing:-.05em}.cart-head p{margin:10px 0 0;color:var(--muted)}
+    .cart-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}.cart-card,.cart-summary{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 30px rgba(16,35,30,.06)}.cart-card{overflow:hidden}.cart-line{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:16px;align-items:center;padding:18px;border-bottom:1px solid var(--line)}.cart-line:last-child{border-bottom:0}.cart-line img{width:76px;height:76px;object-fit:cover;border-radius:14px;background:#e9f2ec}.cart-line h2{font-size:17px;margin:0 0 6px}.cart-line-price{color:var(--muted);font-size:13px}.cart-line-actions{display:flex;align-items:center;gap:8px;margin-top:10px}.cart-qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}.cart-qty button{width:32px;height:32px;border:0;background:#f7f7f4;font:inherit;font-weight:800;cursor:pointer}.cart-qty span{min-width:32px;text-align:center;font-weight:800}.cart-remove{border:0;background:transparent;color:#6d7772;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:5px}.cart-line-total{font-weight:900;white-space:nowrap}.cart-summary{padding:22px;position:sticky;top:100px}.cart-summary h2{margin:0 0 20px;font-size:22px}.cart-summary-row{display:flex;justify-content:space-between;gap:15px;padding:10px 0;color:var(--muted);font-size:14px}.cart-summary-total{border-top:1px solid var(--line);margin-top:8px;padding-top:16px;display:flex;justify-content:space-between;font-size:20px;font-weight:900}.cart-summary .button{width:100%;margin-top:18px}.cart-summary small{display:block;color:var(--muted);font-size:11px;line-height:1.45;margin-top:12px}.cart-continue{display:inline-block;margin-top:16px;color:var(--forest);font-weight:800;font-size:13px;text-decoration:none}.cart-empty{padding:60px 24px;text-align:center}.cart-empty-mark{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 16px;border-radius:18px;background:#e9f2ec;color:var(--forest);font-size:28px;font-weight:900}.cart-empty h2{margin:0 0 8px;font-size:28px}.cart-empty p{margin:0 auto;max-width:560px;color:var(--muted);font-size:14px}.cart-status{margin-bottom:18px;padding:13px 16px;border-radius:12px;background:#10251d;color:#fff;font-size:13px}.cart-status[hidden]{display:none}.cart-error{background:#6d1e1e}.cart-loading{text-align:center;padding:45px;color:var(--muted)}
+    @media(max-width:800px){.cart-layout{grid-template-columns:1fr}.cart-summary{position:static}.cart-head{display:block}}@media(max-width:560px){.cart-page{padding-top:95px}.cart-line{grid-template-columns:58px minmax(0,1fr);gap:12px}.cart-line img{width:58px;height:58px}.cart-line-total{grid-column:2}.cart-head h1{font-size:44px}}
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="site-header" data-header>
+  <div class="shell header-inner">
+    <a class="brand" href="./index.html" aria-label="España Outdoor"><img src="./assets/brand/mark.svg" alt="" width="48" height="48"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" data-menu><span></span><span></span><span></span><span class="sr-only">Abrir menú</span></button>
+    <nav id="main-nav" class="main-nav" aria-label="Principal">
+      <a href="./index.html">Inicio</a><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./seguridad.html">Seguridad</a><a class="active" href="./tienda.html">Tienda</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a><a class="nav-download" href="./app.html">Descargar App</a>
+    </nav>
+  </div>
+</header>
+<main id="contenido" class="cart-page">
+  <div class="shell cart-shell">
+    <div class="cart-head"><div><p class="kicker">España Outdoor · Tienda</p><h1>Tu carrito</h1><p>Revisa tus productos antes de pasar al checkout.</p></div></div>
+    <div id="cart-status" class="cart-status" hidden></div>
+    <div id="cart-content" class="cart-layout"><div class="cart-card"><div class="cart-loading">Cargando carrito…</div></div></div>
+  </div>
+</main>
+<footer class="site-footer"><div class="shell footer-inner"><div class="brand footer-brand"><img src="./assets/brand/mark.svg" alt="" width="40"><span class="brand-wordmark">ESPAÑA<br><strong>OUTDOOR</strong></span></div><div class="footer-links"><a href="./mapa.html">Mapa</a><a href="./rutas.html">Rutas</a><a href="./naturaleza.html">Naturaleza</a><a href="./flora-fauna.html">Flora y Fauna</a><a href="./seguridad.html">Seguridad</a><a href="./tienda.html">Tienda</a><a href="./app.html">App</a><a href="./blog.html">Blog</a><a href="./contacto.html">Contacto</a></div><div class="footer-copy">© <span data-year></span> España Outdoor<br><small>Grupo PAGREY · Todos los derechos reservados</small></div></div></footer>
+<script src="./app.js" defer></script>
+<script src="./shopify-config.js" defer></script>
+<script src="./carrito.js" defer></script>
+</body>
+</html>
