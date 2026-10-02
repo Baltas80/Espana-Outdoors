@@ -18,6 +18,8 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
         _accessToken = accessToken,
         _client = client ?? http.Client();
 
+  static const _requestTimeout = Duration(seconds: 15);
+
   final Uri _baseUrl;
   final Future<String?> Function() _accessToken;
   final http.Client _client;
@@ -26,17 +28,19 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
   Future<RescueLinkRemoteSession> create(
     RescueLinkCreateRequest request,
   ) async {
-    final response = await _client.post(
-      _uri('/v1/rescue-links'),
-      headers: await _headers(),
-      body: jsonEncode({
-        'latitude': request.position.latitude,
-        'longitude': request.position.longitude,
-        'accuracyMeters': request.accuracyMeters,
-        'type': request.type.name,
-        'expiresAt': request.expiresAt.toUtc().toIso8601String(),
-      }),
-    );
+    final response = await _client
+        .post(
+          _uri('/v1/rescue-links'),
+          headers: await _headers(),
+          body: jsonEncode({
+            'latitude': request.position.latitude,
+            'longitude': request.position.longitude,
+            'accuracyMeters': request.accuracyMeters,
+            'type': request.type.name,
+            'expiresAt': request.expiresAt.toUtc().toIso8601String(),
+          }),
+        )
+        .timeout(_requestTimeout);
     _ensureSuccess(response);
 
     final json = _decodeMap(response.body);
@@ -64,10 +68,12 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
 
   @override
   Future<void> revoke(String id) async {
-    final response = await _client.post(
-      _uri('/v1/rescue-links/' + Uri.encodeComponent(id) + '/revoke'),
-      headers: await _headers(),
-    );
+    final response = await _client
+        .post(
+          _uri('/v1/rescue-links/' + Uri.encodeComponent(id) + '/revoke'),
+          headers: await _headers(),
+        )
+        .timeout(_requestTimeout);
     _ensureSuccess(response);
   }
 
@@ -76,11 +82,13 @@ final class HttpRescueLinkGateway implements RescueLinkGateway {
     required String id,
     required String shareToken,
   }) async {
-    final response = await _client.post(
-      _uri('/v1/rescue-links/' + Uri.encodeComponent(id) + '/accept'),
-      headers: await _headers(),
-      body: jsonEncode({'shareToken': shareToken}),
-    );
+    final response = await _client
+        .post(
+          _uri('/v1/rescue-links/' + Uri.encodeComponent(id) + '/accept'),
+          headers: await _headers(),
+          body: jsonEncode({'shareToken': shareToken}),
+        )
+        .timeout(_requestTimeout);
     _ensureSuccess(response);
 
     final json = _decodeMap(response.body);
