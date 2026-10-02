@@ -1,180 +1,24 @@
 (() => {
   'use strict';
-
-  const STORAGE_KEY = 'espana-outdoor-store-cart-v1';
+  const STORAGE_KEY = 'espana-outdoor-store-cart-v2';
+  const SHOPIFY_DOMAIN = 'outdoorspain.myshopify.com';
+  const SHOPIFY_API_VERSION = '2026-10';
+  const SHOPIFY_TOKEN = window.ESPANA_OUTDOOR_SHOPIFY_STOREFRONT_TOKEN || '';
+  const categories = [['mochilas','Mochilas'],['calzado','Calzado'],['ropa','Ropa outdoor'],['trekking','Trekking'],['camping','Camping'],['hidratacion','Hidratación'],['navegacion','Navegación'],['seguridad','Seguridad'],['iluminacion','Iluminación'],['accesorios','Accesorios']];
   const catalog = [];
-  const categories = [
-    ['mochilas', 'Mochilas'],
-    ['calzado', 'Calzado'],
-    ['ropa', 'Ropa outdoor'],
-    ['trekking', 'Trekking'],
-    ['camping', 'Camping'],
-    ['hidratacion', 'Hidratación'],
-    ['navegacion', 'Navegación'],
-    ['seguridad', 'Seguridad'],
-    ['iluminacion', 'Iluminación'],
-    ['accesorios', 'Accesorios']
-  ];
-
-  const state = {
-    category: 'all',
-    query: '',
-    sort: 'featured',
-    cart: loadCart()
-  };
-
-  function loadCart() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      return Array.isArray(parsed) ? parsed.filter(item => item && item.id && Number.isInteger(item.qty) && item.qty > 0) : [];
-    } catch (_) {
-      return [];
-    }
-  }
-
-  function saveCart() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cart)); } catch (_) {}
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
-  function renderCatalog() {
-    const host = document.querySelector('#catalogo');
-    if (!host) return;
-
-    const categoryButtons = categories.map(([id, label]) => `
-      <button class="store-filter ${state.category === id ? 'is-active' : ''}" type="button" data-store-category="${id}">${escapeHtml(label)}</button>
-    `).join('');
-
-    const empty = catalog.length === 0;
-    host.className = 'store-catalog';
-    host.innerHTML = `
-      <div class="store-catalog-head">
-        <div>
-          <p class="kicker">Catálogo</p>
-          <h2>Productos seleccionados</h2>
-          <p class="store-catalog-intro">La infraestructura comercial ya está preparada. Los productos reales se incorporarán cuando estén validados proveedor, precio, disponibilidad, condiciones de entrega y destino del enlace de compra.</p>
-        </div>
-        <button class="store-cart-button" type="button" data-store-cart aria-controls="store-cart" aria-expanded="false">
-          Carrito <span data-cart-count>0</span>
-        </button>
-      </div>
-      <div class="store-toolbar" role="region" aria-label="Filtros de tienda">
-        <div class="store-filters" aria-label="Categorías">
-          <button class="store-filter ${state.category === 'all' ? 'is-active' : ''}" type="button" data-store-category="all">Todo</button>
-          ${categoryButtons}
-        </div>
-        <label class="store-search"><span class="sr-only">Buscar productos</span><input type="search" data-store-search placeholder="Buscar en la tienda…" value="${escapeHtml(state.query)}"></label>
-        <label class="store-sort"><span class="sr-only">Ordenar</span><select data-store-sort><option value="featured" ${state.sort === 'featured' ? 'selected' : ''}>Destacados</option><option value="price-asc" ${state.sort === 'price-asc' ? 'selected' : ''}>Precio: menor a mayor</option><option value="price-desc" ${state.sort === 'price-desc' ? 'selected' : ''}>Precio: mayor a menor</option></select></label>
-      </div>
-      <div class="store-product-grid" data-store-products>
-        ${empty ? `
-          <article class="store-empty store-catalog-empty">
-            <span class="store-empty-mark" aria-hidden="true">+</span>
-            <h2>Primer catálogo comercial pendiente de validación</h2>
-            <p>No mostramos precios, stock ni enlaces ficticios. El siguiente paso es cargar proveedores reales y publicar únicamente productos comprobados.</p>
-            <a class="button button-small" href="./contacto.html?asunto=proveedores">Proponer proveedor</a>
-          </article>
-        ` : renderProducts()}
-      </div>
-      <aside id="store-cart" class="store-cart" hidden aria-label="Carrito">
-        <div class="store-cart-head"><strong>Tu carrito</strong><button type="button" data-store-close-cart aria-label="Cerrar carrito">×</button></div>
-        <div data-store-cart-items></div>
-        <div class="store-cart-foot"><strong>Total</strong><strong data-store-cart-total>0,00 €</strong><button type="button" class="button button-gold" data-store-checkout disabled>Checkout pendiente</button><small>El pago se activará cuando se conecte un proveedor de checkout verificado.</small></div>
-      </aside>
-    `;
-
-    bindCatalogEvents(host);
-    updateCartUi(host);
-  }
-
-  function renderProducts() {
-    const filtered = catalog
-      .filter(item => state.category === 'all' || item.category === state.category)
-      .filter(item => !state.query || `${item.name} ${item.description}`.toLowerCase().includes(state.query.toLowerCase()))
-      .slice();
-
-    filtered.sort((a, b) => {
-      if (state.sort === 'price-asc') return a.price - b.price;
-      if (state.sort === 'price-desc') return b.price - a.price;
-      return (a.featured ? 0 : 1) - (b.featured ? 0 : 1);
-    });
-
-    if (!filtered.length) return '<div class="store-empty store-catalog-empty"><h2>Sin resultados</h2><p>Prueba otra categoría o término de búsqueda.</p></div>';
-
-    return filtered.map(item => `
-      <article class="store-product-card">
-        <div class="store-product-media"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy"><span>${escapeHtml(item.badge || 'Selección')}</span></div>
-        <div class="store-product-body"><small>${escapeHtml(item.vendor || 'Proveedor pendiente')}</small><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.description)}</p><div class="store-product-foot"><strong>${new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(item.price)}</strong><button type="button" class="button button-small" data-add-product="${escapeHtml(item.id)}">Añadir</button></div></div>
-      </article>
-    `).join('');
-  }
-
-  function bindCatalogEvents(host) {
-    host.querySelectorAll('[data-store-category]').forEach(button => button.addEventListener('click', () => {
-      state.category = button.dataset.storeCategory;
-      renderCatalog();
-    }));
-
-    const search = host.querySelector('[data-store-search]');
-    if (search) search.addEventListener('input', event => { state.query = event.target.value; renderCatalog(); });
-
-    const sort = host.querySelector('[data-store-sort]');
-    if (sort) sort.addEventListener('change', event => { state.sort = event.target.value; renderCatalog(); });
-
-    host.querySelectorAll('[data-add-product]').forEach(button => button.addEventListener('click', () => addToCart(button.dataset.addProduct)));
-
-    const cartButton = host.querySelector('[data-store-cart]');
-    if (cartButton) cartButton.addEventListener('click', () => {
-      const cart = host.querySelector('#store-cart');
-      cart.hidden = false;
-      cartButton.setAttribute('aria-expanded', 'true');
-    });
-
-    const closeCart = host.querySelector('[data-store-close-cart]');
-    if (closeCart) closeCart.addEventListener('click', () => {
-      const cart = host.querySelector('#store-cart');
-      cart.hidden = true;
-      host.querySelector('[data-store-cart]')?.setAttribute('aria-expanded', 'false');
-    });
-  }
-
-  function addToCart(id) {
-    const item = catalog.find(product => product.id === id);
-    if (!item) return;
-    const existing = state.cart.find(line => line.id === id);
-    if (existing) existing.qty += 1;
-    else state.cart.push({ id, qty: 1 });
-    saveCart();
-    const host = document.querySelector('#catalogo');
-    if (host) updateCartUi(host);
-  }
-
-  function updateCartUi(host) {
-    const count = state.cart.reduce((sum, line) => sum + line.qty, 0);
-    const countNode = host.querySelector('[data-cart-count]');
-    if (countNode) countNode.textContent = String(count);
-
-    const itemsNode = host.querySelector('[data-store-cart-items]');
-    const totalNode = host.querySelector('[data-store-cart-total]');
-    if (!itemsNode || !totalNode) return;
-
-    let total = 0;
-    itemsNode.innerHTML = state.cart.map(line => {
-      const product = catalog.find(item => item.id === line.id);
-      if (!product) return '';
-      total += product.price * line.qty;
-      return `<div class="store-cart-line"><span>${escapeHtml(product.name)} × ${line.qty}</span><strong>${new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(product.price * line.qty)}</strong></div>`;
-    }).join('') || '<p class="store-cart-empty">El carrito está vacío.</p>';
-    totalNode.textContent = new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(total);
-  }
-
-  document.addEventListener('DOMContentLoaded', renderCatalog, { once: true });
+  const state = {category:'all',query:'',sort:'featured',cart:loadCart()};
+  const endpoint = `https://${SHOPIFY_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`;
+  function loadCart(){try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');return Array.isArray(x)?x.filter(v=>v?.variantId&&Number.isInteger(v.qty)&&v.qty>0):[]}catch(_){return[]}}
+  function saveCart(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state.cart))}catch(_) {}}
+  function escapeHtml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+  function categoryFor(p){const t=`${p.productType} ${p.title} ${(p.tags||[]).join(' ')}`.toLowerCase();if(/mochila|backpack|pack/.test(t))return'mochilas';if(/bota|botas|zapatilla|calzado|shoe|footwear/.test(t))return'calzado';if(/ropa|chaqueta|pantal[oó]n|camiseta|forro|impermeable|jacket|fleece/.test(t))return'ropa';if(/trekking|bast[oó]n|pole|senderismo/.test(t))return'trekking';if(/camping|tienda|saco|colchoneta|cocina|hornillo|camp/.test(t))return'camping';if(/hidrata|botella|filtro de agua|water|hydrat/.test(t))return'hidratacion';if(/gps|br[uú]jula|navegaci[oó]n|compass|navigation/.test(t))return'navegacion';if(/seguridad|botiqu[ií]n|emergencia|rescate|first aid|safety/.test(t))return'seguridad';if(/linterna|frontal|luz|ilumin|flashlight|headlamp/.test(t))return'iluminacion';return'accesorios'}
+  async function shopify(query,variables={}){if(!SHOPIFY_TOKEN)throw new Error('Shopify Storefront token no configurado.');const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','X-Shopify-Storefront-Access-Token':SHOPIFY_TOKEN},body:JSON.stringify({query,variables})});if(!r.ok)throw new Error(`Shopify HTTP ${r.status}`);const b=await r.json();if(b.errors?.length)throw new Error(b.errors.map(e=>e.message).join('; '));return b.data}
+  async function loadProducts(){const q=`query Products { products(first:100, sortKey:TITLE) { nodes { id title handle description productType tags availableForSale featuredImage { url altText } variants(first:1) { nodes { id availableForSale price { amount currencyCode } } } } } }`;const d=await shopify(q);catalog.splice(0,catalog.length,...(d.products.nodes||[]).filter(p=>p.availableForSale&&p.variants.nodes.length&&p.variants.nodes[0].availableForSale).map(p=>({id:p.id,variantId:p.variants.nodes[0].id,name:p.title,description:p.description||'Equipamiento outdoor seleccionado por España Outdoor.',vendor:p.productType||'España Outdoor',image:p.featuredImage?.url||'',price:Number(p.variants.nodes[0].price.amount),currency:p.variants.nodes[0].price.currencyCode,category:categoryFor(p),featured:true,badge:'Disponible'})))}
+  function renderCatalog(message=''){const h=document.querySelector('#catalogo');if(!h)return;const buttons=categories.map(([id,label])=>`<button class="store-filter ${state.category===id?'is-active':''}" type="button" data-store-category="${id}">${label}</button>`).join('');let f=catalog.filter(p=>state.category==='all'||p.category===state.category).filter(p=>!state.query||`${p.name} ${p.description}`.toLowerCase().includes(state.query.toLowerCase())).slice();f.sort((a,b)=>state.sort==='price-asc'?a.price-b.price:state.sort==='price-desc'?b.price-a.price:0);h.className='store-catalog';h.innerHTML=`<div class="store-catalog-head"><div><p class="kicker">Catálogo Shopify</p><h2>Productos seleccionados</h2><p class="store-catalog-intro">Productos reales sincronizados desde la tienda Shopify de España Outdoor.</p></div><button class="store-cart-button" type="button" data-store-cart>Carrito <span data-cart-count>0</span></button></div><div class="store-toolbar"><div class="store-filters"><button class="store-filter ${state.category==='all'?'is-active':''}" type="button" data-store-category="all">Todo</button>${buttons}</div><label class="store-search"><span class="sr-only">Buscar</span><input type="search" data-store-search placeholder="Buscar en la tienda…" value="${escapeHtml(state.query)}"></label><label class="store-sort"><select data-store-sort><option value="featured">Destacados</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option></select></label></div><div class="store-product-grid">${f.length?f.map(productCard).join(''):`<article class="store-empty store-catalog-empty"><span class="store-empty-mark">${message?'!':'+'}</span><h2>${escapeHtml(message||'No hay productos publicados todavía')}</h2><p>${message?'Revisa la configuración del canal Headless y el catálogo de Shopify.':'Publica productos en Shopify para que aparezcan aquí.'}</p></article>`}</div><aside id="store-cart" class="store-cart" hidden><div class="store-cart-head"><strong>Tu carrito</strong><button type="button" data-store-close-cart>×</button></div><div data-store-cart-items></div><div class="store-cart-foot"><strong>Total</strong><strong data-store-cart-total>0,00 €</strong><button type="button" class="button button-gold" data-store-checkout>Ir al checkout</button><small>El pago se completa en el checkout seguro de Shopify.</small></div></aside>`;bindEvents(h);updateCartUi(h)}
+  function productCard(p){return`<article class="store-product-card"><div class="store-product-media">${p.image?`<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy">`:''}<span>${escapeHtml(p.badge)}</span></div><div class="store-product-body"><small>${escapeHtml(p.vendor)}</small><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.description)}</p><div class="store-product-foot"><strong>${new Intl.NumberFormat('es-ES',{style:'currency',currency:p.currency||'EUR'}).format(p.price)}</strong><button type="button" class="button button-small" data-add-product="${escapeHtml(p.id)}">Añadir</button></div></div></article>`}
+  function bindEvents(h){h.querySelectorAll('[data-store-category]').forEach(b=>b.addEventListener('click',()=>{state.category=b.dataset.storeCategory;renderCatalog()}));h.querySelector('[data-store-search]')?.addEventListener('input',e=>{state.query=e.target.value;renderCatalog()});h.querySelector('[data-store-sort]')?.addEventListener('change',e=>{state.sort=e.target.value;renderCatalog()});h.querySelectorAll('[data-add-product]').forEach(b=>b.addEventListener('click',()=>addToCart(b.dataset.addProduct)));h.querySelector('[data-store-cart]')?.addEventListener('click',()=>{h.querySelector('#store-cart').hidden=false});h.querySelector('[data-store-close-cart]')?.addEventListener('click',()=>{h.querySelector('#store-cart').hidden=true});h.querySelector('[data-store-checkout]')?.addEventListener('click',checkout)}
+  function addToCart(id){const p=catalog.find(x=>x.id===id);if(!p)return;const l=state.cart.find(x=>x.variantId===p.variantId);if(l)l.qty+=1;else state.cart.push({variantId:p.variantId,qty:1,id:p.id});saveCart();updateCartUi(document.querySelector('#catalogo'))}
+  function updateCartUi(h){if(!h)return;const count=state.cart.reduce((s,x)=>s+x.qty,0);const c=h.querySelector('[data-cart-count]');if(c)c.textContent=String(count);const items=h.querySelector('[data-store-cart-items]');const total=h.querySelector('[data-store-cart-total]');if(!items||!total)return;let sum=0;items.innerHTML=state.cart.map(l=>{const p=catalog.find(x=>x.variantId===l.variantId);if(!p)return'';sum+=p.price*l.qty;return`<div class="store-cart-line"><span>${escapeHtml(p.name)} × ${l.qty}</span><strong>${new Intl.NumberFormat('es-ES',{style:'currency',currency:p.currency||'EUR'}).format(p.price*l.qty)}</strong></div>`}).join('')||'<p class="store-cart-empty">El carrito está vacío.</p>';total.textContent=new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(sum)}
+  async function checkout(){if(!state.cart.length)return;const b=document.querySelector('[data-store-checkout]');if(b){b.disabled=true;b.textContent='Preparando…'}try{const d=await shopify(`mutation CartCreate($input: CartInput!) { cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } } }`,{input:{lines:state.cart.map(l=>({merchandiseId:l.variantId,quantity:l.qty}))}});const r=d.cartCreate;if(r.userErrors?.length)throw new Error(r.userErrors.map(e=>e.message).join('; '));if(!r.cart?.checkoutUrl)throw new Error('Shopify no devolvió checkoutUrl.');window.location.href=r.cart.checkoutUrl}catch(e){alert(`No se pudo abrir el checkout: ${e.message}`);if(b){b.disabled=false;b.textContent='Ir al checkout'}}}
+  document.addEventListener('DOMContentLoaded',async()=>{if(!SHOPIFY_TOKEN){renderCatalog('Shopify aún no está configurado en el despliegue.');return}try{await loadProducts();renderCatalog()}catch(e){console.error(e);renderCatalog(e.message)}},{once:true});
 })();
