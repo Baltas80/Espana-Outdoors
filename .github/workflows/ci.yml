@@ -75,8 +75,7 @@ jobs:
           test/remote_source_gateway_test.dart
           test/gateway_weather_service_test.dart
           test/source_gateway_config_test.dart
-      - name: Full test suite (non-blocking for review APK)
-        continue-on-error: true
+      - name: Full test suite
         run: flutter test --coverage --concurrency=1
       - name: Android release build
         run: |
