@@ -124,7 +124,31 @@ class RouteRecorder extends Notifier<RouteRecordingState> {
 
   void _listenForPositions() {
     _subscription?.cancel();
-    _subscription = Geolocator.getPositionStream(locationSettings: _locationSettings()).listen(_onPosition);
+    _subscription = Geolocator.getPositionStream(
+      locationSettings: _locationSettings(),
+    ).listen(
+      _onPosition,
+      onError: _onPositionStreamError,
+      onDone: _onPositionStreamDone,
+      cancelOnError: true,
+    );
+  }
+
+  void _onPositionStreamError(Object _, StackTrace __) {
+    _onPositionStreamEnded();
+  }
+
+  void _onPositionStreamDone() {
+    _onPositionStreamEnded();
+  }
+
+  void _onPositionStreamEnded() {
+    _subscription = null;
+    if (_disposed) return;
+    state = state.copyWith(
+      isRecording: false,
+      hasRecoverableSession: state.points.isNotEmpty,
+    );
   }
 
   LocationSettings _locationSettings() {
