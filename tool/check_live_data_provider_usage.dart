@@ -1,14 +1,10 @@
 import 'dart:io';
 
-const allowedFiles = <String>{
-  'lib/core/weather/aemet_weather_service.dart',
-};
-
-final directAemetPattern = RegExp(r'\bAemetWeatherService\s*\(');
-final directRuntimeCredentialPattern = RegExp(
-  r'WeatherRuntimeConfig\s*\([^)]*apiKey\s*:',
-  dotAll: true,
-);
+final directCredentialPatterns = <RegExp>[
+  RegExp(r'\bAemetWeatherService\s*\('),
+  RegExp(r'\bWeatherRuntimeConfig\s*\('),
+  RegExp(r'api_key\s*[:=]'),
+];
 
 void main() {
   final violations = <String>[];
@@ -22,27 +18,32 @@ void main() {
   for (final entity in lib.listSync(recursive: true, followLinks: false)) {
     if (entity is! File || !entity.path.endsWith('.dart')) continue;
     final path = entity.path.replaceAll('\\', '/');
-    if (allowedFiles.contains(path)) continue;
+    final source = entity.readAsStringSync();
 
-    final content = entity.readAsStringSync();
-    if (directAemetPattern.hasMatch(content) ||
-        directRuntimeCredentialPattern.hasMatch(content)) {
-      violations.add(path);
+    for (final pattern in directCredentialPatterns) {
+      if (pattern.hasMatch(source)) {
+        violations.add(path + ': ' + pattern.pattern);
+        break;
+      }
     }
   }
 
   if (violations.isNotEmpty) {
     stderr.writeln(
-      'Direct credentialed live-provider usage detected: ' +
-          violations.join(', '),
+      'Direct client-side credentialed live-provider usage detected:',
     );
+    for (final violation in violations) {
+      stderr.writeln(' - ' + violation);
+    }
     stderr.writeln(
       'Features must consume SourceGateway/GatewayWeatherService. '
-      'AEMET credentials remain server-side.',
+      'Provider credentials remain server-side.',
     );
     exitCode = 1;
     return;
   }
 
-  stdout.writeln('Live data provider usage guard passed.');
+  stdout.writeln(
+    'Live data provider usage guard passed: gateway-only client boundary.',
+  );
 }
