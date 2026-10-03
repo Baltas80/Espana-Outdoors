@@ -57,7 +57,7 @@ func TestGetJSONWithRetryRetriesTransientProviderFailures(t *testing.T) {
             return
         }
         w.Header().Set("Content-Type", "application/json")
-        _, _ = w.Write([]byte(`{"ok":true}`))
+        _, _ = w.Write([]byte(`{\"ok\":true}`))
     }))
     defer upstream.Close()
 
@@ -105,7 +105,7 @@ func setRequiredConfigEnv(t *testing.T) {
     t.Helper()
     t.Setenv("OIDC_ISSUER", "https://auth.example.com/realms/espana-outdoor")
     t.Setenv("OIDC_AUDIENCE", "espana-outdoor")
-    t.Setenv("AEMET_API_KEY", "test-key")
+    t.Setenv("AEMET_API_KEY", "fixture")
     t.Setenv("AEMET_API_KEY_EXPIRES_AT", time.Now().UTC().Add(time.Hour).Format(time.RFC3339))
     t.Setenv("AEMET_BASE_URL", "https://opendata.aemet.es/opendata/api")
     t.Setenv("CACHE_FRESH_TTL", "10m")
