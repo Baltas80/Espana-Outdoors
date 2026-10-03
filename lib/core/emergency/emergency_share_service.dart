@@ -20,7 +20,7 @@ class EmergencyShareService {
     return EmergencySharePayload(
       snapshot: snapshot,
       expiresAt: expiresAt,
-      shareToken: _localCorrelationCode(snapshot, expiresAt),
+      shareToken: _localCorrelationCode(),
     );
   }
 
@@ -63,10 +63,7 @@ class EmergencyShareService {
     return (value * 100).roundToDouble() / 100;
   }
 
-  String _localCorrelationCode(
-    EmergencySnapshot snapshot,
-    DateTime expiresAt,
-  ) {
+  String _localCorrelationCode() {
     final random = Random.secure();
     const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final buffer = StringBuffer();
