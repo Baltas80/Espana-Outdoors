@@ -16,7 +16,7 @@ import '../features/navigation/waypoints_page.dart';
 import '../features/natura/natura_protect_page.dart';
 import '../features/offline/offline_page.dart';
 import '../features/pets/pets_page.dart';
-import '../features/profile/plans_page.dart';
+import '../features.profile/plans_page.dart';
 import '../features/profile/profile_page.dart';
 import '../features/rescue/rescue_link_page.dart';
 import '../features/routes/route_detail_page.dart';
@@ -29,6 +29,7 @@ import '../features/weather/lightning_page.dart';
 import '../features/wildlife/wildlife_page.dart';
 import 'app_shell.dart';
 import 'theme.dart';
+import '../features/splash/splash_page.dart';
 
 class EspanaOutdoorApp extends StatelessWidget {
   const EspanaOutdoorApp({super.key});
@@ -40,8 +41,12 @@ class EspanaOutdoorApp extends StatelessWidget {
       _BackNavigationScope(fallback: fallback, child: child);
 
   static final _router = GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashPage(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (_, __, navigationShell) =>
             AppShell(navigationShell: navigationShell),
