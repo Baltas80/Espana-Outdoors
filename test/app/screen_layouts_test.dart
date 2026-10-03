@@ -40,7 +40,7 @@ void main() {
         expect(slot.rect.left, EOLayoutCanvas.horizontal, reason: layout.title);
         expect(slot.rect.width, EOLayoutCanvas.contentWidth, reason: layout.title);
         expect(slot.rect.top, EOLayoutCanvas.safeTop, reason: layout.title);
-        expect(slot.rect.height, 56, reason: layout.title);
+        expect(slot.rect.height, EOLayoutCanvas.appBarHeight, reason: layout.title);
       }
     }
   });
