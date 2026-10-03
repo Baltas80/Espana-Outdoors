@@ -42,7 +42,7 @@ class OfflineRegion {
         license is! String ||
         attribution is! String ||
         url is! String ||
-        size is! num ||
+        size is! int ||
         updated is! String ||
         checksum is! String) {
       throw const FormatException(
@@ -80,7 +80,7 @@ class OfflineRegion {
         normalizedName.isEmpty ||
         normalizedProviderId.isEmpty ||
         normalizedAttribution.isEmpty ||
-        size.toInt() <= 0) {
+        size <= 0) {
       throw const FormatException(
         'Invalid offline region identity, provider or attribution.',
       );
@@ -94,7 +94,7 @@ class OfflineRegion {
       licenseUrl: licenseUrl,
       attribution: normalizedAttribution,
       downloadUrl: downloadUrl,
-      sizeBytes: size.toInt(),
+      sizeBytes: size,
       updatedAt: updatedAt.toUtc(),
       sha256: normalizedChecksum,
     );
