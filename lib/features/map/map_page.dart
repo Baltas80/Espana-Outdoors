@@ -194,9 +194,9 @@ class _PmTilesLayer extends StatelessWidget {
   Widget build(BuildContext context) {
     final markers = <Marker>[
       if (currentPosition != null)
-        Marker(point: currentPosition!, width: 42, height: 42, child: Tooltip(message: 'Mi posición', child: DecoratedBox(decoration: const BoxDecoration(color: EOColors.green, shape: BoxShape.circle), child: const Icon(Icons.my_location, color: EOColors.night, size: 25))),
+        Marker(point: currentPosition!, width: 42, height: 42, child: Tooltip(message: 'Mi posición', child: DecoratedBox(decoration: const BoxDecoration(color: EOColors.green, shape: BoxShape.circle), child: const Icon(Icons.my_location, color: EOColors.night, size: 25)))),
       if (destination != null)
-        Marker(point: destination!, width: 42, height: 48, child: Tooltip(message: 'Destino', child: DecoratedBox(decoration: const BoxDecoration(color: EOColors.orange, shape: BoxShape.circle), child: const Icon(Icons.place, color: EOColors.night, size: 27))),
+        Marker(point: destination!, width: 42, height: 48, child: Tooltip(message: 'Destino', child: DecoratedBox(decoration: const BoxDecoration(color: EOColors.orange, shape: BoxShape.circle), child: const Icon(Icons.place, color: EOColors.night, size: 27)))),
     ];
 
     return FlutterMap(
