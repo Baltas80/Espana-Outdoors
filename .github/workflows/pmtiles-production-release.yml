@@ -4,37 +4,86 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Immutable basemap version'
+        description: Immutable map version (for example 2026-09-24)
         required: true
         type: string
-
-env:
-  VERSION: ${{ inputs.version }}
+      osm_url:
+        description: Immutable/versioned Geofabrik OSM PBF URL
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
+  build-publish:
+    runs-on: ubuntu-24.04
     environment: maps-production
     env:
-      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID}}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID}}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY}}
+      R2_BUCKET: ${{ vars.R2_BUCKET}}
+      MAPS_PUBLIC_BASE_URL: ${{ vars.MAPS_PUBLIC_BASE_URL}}
+      MAPS_LICENSE_URL: ${{ vars.MAPS_LICENSE_URL}}
+      MAPS_ATTRIBUTION: ${{ vars.MAPS_ATTRIBUTION}}
+      VERSION: ${{ inputs.version}}
+      OSM_URL: ${{ inputs.osm_url}}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Validate production configuration
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y awscli
+          : "${R2_ACCOUNT_ID:?R2_ACCOUNT_ID secret is required}"
+          : "${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID secret is required}"
+          : "${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY secret is required}"
+          : "${R2_BUCKET:?R2_BUCKET environment variable is required}"
+          : "${MAPS_PUBLIC_BASE_URL:?MAPS_PUBLIC_BASE_URL environment variable is required}"
+          : "${MAPS_LICENSE_URL:?MAPS_LICENSE_URL environment variable is required}"
+          : "${MAPS_ATTRIBUTION:?MAPS_ATTRIBUTION environment variable is required}"
 
-      - name: Build PMTiles
+          case "${MAPS_PUBLIC_BASE_URL}" in
+            https://*) ;;
+            *) echo "MAPS_PUBLIC_BASE_URL must be HTTPS"; exit 1 ;;
+          esac
+
+          if [[ ! "${VERSION}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "VERSION must use YYYY-MM-DD to keep R2 keys immutable and path-safe."
+            exit 1
+          fi
+
+          case "${OSM_URL}" in
+            https://download.geofabrik.de/*.osm.pbf) ;;
+            *)
+              echo "OSM_URL must be an HTTPS Geofabrik OSM PBF URL."
+              exit 1
+              ;;
+          esac
+
+      - name: Download pinned PMTiles CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="1.31.2"
+          expected="3ed7dbf4ec2e6dfe5e25b6f70d1ffc932729f93c86db353bf514dd71010a312f"
+          url="https://github.com/protomaps/go-pmtiles/releases/download/v${version}/go-pmtiles_${version}_Linux_x86_64.tar.gz"
+          curl --fail --location --retry 5 --retry-all-errors -o /tmp/go-pmtiles.tar.gz "${url}"
+          echo "${expected}  /tmp/go-pmtiles.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/go-pmtiles.tar.gz -C /tmp
+          install -m 0755 /tmp/pmtiles ./pmtiles
+
+      - name: Download versioned OSM extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/maps
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output build/maps/spain.osm.pbf "${OSM_URL}"
+          sha256sum build/maps/spain.osm.pbf | tee build/maps/spain.osm.pbf.sha256
+
+      - name: Build Spain PMTiles with pinned Planetiler
         shell: bash
         run: |
           set -euo pipefail
@@ -108,32 +157,61 @@ jobs:
           python3 - <<'PY'
           import json
           import os
+          from datetime import datetime, timezone
           from pathlib import Path
 
-          out = Path('build/maps/catalog-entry.json')
-          out.parent.mkdir(parents=True, exist_ok=True)
-          out.write_text(json.dumps({
-              'version': os.environ['VERSION'],
-              'sha256': os.environ['MAP_SHA256'],
-              'size_bytes': int(os.environ['MAP_SIZE_BYTES']),
-              'path': f"basemap/spain/{os.environ['VERSION']}/spain.pmtiles",
-          }, sort_keys=True, indent=2) + '\n')
+          payload = {
+              "id": "spain",
+              "name": "España",
+              "description": "Mapa base vectorial de España para España Outdoor.",
+              "providerId": "approved-pmtiles-catalog",
+              "licenseUrl": os.environ["MAPS_LICENSE_URL"],
+              "attribution": os.environ["MAPS_ATTRIBUTION"],
+              "downloadUrl": (
+                  os.environ["MAPS_PUBLIC_BASE_URL"].rstrip("/")
+                  + "/basemap/spain/"
+                  + os.environ["VERSION"]
+                  + "/spain.pmtiles"
+              ),
+              "sizeBytes": int(os.environ["MAP_SIZE_BYTES"]),
+              "updatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "sha256": os.environ["MAP_SHA256"],
+          }
+
+          Path("build/maps/spain.json").write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
           PY
 
-          aws s3api put-object \
-            --bucket "${R2_BUCKET}" \
-            --key "basemap/spain/catalog/${VERSION}.json" \
-            --body build/maps/catalog-entry.json \
-            --endpoint-url "${endpoint}" \
-            --content-type application/json \
-            --if-none-match '*'
+          export AWS_ACCESS_KEY_ID="${R2_ACCESS_KEY_ID}"
+          export AWS_SECRET_ACCESS_KEY="${R2_SECRET_ACCESS_KEY}"
+          export AWS_DEFAULT_REGION=auto
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
-      - name: Verify HTTPS range request
+          aws s3 cp build/maps/spain.json "s3://${R2_BUCKET}/catalog/spain.json" \
+            --content-type application/json \
+            --cache-control "no-cache" \
+            --endpoint-url "${endpoint}"
+
+          aws s3api head-object \
+            --bucket "${R2_BUCKET}" \
+            --key catalog/spain.json \
+            --endpoint-url "${endpoint}" >/dev/null
+
+      - name: Verify HTTPS and byte range
         shell: bash
+        env:
+          MAP_PMTILES_URL: ${{ vars.MAPS_PUBLIC_BASE_URL}}/basemap/spain/${{ inputs.version}}/spain.pmtiles
         run: |
-          set -euo pipefail
-          url="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}/basemap/spain/${VERSION}/spain.pmtiles"
-          curl --fail --silent --show-error --range 0-15 -D /tmp/headers.bin -o /tmp/range.bin "${url}"
-          grep -qi '^HTTP/.*206' /tmp/headers.bin
-          grep -qi '^content-range: bytes 0-15/' /tmp/headers.bin
-          test "$(stat -c '%s' /tmp/range.bin)" = 16
+          bash ops/offline/verify-pmtiles-http.sh
+
+      - name: Upload release evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmtiles-release-evidence-${{ inputs.version}}
+          path: |
+            build/maps/spain.osm.pbf.sha256
+            build/maps/spain.pmtiles.sha256
+            build/maps/spain.pmtiles.metadata.txt
+            build/maps/spain.json
