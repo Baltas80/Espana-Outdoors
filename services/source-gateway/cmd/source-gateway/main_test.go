@@ -47,7 +47,6 @@ func TestMunicipalityCodeValidation(t *testing.T) {
     }
 }
 
-
 func TestGetJSONWithRetryRetriesTransientProviderFailures(t *testing.T) {
     attempts := 0
     upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +56,7 @@ func TestGetJSONWithRetryRetriesTransientProviderFailures(t *testing.T) {
             return
         }
         w.Header().Set("Content-Type", "application/json")
-        _, _ = w.Write([]byte(`{\"ok\":true}`))
+        _, _ = w.Write([]byte(`{"ok":true}`))
     }))
     defer upstream.Close()
 
@@ -90,7 +89,6 @@ func TestGetJSONWithRetryDoesNotRetryPermanentClientErrors(t *testing.T) {
         t.Fatalf("expected one attempt for permanent client error, got %d", attempts)
     }
 }
-
 
 func TestLoadConfigRejectsHTTPOIDCIssuer(t *testing.T) {
     setRequiredConfigEnv(t)
