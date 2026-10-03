@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,7 +20,7 @@ class EmergencyShareService {
     return EmergencySharePayload(
       snapshot: snapshot,
       expiresAt: expiresAt,
-      shareToken: _localCorrelationCode(snapshot, expiresAt),
+      shareToken: _localCorrelationCode(),
     );
   }
 
@@ -61,13 +63,13 @@ class EmergencyShareService {
     return (value * 100).roundToDouble() / 100;
   }
 
-  String _localCorrelationCode(
-    EmergencySnapshot snapshot,
-    DateTime expiresAt,
-  ) {
-    final seed = snapshot.capturedAt.millisecondsSinceEpoch ^
-        snapshot.type.index ^
-        expiresAt.millisecondsSinceEpoch;
-    return seed.toRadixString(36);
+  String _localCorrelationCode() {
+    final random = Random.secure();
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final buffer = StringBuffer();
+    for (var i = 0; i < 16; i++) {
+      buffer.write(alphabet[random.nextInt(alphabet.length)]);
+    }
+    return buffer.toString();
   }
 }
