@@ -4,7 +4,6 @@ import (
     "context"
     "net/http"
     "net/http/httptest"
-    "os"
     "testing"
     "time"
 )
@@ -115,5 +114,4 @@ func setRequiredConfigEnv(t *testing.T) {
     t.Setenv("RATE_LIMIT_RPS", "2")
     t.Setenv("RATE_LIMIT_BURST", "10")
     t.Setenv("PROVIDER_TIMEOUT", "15s")
-    _ = os.Getenv("OIDC_ISSUER")
 }
