@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -65,9 +67,12 @@ class EmergencyShareService {
     EmergencySnapshot snapshot,
     DateTime expiresAt,
   ) {
-    final seed = snapshot.capturedAt.millisecondsSinceEpoch ^
-        snapshot.type.index ^
-        expiresAt.millisecondsSinceEpoch;
-    return seed.toRadixString(36);
+    final random = Random.secure();
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final buffer = StringBuffer();
+    for (var i = 0; i < 16; i++) {
+      buffer.write(alphabet[random.nextInt(alphabet.length)]);
+    }
+    return buffer.toString();
   }
 }
