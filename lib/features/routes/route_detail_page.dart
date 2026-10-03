@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/gpx/gpx_export_service.dart';
@@ -48,6 +49,17 @@ class _RouteDetailPageState extends State<RouteDetailPage> {
         const SizedBox(height: 18),
         if (track != null) _TrackStats(track: track),
         if (route != null) _RouteStats(route: route),
+        if (track != null || route != null) ...[
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => context.push('/navigation'),
+              icon: const Icon(Icons.navigation_outlined),
+              label: const Text('Iniciar navegación GPS'),
+            ),
+          ),
+        ],
       ]),
     );
   }
