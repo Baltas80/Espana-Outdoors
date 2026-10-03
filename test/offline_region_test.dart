@@ -18,7 +18,6 @@ Map<String, Object?> _validRegion() => {
       'sha256': List.filled(64, 'a').join(),
     };
 
-
 class _FakeClient extends http.BaseClient {
   _FakeClient(this.payload);
 
@@ -82,6 +81,15 @@ void main() {
     );
   });
 
+  test('offline region metadata rejects fractional size', () {
+    final invalid = _validRegion()..['sizeBytes'] = 1024.5;
+
+    expect(
+      () => OfflineRegion.fromJson(invalid),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
   test('offline catalog requires HTTPS', () {
     expect(
       () => OfflineRegionCatalog(endpoint: Uri.parse('http://maps.example.com/catalog')),
@@ -102,5 +110,4 @@ void main() {
     expect(entries.single.id, 'madrid-2026-09');
     expect(entries.single.sha256, region['sha256']);
   });
-
 }
