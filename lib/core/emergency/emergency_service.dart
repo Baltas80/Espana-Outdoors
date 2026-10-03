@@ -26,7 +26,7 @@ class EmergencyService {
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
       ),
-    );
+    ).timeout(const Duration(seconds: 15));
 
     final batteryPercent = await _readBatteryPercent();
     final connectivity = await _readConnectivity();
