@@ -1,0 +1,30 @@
+﻿ESPAÑA OUTDOOR — CATÁLOGO DE ASSETS DE RUTAS
+Fuente única: C:\Users\SPTRLTD\Desktop\TRABAJO PRIORITARIO\Pantalla visual\Imagenes
+Destino de producción: C:\Users\SPTRLTD\Desktop\ESPAÑA OUTDOOR\assets\images\routes
+Fecha de preparación: 2026-10-04 00:21:23
+
+REGLAS:
+- Los originales de Imagenes no se modifican ni eliminan.
+- No se descargan imágenes externas.
+- Solo se incorporan al catálogo las imágenes seleccionadas de la carpeta Imagenes.
+- Las variantes externas dentro de las subcarpetas permanecen en la copia de fuente y no se incorporan automáticamente.
+
+ACTIVOS SELECCIONADOS:
+- banos-popea-bejarano -> banos_popea_bejarano.jpg
+- gargantas-infiernos -> gargantas_de_los_infiernos.jpg
+- caminito-del-rey -> caminito_del_rey.jpg
+- lagos-covadonga -> lagos_covadonga.jpg
+- cami-ronda-costa-brava -> cami_ronda_costa_brava.jpg
+- mulhacen-sierra-nevada -> mulhacen_sierra_nevada.jpg
+- ruta-volcanes-la-palma -> ruta_volcanes_la_palma.jpg
+- lagos-colomers -> lagos_colomers.jpg
+- penalara -> penalara.jpg
+- cami-de-cavalls -> cami_de_cavalls.jpg
+- picos-de-europa -> picos_de_europa.jpg
+- carros-de-foc -> carros_de_foc.jpg
+- gr11-transpirenaica -> gr11_transpirenaica.jpg
+- rio-bailon-zuheros -> canon_rio_bailon_zuheros.jpg
+- senda-teide -> senda_teide.jpg
+- pantaneros-chulilla -> pantaneros_chulilla.jpg
+- ruta-del-cares -> ruta_del_cares.jpg
+

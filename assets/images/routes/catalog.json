@@ -1,0 +1,87 @@
+﻿[
+    {
+        "id":  "banos-popea-bejarano",
+        "name":  "Baños de Popea y Arroyo del Bejarano",
+        "asset":  "assets/images/routes/banos_popea_bejarano.jpg"
+    },
+    {
+        "id":  "gargantas-infiernos",
+        "name":  "Ruta de las Gargantas de los Infiernos",
+        "asset":  "assets/images/routes/gargantas_de_los_infiernos.jpg"
+    },
+    {
+        "id":  "caminito-del-rey",
+        "name":  "Caminito del Rey",
+        "asset":  "assets/images/routes/caminito_del_rey.jpg"
+    },
+    {
+        "id":  "lagos-covadonga",
+        "name":  "Ruta de los Lagos de Covadonga",
+        "asset":  "assets/images/routes/lagos_covadonga.jpg"
+    },
+    {
+        "id":  "cami-ronda-costa-brava",
+        "name":  "Camí de Ronda / Costa Brava",
+        "asset":  "assets/images/routes/cami_ronda_costa_brava.jpg"
+    },
+    {
+        "id":  "mulhacen-sierra-nevada",
+        "name":  "Mulhacén / Sierra Nevada",
+        "asset":  "assets/images/routes/mulhacen_sierra_nevada.jpg"
+    },
+    {
+        "id":  "ruta-volcanes-la-palma",
+        "name":  "Ruta de los Volcanes — La Palma",
+        "asset":  "assets/images/routes/ruta_volcanes_la_palma.jpg"
+    },
+    {
+        "id":  "lagos-colomers",
+        "name":  "Ruta de los Lagos de Colomèrs",
+        "asset":  "assets/images/routes/lagos_colomers.jpg"
+    },
+    {
+        "id":  "penalara",
+        "name":  "Peñalara — Sierra de Guadarrama",
+        "asset":  "assets/images/routes/penalara.jpg"
+    },
+    {
+        "id":  "cami-de-cavalls",
+        "name":  "Camí de Cavalls — Menorca",
+        "asset":  "assets/images/routes/cami_de_cavalls.jpg"
+    },
+    {
+        "id":  "picos-de-europa",
+        "name":  "Picos de Europa",
+        "asset":  "assets/images/routes/picos_de_europa.jpg"
+    },
+    {
+        "id":  "carros-de-foc",
+        "name":  "Carros de Foc — Pirineo catalán",
+        "asset":  "assets/images/routes/carros_de_foc.jpg"
+    },
+    {
+        "id":  "gr11-transpirenaica",
+        "name":  "GR-11 / Transpirenaica — Pirineos",
+        "asset":  "assets/images/routes/gr11_transpirenaica.jpg"
+    },
+    {
+        "id":  "rio-bailon-zuheros",
+        "name":  "Cañón del Río Bailón — Zuheros",
+        "asset":  "assets/images/routes/canon_rio_bailon_zuheros.jpg"
+    },
+    {
+        "id":  "senda-teide",
+        "name":  "Senda del Teide — Tenerife",
+        "asset":  "assets/images/routes/senda_teide.jpg"
+    },
+    {
+        "id":  "pantaneros-chulilla",
+        "name":  "Ruta de los Pantaneros de Chulilla — Valencia",
+        "asset":  "assets/images/routes/pantaneros_chulilla.jpg"
+    },
+    {
+        "id":  "ruta-del-cares",
+        "name":  "Ruta del Cares — Picos de Europa",
+        "asset":  "assets/images/routes/ruta_del_cares.jpg"
+    }
+]
