@@ -38,6 +38,7 @@ class OfflineRegionDownloader {
     await const OfflinePackageVerifier().verifyFile(
       file,
       expectedSha256: region.sha256,
+      expectedBytes: region.sizeBytes,
       requireChecksum: requireChecksum,
     );
     return file;
@@ -51,6 +52,7 @@ class OfflineRegionDownloader {
     await const OfflinePackageVerifier().verifyFile(
       file,
       expectedSha256: region.sha256,
+      expectedBytes: region.sizeBytes,
       requireChecksum: requireChecksum,
     );
     return file;
