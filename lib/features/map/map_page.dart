@@ -9,6 +9,7 @@ import '../../app/eo_components.dart';
 import '../../core/location/location_controller.dart';
 import '../../core/location/route_recorder.dart';
 import '../../core/maps/pmtiles_style_loader.dart';
+import '../menu/menu_sheet.dart';
 
 const _mapAttribution = String.fromEnvironment(
   'MAP_ATTRIBUTION',
@@ -37,6 +38,15 @@ class _MapPageState extends ConsumerState<MapPage> {
     if (position == null) return;
     _mapController.move(LatLng(position.latitude, position.longitude), 15);
   }
+  void _openMenu() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: EOColors.night,
+      isScrollControlled: true,
+      showDragHandle: false,
+      builder: (_) => const MenuSheet(),
+    );
+  }
   @override
   void dispose() {
     _styleFuture.then((style) => style.dispose());
@@ -52,6 +62,13 @@ class _MapPageState extends ConsumerState<MapPage> {
       appBar: EOAppBar(
         title: 'Mapa',
         actions: [
+          EOIconButton(
+            icon: Icons.menu,
+            tooltip: 'Menú',
+            onPressed: _openMenu,
+            size: 44,
+          ),
+          const SizedBox(width: 4),
           EOIconButton(
             icon: Icons.download_outlined,
             tooltip: 'Mapas offline',
