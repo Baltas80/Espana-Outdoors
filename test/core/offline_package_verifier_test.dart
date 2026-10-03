@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:espana_outdoors/core/offline/offline_package_verifier.dart';
 
@@ -36,5 +37,42 @@ void main() {
     );
 
     expect(await file.exists(), isFalse);
+  });
+
+  test('rejects a package whose catalog size differs', () async {
+    final file = File(
+      Directory.systemTemp.path + '/espana-outdoors-size-mismatch.txt',
+    );
+    await file.writeAsString('abc');
+    final checksum = sha256.convert(await file.readAsBytes()).toString();
+
+    await expectLater(
+      const OfflinePackageVerifier().verifyFile(
+        file,
+        expectedSha256: checksum,
+        expectedBytes: 4,
+      ),
+      throwsStateError,
+    );
+
+    expect(await file.exists(), isFalse);
+  });
+
+  test('accepts a package when catalog size and checksum match', () async {
+    final file = File(
+      Directory.systemTemp.path + '/espana-outdoors-size-match.txt',
+    );
+    await file.writeAsString('abc');
+
+    addTearDown(() async {
+      if (await file.exists()) await file.delete();
+    });
+
+    final checksum = sha256.convert(await file.readAsBytes()).toString();
+    await const OfflinePackageVerifier().verifyFile(
+      file,
+      expectedSha256: checksum,
+      expectedBytes: 3,
+    );
   });
 }

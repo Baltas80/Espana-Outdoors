@@ -8,10 +8,19 @@ final class OfflinePackageVerifier {
   Future<void> verifyFile(
     File file, {
     required String? expectedSha256,
+    int? expectedBytes,
     bool requireChecksum = true,
   }) async {
     if (!await file.exists()) {
       throw StateError('Offline package does not exist.');
+    }
+    if (expectedBytes != null && expectedBytes <= 0) {
+      await _deleteQuietly(file);
+      throw StateError('Offline package has an invalid expected size.');
+    }
+    if (expectedBytes != null && await file.length() != expectedBytes) {
+      await _deleteQuietly(file);
+      throw StateError('Offline package size verification failed.');
     }
     final expected = expectedSha256?.trim().toLowerCase();
     if (expected == null || expected.isEmpty) {
