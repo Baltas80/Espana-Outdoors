@@ -42,3 +42,33 @@ void main() {
     expect(message, isNot(contains('40.41')));
   });
 }
+
+
+test('share code is generated with independent non-deterministic entropy', () {
+  final service = const EmergencyShareService();
+  final payload1 = service.createPayload(
+    snapshot: EmergencySnapshot(
+      type: EmergencyType.lost,
+      position: const GeoPoint(latitude: 40.4, longitude: -3.7),
+      accuracyMeters: 8,
+      capturedAt: DateTime.utc(2026, 9, 23, 12),
+      batteryPercent: 42,
+      connectivity: EmergencyConnectivity.offline,
+    ),
+  );
+  final payload2 = service.createPayload(
+    snapshot: EmergencySnapshot(
+      type: EmergencyType.lost,
+      position: const GeoPoint(latitude: 40.4, longitude: -3.7),
+      accuracyMeters: 8,
+      capturedAt: DateTime.utc(2026, 9, 23, 12),
+      batteryPercent: 42,
+      connectivity: EmergencyConnectivity.offline,
+    ),
+  );
+
+  expect(payload1.shareToken, hasLength(16));
+  expect(payload1.shareToken, matches(RegExp(r'^[a-z0-9]+$')));
+  expect(payload2.shareToken, hasLength(16));
+  expect(payload2.shareToken, isNot(payload1.shareToken));
+});
