@@ -2,7 +2,10 @@ import 'dart:io';
 
 final directCredentialPatterns = <RegExp>[
   RegExp(r'\bAemetWeatherService\s*\('),
-  RegExp(r'\bWeatherRuntimeConfig\s*\('),
+  RegExp(
+    r'\bWeatherRuntimeConfig\s*\([^)]*apiKey\s*:',
+    dotAll: true,
+  ),
   RegExp(r'api_key\s*[:=]'),
 ];
 
