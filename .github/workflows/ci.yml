@@ -15,6 +15,20 @@ permissions:
   contents: read
 
 jobs:
+  source-gateway:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: services/source-gateway/go.mod
+          cache-dependency-path: services/source-gateway/go.sum
+      - name: Test Source Gateway
+        working-directory: services/source-gateway
+        run: go test ./...
+
   flutter:
     runs-on: ubuntu-latest
     env:
