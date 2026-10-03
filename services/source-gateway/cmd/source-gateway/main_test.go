@@ -1,6 +1,9 @@
 package main
 
 import (
+    "context"
+    "net/http"
+    "net/http/httptest"
     "testing"
     "time"
 )
@@ -41,5 +44,49 @@ func TestMunicipalityCodeValidation(t *testing.T) {
         if got := validMunicipalityCode(tc.value); got != tc.ok {
             t.Fatalf("validMunicipalityCode(%q) = %v, want %v", tc.value, got, tc.ok)
         }
+    }
+}
+
+
+func TestGetJSONWithRetryRetriesTransientProviderFailures(t *testing.T) {
+    attempts := 0
+    upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        attempts++
+        if attempts < 3 {
+            http.Error(w, "temporary failure", http.StatusServiceUnavailable)
+            return
+        }
+        w.Header().Set("Content-Type", "application/json")
+        _, _ = w.Write([]byte(`{"ok":true}`))
+    }))
+    defer upstream.Close()
+
+    s := &server{client: upstream.Client()}
+    payload, err := s.getJSONWithRetry(context.Background(), upstream.URL, nil)
+    if err != nil {
+        t.Fatalf("getJSONWithRetry returned error: %v", err)
+    }
+    if got := attempts; got != 3 {
+        t.Fatalf("expected 3 attempts, got %d", got)
+    }
+    if ok, exists := payload["ok"].(bool); !exists || !ok {
+        t.Fatalf("expected successful JSON payload, got %#v", payload)
+    }
+}
+
+func TestGetJSONWithRetryDoesNotRetryPermanentClientErrors(t *testing.T) {
+    attempts := 0
+    upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        attempts++
+        http.Error(w, "bad request", http.StatusBadRequest)
+    }))
+    defer upstream.Close()
+
+    s := &server{client: upstream.Client()}
+    if _, err := s.getJSONWithRetry(context.Background(), upstream.URL, nil); err == nil {
+        t.Fatal("expected provider error")
+    }
+    if attempts != 1 {
+        t.Fatalf("expected one attempt for permanent client error, got %d", attempts)
     }
 }
