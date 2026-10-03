@@ -21,9 +21,6 @@ final class OpenIdConnectAuthService {
       clientId: config.clientId,
       redirectUrl: config.redirectUrl,
       tenantId: config.tenantId,
-      // Compatibility parameter in openidconnect 3.x; token storage uses
-      // the package's endorsed secure platform implementation.
-      encryptionKey: 'espana-outdoor-oidc-v3',
       scopes: const [
         'openid',
         'profile',
