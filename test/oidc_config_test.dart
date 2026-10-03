@@ -22,4 +22,14 @@ void main() {
 
     expect(config.isConfigured, isTrue);
   });
+
+  test('rejects non-HTTPS OIDC issuers', () {
+    final config = OidcConfig(
+      issuer: Uri.parse('http://auth.example.com/realms/espana-outdoor'),
+      clientId: 'espana-outdoor-mobile',
+      redirectUrl: 'espanaoutdoor://callback',
+    );
+
+    expect(config.isConfigured, isFalse);
+  });
 }

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 final class RescueLinkConfig {
   const RescueLinkConfig({
     required this.baseUrl,
@@ -10,14 +12,17 @@ final class RescueLinkConfig {
   bool get isConfigured =>
       baseUrl.host.isNotEmpty &&
       (baseUrl.scheme == 'https' ||
-          (allowHttpForDevelopment && baseUrl.scheme == 'http'));
+          (kDebugMode &&
+              allowHttpForDevelopment &&
+              baseUrl.scheme == 'http'));
 
   static RescueLinkConfig fromEnvironment() {
     const raw = String.fromEnvironment('RESCUE_LINK_BASE_URL');
     const allowHttp = String.fromEnvironment('ALLOW_HTTP_DEV');
     return RescueLinkConfig(
       baseUrl: Uri.tryParse(raw) ?? Uri(),
-      allowHttpForDevelopment: allowHttp == 'true',
+      allowHttpForDevelopment:
+          kDebugMode && allowHttp.trim().toLowerCase() == 'true',
     );
   }
 }

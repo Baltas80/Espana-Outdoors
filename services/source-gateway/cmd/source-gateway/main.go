@@ -137,6 +137,10 @@ func main() {
 func loadConfig(now time.Time) (config, error) {
     issuer, err := requiredEnv("OIDC_ISSUER")
     if err != nil { return config{}, err }
+    issuerURL, err := url.Parse(issuer)
+    if err != nil || issuerURL.Host == "" || issuerURL.Scheme != "https" {
+        return config{}, errors.New("OIDC_ISSUER must be HTTPS")
+    }
     audience, err := requiredEnv("OIDC_AUDIENCE")
     if err != nil { return config{}, err }
     key, err := requiredEnv("AEMET_API_KEY")
@@ -168,7 +172,7 @@ func loadConfig(now time.Time) (config, error) {
 
     return config{
         port: envOrDefault("PORT", "8080"),
-        oidcIssuer: strings.TrimRight(issuer, "/"),
+        oidcIssuer: strings.TrimRight(issuerURL.String(), "/"),
         oidcAudience: audience,
         aemetKey: key,
         aemetKeyExpiresAt: keyExpiry,

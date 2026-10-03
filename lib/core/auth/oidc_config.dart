@@ -14,7 +14,10 @@ final class OidcConfig {
   final String? tenantId;
 
   bool get isConfigured =>
-      issuer.hasScheme && issuer.host.isNotEmpty && clientId.isNotEmpty && redirectUrl.isNotEmpty;
+      issuer.scheme == 'https' &&
+      issuer.host.isNotEmpty &&
+      clientId.trim().isNotEmpty &&
+      redirectUrl.trim().isNotEmpty;
 
   static OidcConfig fromEnvironment() {
     const issuer = String.fromEnvironment('OIDC_ISSUER');
