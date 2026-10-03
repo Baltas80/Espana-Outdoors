@@ -4,6 +4,7 @@ import (
     "context"
     "net/http"
     "net/http/httptest"
+    "os"
     "testing"
     "time"
 )
@@ -89,4 +90,30 @@ func TestGetJSONWithRetryDoesNotRetryPermanentClientErrors(t *testing.T) {
     if attempts != 1 {
         t.Fatalf("expected one attempt for permanent client error, got %d", attempts)
     }
+}
+
+
+func TestLoadConfigRejectsHTTPOIDCIssuer(t *testing.T) {
+    setRequiredConfigEnv(t)
+    t.Setenv("OIDC_ISSUER", "http://auth.example.com/realms/espana-outdoor")
+
+    if _, err := loadConfig(time.Now().UTC()); err == nil {
+        t.Fatal("expected HTTP OIDC issuer to be rejected")
+    }
+}
+
+func setRequiredConfigEnv(t *testing.T) {
+    t.Helper()
+    t.Setenv("OIDC_ISSUER", "https://auth.example.com/realms/espana-outdoor")
+    t.Setenv("OIDC_AUDIENCE", "espana-outdoor")
+    t.Setenv("AEMET_API_KEY", "test-key")
+    t.Setenv("AEMET_API_KEY_EXPIRES_AT", time.Now().UTC().Add(time.Hour).Format(time.RFC3339))
+    t.Setenv("AEMET_BASE_URL", "https://opendata.aemet.es/opendata/api")
+    t.Setenv("CACHE_FRESH_TTL", "10m")
+    t.Setenv("CACHE_AGING_TTL", "10m")
+    t.Setenv("CACHE_STALE_TTL", "40m")
+    t.Setenv("RATE_LIMIT_RPS", "2")
+    t.Setenv("RATE_LIMIT_BURST", "10")
+    t.Setenv("PROVIDER_TIMEOUT", "15s")
+    _ = os.Getenv("OIDC_ISSUER")
 }
