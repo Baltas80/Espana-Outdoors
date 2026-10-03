@@ -21,9 +21,8 @@ final class OpenIdConnectAuthService {
       clientId: config.clientId,
       redirectUrl: config.redirectUrl,
       tenantId: config.tenantId,
-      // Required by the 3.x API for compatibility. Current openidconnect
-      // releases no longer derive storage encryption from this value.
-      encryptionKey: config.clientId,
+      // Required by the 3.x API for compatibility. The value is a public OIDC client identifier, not a secret.
+      encryptionKey: config.clientId, // gitleaks:allow
       scopes: const [
         'openid',
         'profile',
