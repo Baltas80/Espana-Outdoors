@@ -14,13 +14,17 @@ class AemetSourceGateway implements SourceGateway {
     required String apiKey,
     Uri? baseUri,
     http.Client? client,
+    Duration requestTimeout = const Duration(seconds: 15),
   })  : _apiKey = apiKey,
-        _baseUri = baseUri ?? Uri.parse('https://opendata.aemet.es/opendata/api/'),
-        _client = client ?? http.Client();
+        _baseUri =
+            baseUri ?? Uri.parse('https://opendata.aemet.es/opendata/api/'),
+        _client = client ?? http.Client(),
+        _requestTimeout = requestTimeout;
 
   final String _apiKey;
   final Uri _baseUri;
   final http.Client _client;
+  final Duration _requestTimeout;
 
   @override
   Future<SourceSnapshot> health(String sourceId) async {
@@ -72,10 +76,12 @@ class AemetSourceGateway implements SourceGateway {
       if (entry.value != null) query[entry.key] = '${entry.value}';
     }
 
-    final first = await _client.get(
-      _baseUri.resolve(endpoint).replace(queryParameters: query),
-      headers: const {'cache-control': 'no-cache'},
-    );
+    final first = await _client
+        .get(
+          _baseUri.resolve(endpoint).replace(queryParameters: query),
+          headers: const {'cache-control': 'no-cache'},
+        )
+        .timeout(_requestTimeout);
     _ensureSuccess(first.statusCode, 'AEMET metadata request');
 
     final envelope = jsonDecode(first.body);
@@ -88,7 +94,8 @@ class AemetSourceGateway implements SourceGateway {
       throw const FormatException('AEMET response has no datos URL.');
     }
 
-    final dataResponse = await _client.get(Uri.parse(datos));
+    final dataResponse =
+        await _client.get(Uri.parse(datos)).timeout(_requestTimeout);
     _ensureSuccess(dataResponse.statusCode, 'AEMET data request');
     return dataResponse.body;
   }
@@ -99,7 +106,11 @@ class AemetSourceGateway implements SourceGateway {
         return 'avisos/ahora/';
       default:
         if (sourceId.startsWith('aemet:')) return sourceId.substring(6);
-        throw ArgumentError.value(sourceId, 'sourceId', 'Unsupported AEMET source.');
+        throw ArgumentError.value(
+          sourceId,
+          'sourceId',
+          'Unsupported AEMET source.',
+        );
     }
   }
 
