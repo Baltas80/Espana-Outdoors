@@ -2,10 +2,16 @@ package main
 
 import (
     "context"
+    "crypto/rand"
+    "crypto/rsa"
+    "encoding/json"
     "net/http"
     "net/http/httptest"
     "testing"
     "time"
+
+    "github.com/coreos/go-oidc/v3/oidc"
+    jose "github.com/go-jose/go-jose/v4"
 )
 
 func TestFreshnessStatus(t *testing.T) {
@@ -97,6 +103,110 @@ func TestLoadConfigRejectsHTTPOIDCIssuer(t *testing.T) {
     if _, err := loadConfig(time.Now().UTC()); err == nil {
         t.Fatal("expected HTTP OIDC issuer to be rejected")
     }
+}
+
+func TestOIDCAudienceRejectsTokenIssuedForAnotherClient(t *testing.T) {
+    verifier, issuer, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    validToken := signTestIDToken(t, issuer, "espana-outdoor")
+    if _, err := verifier.Verify(context.Background(), validToken); err != nil {
+        t.Fatalf("expected token for configured audience to verify: %v", err)
+    }
+
+    foreignToken := signTestIDToken(t, issuer, "another-client")
+    if _, err := verifier.Verify(context.Background(), foreignToken); err == nil {
+        t.Fatal("expected token issued for another client to be rejected")
+    }
+}
+
+func TestOIDCAudienceRejectsMissingAudience(t *testing.T) {
+    verifier, issuer, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    key, err := rsa.GenerateKey(rand.Reader, 2048)
+    if err != nil {
+        t.Fatalf("generate signing key: %v", err)
+    }
+    signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: key}, nil)
+    if err != nil {
+        t.Fatalf("create signer: %v", err)
+    }
+    claims := map[string]any{
+        "iss": issuer,
+        "sub": "test-user",
+        "iat": time.Now().Unix(),
+        "exp": time.Now().Add(5 * time.Minute).Unix(),
+    }
+    token, err := jose.Signed(signer).Claims(claims).Serialize()
+    if err != nil {
+        t.Fatalf("serialize token: %v", err)
+    }
+
+    if _, err := verifier.Verify(context.Background(), token); err == nil {
+        t.Fatal("expected token without audience to be rejected")
+    }
+}
+
+func newTestOIDCVerifier(t *testing.T, audience string) (*oidc.IDTokenVerifier, string, func()) {
+    t.Helper()
+
+    key, err := rsa.GenerateKey(rand.Reader, 2048)
+    if err != nil {
+        t.Fatalf("generate signing key: %v", err)
+    }
+    publicJWK := jose.JSONWebKey{Key: &key.PublicKey, KeyID: "test-key", Algorithm: string(jose.RS256), Use: "sig"}
+
+    var server *httptest.Server
+    server = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        switch r.URL.Path {
+        case "/.well-known/openid-configuration":
+            w.Header().Set("Content-Type", "application/json")
+            _ = json.NewEncoder(w).Encode(map[string]string{
+                "issuer":   server.URL,
+                "jwks_uri": server.URL + "/keys",
+            })
+        case "/keys":
+            w.Header().Set("Content-Type", "application/json")
+            _ = json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{publicJWK}})
+        default:
+            http.NotFound(w, r)
+        }
+    }))
+
+    ctx := oidc.ClientContext(context.Background(), server.Client())
+    provider, err := oidc.NewProvider(ctx, server.URL)
+    if err != nil {
+        server.Close()
+        t.Fatalf("OIDC discovery failed: %v", err)
+    }
+
+    return provider.Verifier(&oidc.Config{ClientID: audience}), server.URL, server.Close
+}
+
+func signTestIDToken(t *testing.T, issuer, audience string) string {
+    t.Helper()
+
+    key, err := rsa.GenerateKey(rand.Reader, 2048)
+    if err != nil {
+        t.Fatalf("generate signing key: %v", err)
+    }
+    signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: key}, nil)
+    if err != nil {
+        t.Fatalf("create signer: %v", err)
+    }
+    claims := map[string]any{
+        "iss": issuer,
+        "sub": "test-user",
+        "aud": audience,
+        "iat": time.Now().Unix(),
+        "exp": time.Now().Add(5 * time.Minute).Unix(),
+    }
+    token, err := jose.Signed(signer).Claims(claims).Serialize()
+    if err != nil {
+        t.Fatalf("serialize token: %v", err)
+    }
+    return token
 }
 
 func setRequiredConfigEnv(t *testing.T) {
