@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -20,8 +22,18 @@ class LocationState {
 }
 
 class LocationController extends Notifier<LocationState> {
+  StreamSubscription<Position>? _subscription;
+  bool _disposed = false;
+
   @override
-  LocationState build() => const LocationState();
+  LocationState build() {
+    ref.onDispose(() {
+      _disposed = true;
+      final subscription = _subscription;
+      if (subscription != null) unawaited(subscription.cancel());
+    });
+    return const LocationState();
+  }
 
   Future<void> locate() async {
     state = const LocationState(message: 'Obteniendo ubicación…');
@@ -50,14 +62,39 @@ class LocationController extends Notifier<LocationState> {
           accuracy: LocationAccuracy.high,
         ),
       ).timeout(const Duration(seconds: 15));
+
       state = LocationState(
         position: position,
-        message: 'Ubicación obtenida.',
+        message: 'Seguimiento GPS activo.',
       );
+      _startTracking();
     } catch (_) {
       state = const LocationState(
-        message: 'No se ha podido obtener la ubicación. Comprueba el GPS e inténtalo de nuevo.',
+        message:
+            'No se ha podido obtener la ubicación. Comprueba el GPS e inténtalo de nuevo.',
       );
     }
+  }
+
+  void _startTracking() {
+    _subscription?.cancel();
+    _subscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      ),
+    ).listen(
+      (position) {
+        if (_disposed) return;
+        state = state.copyWith(
+          position: position,
+          message: 'Seguimiento GPS activo.',
+        );
+      },
+      onError: (Object _) {
+        if (_disposed) return;
+        state = state.copyWith(message: 'Seguimiento GPS interrumpido.');
+      },
+    );
   }
 }
