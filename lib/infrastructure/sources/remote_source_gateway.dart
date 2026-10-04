@@ -51,6 +51,14 @@ final class RemoteSourceGateway implements SourceGateway {
       throw const FormatException('Invalid source gateway health response.');
     }
 
+    final responseSourceId = json['sourceId'];
+    if (responseSourceId != null && responseSourceId != sourceId) {
+      throw const FormatException('Source gateway returned a mismatched sourceId.');
+    }
+
+    final kind = _parseSourceKind(json['kind']);
+    final status = _parseSourceStatus(json['status']);
+
     final observedAt = DateTime.tryParse('${json['observedAt']}')?.toUtc();
     if (observedAt == null) {
       throw const FormatException(
@@ -67,20 +75,17 @@ final class RemoteSourceGateway implements SourceGateway {
       );
     }
 
+    final licenseUrl = _parseLicenseUrl(json['licenseUrl']);
+    final attribution = _parseOptionalString(json['attribution'], 'attribution');
+
     return SourceSnapshot(
       sourceId: sourceId,
-      kind: SourceKind.values.firstWhere(
-        (value) => value.name == json['kind'],
-        orElse: () => SourceKind.official,
-      ),
-      status: SourceStatus.values.firstWhere(
-        (value) => value.name == json['status'],
-        orElse: () => SourceStatus.unavailable,
-      ),
+      kind: kind,
+      status: status,
       observedAt: observedAt,
       expiresAt: expiresAt,
-      licenseUrl: json['licenseUrl'] as String?,
-      attribution: json['attribution'] as String?,
+      licenseUrl: licenseUrl,
+      attribution: attribution,
     );
   }
 
@@ -156,6 +161,40 @@ final class RemoteSourceGateway implements SourceGateway {
     return Uri.parse(Uri.encodeFull('$normalized$path')).replace(
       queryParameters: queryParameters,
     );
+  }
+
+  static SourceKind _parseSourceKind(Object? value) {
+    for (final kind in SourceKind.values) {
+      if (kind.name == value) return kind;
+    }
+    throw FormatException('Unknown source kind: $value');
+  }
+
+  static SourceStatus _parseSourceStatus(Object? value) {
+    for (final status in SourceStatus.values) {
+      if (status.name == value) return status;
+    }
+    throw FormatException('Unknown source status: $value');
+  }
+
+  static String? _parseOptionalString(Object? value, String field) {
+    if (value == null) return null;
+    if (value is! String || value.trim().isEmpty) {
+      throw FormatException('Source gateway field $field must be a non-empty string.');
+    }
+    return value;
+  }
+
+  static String? _parseLicenseUrl(Object? value) {
+    if (value == null) return null;
+    if (value is! String || value.trim().isEmpty) {
+      throw const FormatException('Source gateway licenseUrl must be a non-empty string.');
+    }
+    final uri = Uri.tryParse(value);
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+      throw const FormatException('Source gateway licenseUrl must use HTTPS.');
+    }
+    return value;
   }
 
   static void _validateSourceId(String sourceId) {
