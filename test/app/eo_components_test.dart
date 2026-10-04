@@ -60,7 +60,7 @@ void main() {
 
     expect(find.text('España Outdoor'), findsOneWidget);
     expect(find.text('Iniciar ruta'), findsOneWidget);
-    final scrollable = find.ancestor(
+    final scrollable = find.descendant(
       of: find.byKey(const Key('component-list')),
       matching: find.byType(Scrollable),
     );
