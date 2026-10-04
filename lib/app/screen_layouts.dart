@@ -105,7 +105,7 @@ abstract final class EOScreenLayouts {
     hasBottomNavigation: true,
     slots: [
       EOLayoutSlot('map', EOLayoutRect(0, 0, 390, 844)),
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('search', EOLayoutRect(20, 88, 350, 52)),
       EOLayoutSlot('mapControls', EOLayoutRect(314, 604, 56, 128)),
       EOLayoutSlot('gps', EOLayoutRect(314, 548, 56, 56)),
@@ -131,7 +131,7 @@ abstract final class EOScreenLayouts {
     title: 'Detalle de ruta',
     slots: [
       EOLayoutSlot('heroPhoto', EOLayoutRect(0, 0, 390, 300)),
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('title', EOLayoutRect(20, 246, 350, 54)),
       EOLayoutSlot('summary', EOLayoutRect(20, 324, 350, 92)),
       EOLayoutSlot('description', EOLayoutRect(20, 436, 350, 128)),
@@ -158,7 +158,7 @@ abstract final class EOScreenLayouts {
     title: 'Grabación',
     slots: [
       EOLayoutSlot('map', EOLayoutRect(0, 0, 390, 844)),
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('recordingStatus', EOLayoutRect(20, 96, 350, 72)),
       EOLayoutSlot('liveStats', EOLayoutRect(20, 184, 350, 96)),
       EOLayoutSlot('gps', EOLayoutRect(314, 560, 56, 56)),
@@ -171,7 +171,7 @@ abstract final class EOScreenLayouts {
     id: EOScreenId.myRoutes,
     title: 'Mis rutas',
     slots: [
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('filters', EOLayoutRect(20, 92, 350, 44)),
       EOLayoutSlot('routeList', EOLayoutRect(20, 152, 350, 548)),
       EOLayoutSlot('importAction', EOLayoutRect(20, 720, 168, 52)),
@@ -185,7 +185,7 @@ abstract final class EOScreenLayouts {
     id: EOScreenId.offlineMaps,
     title: 'Mapas offline',
     slots: [
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('storageSummary', EOLayoutRect(20, 96, 350, 88)),
       EOLayoutSlot('regionSelector', EOLayoutRect(20, 200, 350, 56)),
       EOLayoutSlot('downloadList', EOLayoutRect(20, 272, 350, 388)),
@@ -199,7 +199,7 @@ abstract final class EOScreenLayouts {
     id: EOScreenId.weather,
     title: 'Meteorología',
     slots: [
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('location', EOLayoutRect(20, 96, 350, 48)),
       EOLayoutSlot('currentWeather', EOLayoutRect(20, 160, 350, 176)),
       EOLayoutSlot('forecast', EOLayoutRect(20, 352, 350, 160)),
@@ -214,7 +214,7 @@ abstract final class EOScreenLayouts {
     id: EOScreenId.instruments,
     title: 'Instrumentos',
     slots: [
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('primaryInstrument', EOLayoutRect(20, 96, 350, 260)),
       EOLayoutSlot('instrumentGrid', EOLayoutRect(20, 376, 350, 276)),
       EOLayoutSlot('quickTools', EOLayoutRect(20, 672, 350, 80)),
@@ -228,7 +228,7 @@ abstract final class EOScreenLayouts {
     title: 'Naturaleza / POI',
     slots: [
       EOLayoutSlot('map', EOLayoutRect(0, 0, 390, 844)),
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('filters', EOLayoutRect(20, 92, 350, 48)),
       EOLayoutSlot('poiPanel', EOLayoutRect(0, 560, 390, 208)),
       EOLayoutSlot('mapControls', EOLayoutRect(314, 432, 56, 112)),
@@ -241,7 +241,7 @@ abstract final class EOScreenLayouts {
     id: EOScreenId.settings,
     title: 'Ajustes',
     slots: [
-      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 56)),
+      EOLayoutSlot('topBar', EOLayoutRect(20, 24, 350, 64)),
       EOLayoutSlot('account', EOLayoutRect(20, 96, 350, 88)),
       EOLayoutSlot('settingsList', EOLayoutRect(20, 200, 350, 500)),
       EOLayoutSlot('dangerZone', EOLayoutRect(20, 716, 350, 48)),
