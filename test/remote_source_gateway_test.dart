@@ -55,6 +55,7 @@ void main() {
     expect(records.single['title'], 'Aviso');
     expect(records.single['level'], 'yellow');
   });
+
   test('rejects malformed freshness timestamps instead of inventing current time', () async {
     final client = MockClient((_) async {
       return http.Response(
@@ -88,4 +89,81 @@ void main() {
     );
   });
 
+  test('rejects unknown source kind instead of falling back to official', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'kind': 'unknown',
+          'status': 'healthy',
+          'observedAt': '2026-09-23T12:00:00Z',
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
+  });
+
+  test('rejects unknown source status instead of falling back to unavailable', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'kind': 'official',
+          'status': 'unknown',
+          'observedAt': '2026-09-23T12:00:00Z',
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
+  });
+
+  test('rejects non-HTTPS license URLs', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'kind': 'official',
+          'status': 'healthy',
+          'observedAt': '2026-09-23T12:00:00Z',
+          'licenseUrl': 'http://example.test/license',
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
+  });
+
+  test('rejects mismatched source IDs returned by gateway', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'sourceId': 'different-source',
+          'kind': 'official',
+          'status': 'healthy',
+          'observedAt': '2026-09-23T12:00:00Z',
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
+  });
 }
