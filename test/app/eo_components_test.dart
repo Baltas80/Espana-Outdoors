@@ -63,7 +63,10 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Mapa de España'),
       300,
-      scrollable: find.byType(Scrollable).last,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('component-list')),
+        matching: find.byType(Scrollable),
+      ),
     );
     expect(find.text('Mapa de España'), findsOneWidget);
     expect(find.text('320 m'), findsOneWidget);
