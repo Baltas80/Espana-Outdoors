@@ -1,0 +1,36 @@
+name: Source Gateway OIDC
+
+on:
+  push:
+    paths:
+      - 'services/source-gateway/**'
+      - '.github/workflows/source-gateway-oidc.yml'
+  pull_request:
+    paths:
+      - 'services/source-gateway/**'
+      - '.github/workflows/source-gateway-oidc.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  oidc-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/source-gateway
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/source-gateway/go.mod
+          cache: true
+
+      - name: Run OIDC audience tests
+        run: go test -run 'Test.*Audience|Test.*OIDC' -v ./...
+
+      - name: Run full source-gateway test suite
+        run: go test ./...
