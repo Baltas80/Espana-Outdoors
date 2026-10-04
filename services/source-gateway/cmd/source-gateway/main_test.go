@@ -106,29 +106,25 @@ func TestLoadConfigRejectsHTTPOIDCIssuer(t *testing.T) {
 }
 
 func TestOIDCAudienceRejectsTokenIssuedForAnotherClient(t *testing.T) {
-    verifier, issuer, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
     defer cleanup()
 
-    validToken := signTestIDToken(t, issuer, "espana-outdoor")
+    validToken := signTestIDToken(t, signingKey, issuer, "espana-outdoor")
     if _, err := verifier.Verify(context.Background(), validToken); err != nil {
         t.Fatalf("expected token for configured audience to verify: %v", err)
     }
 
-    foreignToken := signTestIDToken(t, issuer, "another-client")
+    foreignToken := signTestIDToken(t, signingKey, issuer, "another-client")
     if _, err := verifier.Verify(context.Background(), foreignToken); err == nil {
         t.Fatal("expected token issued for another client to be rejected")
     }
 }
 
 func TestOIDCAudienceRejectsMissingAudience(t *testing.T) {
-    verifier, issuer, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
     defer cleanup()
 
-    key, err := rsa.GenerateKey(rand.Reader, 2048)
-    if err != nil {
-        t.Fatalf("generate signing key: %v", err)
-    }
-    signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: key}, nil)
+    signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: signingKey}, nil)
     if err != nil {
         t.Fatalf("create signer: %v", err)
     }
@@ -148,7 +144,7 @@ func TestOIDCAudienceRejectsMissingAudience(t *testing.T) {
     }
 }
 
-func newTestOIDCVerifier(t *testing.T, audience string) (*oidc.IDTokenVerifier, string, func()) {
+func newTestOIDCVerifier(t *testing.T, audience string) (*oidc.IDTokenVerifier, string, *rsa.PrivateKey, func()) {
     t.Helper()
 
     key, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -181,16 +177,12 @@ func newTestOIDCVerifier(t *testing.T, audience string) (*oidc.IDTokenVerifier, 
         t.Fatalf("OIDC discovery failed: %v", err)
     }
 
-    return provider.Verifier(&oidc.Config{ClientID: audience}), server.URL, server.Close
+    return provider.Verifier(&oidc.Config{ClientID: audience}), server.URL, key, server.Close
 }
 
-func signTestIDToken(t *testing.T, issuer, audience string) string {
+func signTestIDToken(t *testing.T, key *rsa.PrivateKey, issuer, audience string) string {
     t.Helper()
 
-    key, err := rsa.GenerateKey(rand.Reader, 2048)
-    if err != nil {
-        t.Fatalf("generate signing key: %v", err)
-    }
     signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: key}, nil)
     if err != nil {
         t.Fatalf("create signer: %v", err)
