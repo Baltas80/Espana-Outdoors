@@ -33,6 +33,7 @@ permissions:
 env:
   APP_ENV: staging
   OFFLINE_CATALOG_URL: https://espana-outdoor-r2-uploader.espana-outdoor.workers.dev/catalog/spain.json
+  MAP_PMTILES_URL: https://maps.espanaoutdoor.es/spain.pmtiles
   VALHALLA_BASE_URL: https://routing.espanaoutdoor.es
   SOURCE_GATEWAY_BASE_URL: https://api.espanaoutdoor.es
   RESCUE_LINK_BASE_URL: https://rescue.espanaoutdoor.es
@@ -50,7 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in VALHALLA_BASE_URL OFFLINE_CATALOG_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL OIDC_ISSUER; do
+          for name in VALHALLA_BASE_URL OFFLINE_CATALOG_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL OIDC_ISSUER MAP_PMTILES_URL; do
             value="${!name:-}"; test -n "$value"
             case "$value" in https://*) ;; *) echo "$name must use HTTPS"; exit 1;; esac
           done
@@ -104,12 +105,13 @@ jobs:
             --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL" \
             --dart-define=SOURCE_GATEWAY_BASE_URL="$SOURCE_GATEWAY_BASE_URL" \
             --dart-define=OFFLINE_CATALOG_URL="$OFFLINE_CATALOG_URL" \
+            --dart-define=MAP_PMTILES_URL="$MAP_PMTILES_URL" \
             --dart-define=RESCUE_LINK_BASE_URL="$RESCUE_LINK_BASE_URL" \
             --dart-define=OIDC_ISSUER="$OIDC_ISSUER" \
             --dart-define=OIDC_CLIENT_ID="$OIDC_CLIENT_ID" \
             --dart-define=OIDC_REDIRECT_URI="$OIDC_REDIRECT_URI" \
             --dart-define=MAP_ATTRIBUTION="$MAP_ATTRIBUTION" \
-            --dart-define=ANDROID_OFFLINE_SMOKE=true
+            --dart-define=ANDROID_OFFLINE_SMOKE=false
       - name: Verify APK
         if: always()
         run: |
@@ -154,7 +156,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           emulator-boot-timeout: 900
-          script: bash tool/smoke_android_map.sh build/app/outputs/flutter-apk/app-release.apk offline
+          script: bash tool/smoke_android_map.sh build/app/outputs/flutter-apk/app-release.apk online
       - name: Upload Android map smoke evidence
         if: always()
         uses: actions/upload-artifact@v7.0.0
