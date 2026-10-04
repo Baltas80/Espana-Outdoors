@@ -12,6 +12,7 @@ import (
 
     "github.com/coreos/go-oidc/v3/oidc"
     jose "github.com/go-jose/go-jose/v4"
+    "github.com/go-jose/go-jose/v4/jwt"
 )
 
 func TestFreshnessStatus(t *testing.T) {
@@ -40,7 +41,7 @@ func TestFreshnessStatus(t *testing.T) {
 func TestMunicipalityCodeValidation(t *testing.T) {
     for _, tc := range []struct {
         value string
-        ok bool
+        ok    bool
     }{
         {"03099", true},
         {"1234", false},
@@ -134,7 +135,7 @@ func TestOIDCAudienceRejectsMissingAudience(t *testing.T) {
         "iat": time.Now().Unix(),
         "exp": time.Now().Add(5 * time.Minute).Unix(),
     }
-    token, err := jose.Signed(signer).Claims(claims).Serialize()
+    token, err := jwt.Signed(signer).Claims(claims).Serialize()
     if err != nil {
         t.Fatalf("serialize token: %v", err)
     }
@@ -194,7 +195,7 @@ func signTestIDToken(t *testing.T, key *rsa.PrivateKey, issuer, audience string)
         "iat": time.Now().Unix(),
         "exp": time.Now().Add(5 * time.Minute).Unix(),
     }
-    token, err := jose.Signed(signer).Claims(claims).Serialize()
+    token, err := jwt.Signed(signer).Claims(claims).Serialize()
     if err != nil {
         t.Fatalf("serialize token: %v", err)
     }
