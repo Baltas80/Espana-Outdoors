@@ -22,7 +22,7 @@ class OutdoorVisualHero extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            SvgPicture.asset(asset, fit: BoxFit.cover, semanticsLabel: title),
+            _VisualAsset(asset: asset, semanticsLabel: title),
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -68,7 +68,7 @@ class OutdoorVisualHero extends StatelessWidget {
   }
 }
 
-class OutdoorAssetIcon extends StatelessWidget {
+class _VisualAsset extends StatelessWidget {\n  const _VisualAsset({required this.asset, required this.semanticsLabel});\n\n  final String asset;\n  final String semanticsLabel;\n\n  @override\n  Widget build(BuildContext context) {\n    if (asset.toLowerCase().endsWith('.svg')) {\n      return SvgPicture.asset(asset, fit: BoxFit.cover, semanticsLabel: semanticsLabel);\n    }\n    return Image.asset(\n      asset,\n      fit: BoxFit.cover,\n      filterQuality: FilterQuality.high,\n      semanticLabel: semanticsLabel,\n    );\n  }\n}\n\nclass OutdoorAssetIcon extends StatelessWidget {
   const OutdoorAssetIcon({
     super.key,
     required this.asset,
