@@ -32,8 +32,8 @@ permissions:
 
 env:
   APP_ENV: staging
-  OFFLINE_CATALOG_URL: https://espana-outdoor-r2-uploader.espana-outdoor.workers.dev/catalog/spain.json
-  MAP_PMTILES_URL: https://maps.espanaoutdoor.es/spain.pmtiles
+  OFFLINE_CATALOG_URL: https://maps.espanaoutdoor.es/catalog/spain.json
+  MAP_PMTILES_URL: ''
   VALHALLA_BASE_URL: https://routing.espanaoutdoor.es
   SOURCE_GATEWAY_BASE_URL: https://api.espanaoutdoor.es
   RESCUE_LINK_BASE_URL: https://rescue.espanaoutdoor.es
@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in VALHALLA_BASE_URL OFFLINE_CATALOG_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL OIDC_ISSUER MAP_PMTILES_URL; do
+          for name in VALHALLA_BASE_URL OFFLINE_CATALOG_URL SOURCE_GATEWAY_BASE_URL RESCUE_LINK_BASE_URL OIDC_ISSUER; do
             value="${!name:-}"; test -n "$value"
             case "$value" in https://*) ;; *) echo "$name must use HTTPS"; exit 1;; esac
           done
