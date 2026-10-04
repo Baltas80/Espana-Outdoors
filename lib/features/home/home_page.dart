@@ -39,7 +39,7 @@ class HomePage extends StatelessWidget {
                 delegate: SliverChildListDelegate(
                   [
                     const OutdoorVisualHero(
-                      asset: 'assets/visuals/hero_routes.svg',
+                      asset: 'assets/visuals/outdoor_photo_atlas.jpg',
                       title: 'Explora España',
                       subtitle: 'Rutas, naturaleza y seguridad en una sola experiencia.',
                     ),
