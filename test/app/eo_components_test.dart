@@ -62,7 +62,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Mapa de España'),
       300,
-      scrollable: find.byType(Scrollable),
+      scrollable: find.byType(ListView),
     );
     expect(find.text('Mapa de España'), findsOneWidget);
     expect(find.text('320 m'), findsOneWidget);
