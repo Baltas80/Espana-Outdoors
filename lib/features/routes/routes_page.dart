@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/outdoor_visuals.dart';
@@ -63,8 +62,8 @@ class _RoutesPageState extends State<RoutesPage> {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [
           const OutdoorVisualHero(
-            asset: 'assets/visuals/hero_routes.svg',
-            title: 'Planifica tu próxima salida',
+            asset: 'assets/images/routes/cami_ronda_costa_brava.jpg',
+            title: 'Descubre rutas por España',
             subtitle: 'Rutas con contexto y preparación offline.',
           ),
           const SizedBox(height: 14),
@@ -93,7 +92,7 @@ class _RoutesPageState extends State<RoutesPage> {
           ),
           const SizedBox(height: 16),
           _RouteVisualCard(
-            asset: 'assets/visuals/hero_routes.svg',
+            asset: 'assets/images/routes/lagos_covadonga.jpg',
             icon: 'assets/visuals/icons/routes.svg',
             title: 'Lagos de Covadonga',
             subtitle: 'Picos de Europa · Asturias',
@@ -102,19 +101,19 @@ class _RoutesPageState extends State<RoutesPage> {
           ),
           const SizedBox(height: 12),
           _RouteVisualCard(
-            asset: 'assets/visuals/hero_natura.svg',
+            asset: 'assets/images/routes/mulhacen_sierra_nevada.jpg',
             icon: 'assets/visuals/icons/natura.svg',
-            title: 'Peñalara por la Cuerda Larga',
-            subtitle: 'Sierra de Guadarrama · Madrid',
+            title: 'Mulhacén · Sierra Nevada',
+            subtitle: 'Sierra Nevada · Granada',
             meta: 'DIFÍCIL · 18,7 km · ↑ 1.320 m · 7–8 h',
             onTap: () => context.push('/routes/planner'),
           ),
           const SizedBox(height: 12),
           _RouteVisualCard(
-            asset: 'assets/visuals/hero_map.svg',
+            asset: 'assets/images/routes/caminito_del_rey.jpg',
             icon: 'assets/visuals/icons/map.svg',
-            title: 'Ruta de los Acantilados',
-            subtitle: 'Costa da Morte · Galicia',
+            title: 'Caminito del Rey',
+            subtitle: 'Málaga · Andalucía',
             meta: 'FÁCIL · 8,3 km · ↑ 210 m · 2–3 h',
             onTap: () => context.push('/routes/planner'),
           ),
@@ -192,7 +191,7 @@ class _RouteVisualCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            SvgPicture.asset(asset, fit: BoxFit.cover),
+            Image.asset(\n              asset,\n              fit: BoxFit.cover,\n              filterQuality: FilterQuality.high,\n              semanticLabel: title,\n            ),
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
