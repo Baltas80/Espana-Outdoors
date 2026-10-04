@@ -191,7 +191,12 @@ class _RouteVisualCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(\n              asset,\n              fit: BoxFit.cover,\n              filterQuality: FilterQuality.high,\n              semanticLabel: title,\n            ),
+            Image.asset(
+              asset,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
+              semanticLabel: title,
+            ),
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
