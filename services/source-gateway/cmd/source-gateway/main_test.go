@@ -106,6 +106,15 @@ func TestLoadConfigRejectsHTTPOIDCIssuer(t *testing.T) {
     }
 }
 
+func TestLoadConfigRequiresOIDCRequiredRole(t *testing.T) {
+    setRequiredConfigEnv(t)
+    t.Setenv("OIDC_REQUIRED_ROLE", "")
+
+    if _, err := loadConfig(time.Now().UTC()); err == nil {
+        t.Fatal("expected missing OIDC_REQUIRED_ROLE to be rejected")
+    }
+}
+
 func TestOIDCAudienceRejectsTokenIssuedForAnotherClient(t *testing.T) {
     verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
     defer cleanup()
@@ -307,6 +316,7 @@ func setRequiredConfigEnv(t *testing.T) {
     t.Helper()
     t.Setenv("OIDC_ISSUER", "https://auth.example.com/realms/espana-outdoor")
     t.Setenv("OIDC_AUDIENCE", "espana-outdoor")
+    t.Setenv("OIDC_REQUIRED_ROLE", "source.read")
     t.Setenv("AEMET_API_KEY", "fixture")
     t.Setenv("AEMET_API_KEY_EXPIRES_AT", time.Now().UTC().Add(time.Hour).Format(time.RFC3339))
     t.Setenv("AEMET_BASE_URL", "https://opendata.aemet.es/opendata/api")
