@@ -16,6 +16,8 @@ permissions:
 jobs:
   oidc-tests:
     runs-on: ubuntu-latest
+    env:
+      OIDC_REQUIRED_ROLE: source.read
     defaults:
       run:
         working-directory: services/source-gateway
