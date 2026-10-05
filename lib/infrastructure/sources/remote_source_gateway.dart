@@ -113,20 +113,17 @@ final class RemoteSourceGateway implements SourceGateway {
     }
 
     final json = jsonDecode(response.body);
-    if (json is List) {
-      return [
-        for (final item in json)
-          if (item is Map) Map<String, Object?>.from(item),
-      ];
+    if (json is! Map<String, dynamic> || json['data'] is! List) {
+      throw const FormatException(
+        'Invalid source gateway data envelope.',
+      );
     }
-    if (json is Map && json['data'] is List) {
-      final data = json['data'] as List;
-      return [
-        for (final item in data)
-          if (item is Map) Map<String, Object?>.from(item),
-      ];
-    }
-    throw const FormatException('Invalid source gateway data response.');
+    _validateDataEnvelope(json);
+    final data = json['data'] as List;
+    return [
+      for (final item in data)
+        if (item is Map) Map<String, Object?>.from(item),
+    ];
   }
 
   Future<Map<String, String>> _headers() async {
@@ -195,6 +192,46 @@ final class RemoteSourceGateway implements SourceGateway {
       throw const FormatException('Source gateway licenseUrl must use HTTPS.');
     }
     return value;
+  }
+
+  static void _validateDataEnvelope(Map<String, dynamic> json) {
+    const topLevel = {'data', 'provenance', 'freshness'};
+    final unexpected = json.keys.where((key) => !topLevel.contains(key));
+    if (unexpected.isNotEmpty) {
+      throw FormatException(
+        'Source gateway data envelope has unexpected fields: ' +
+            unexpected.join(', ') +
+            '.',
+      );
+    }
+
+    final provenance = json['provenance'];
+    if (provenance is! Map) {
+      throw const FormatException('Source gateway provenance is missing or malformed.');
+    }
+    final provenanceKeys = provenance.keys.map((key) => '$key').toSet();
+    const expectedProvenance = {'source', 'licenseUrl', 'observedAt'};
+    if (!provenanceKeys.containsAll(expectedProvenance) ||
+        provenanceKeys.length != expectedProvenance.length) {
+      throw const FormatException('Source gateway provenance schema is invalid.');
+    }
+
+    final freshness = json['freshness'];
+    if (freshness is! Map) {
+      throw const FormatException('Source gateway freshness is missing or malformed.');
+    }
+    final freshnessKeys = freshness.keys.map((key) => '$key').toSet();
+    const expectedFreshness = {'status', 'fetchedAt'};
+    if (!freshnessKeys.containsAll(expectedFreshness) ||
+        freshnessKeys.length != expectedFreshness.length) {
+      throw const FormatException('Source gateway freshness schema is invalid.');
+    }
+
+    final status = freshness['status'];
+    if (status is! String ||
+        !const {'current', 'aging', 'stale'}.contains(status)) {
+      throw const FormatException('Source gateway freshness status is invalid.');
+    }
   }
 
   static void _validateSourceId(String sourceId) {
