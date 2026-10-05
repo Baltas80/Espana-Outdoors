@@ -87,6 +87,14 @@ jobs:
         with:
           category: /language:go
 
+  web-og-image-policy:
+    name: OG image policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Validate first-party OG images
+        run: python3 tool/check_og_image_policy.py
+
   dart-static-analysis:
     name: Dart static analysis (CodeQL unavailable)
     runs-on: ubuntu-latest
