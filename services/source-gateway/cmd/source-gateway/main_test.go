@@ -145,7 +145,7 @@ func TestOIDCAudienceRejectsMissingAudience(t *testing.T) {
     }
 }
 
-func TestOIDCJWTR​​ejectsWrongIssuer(t *testing.T) {
+func TestOIDCJWTRejectsWrongIssuer(t *testing.T) {
     verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
     defer cleanup()
 
@@ -185,7 +185,7 @@ func TestOIDCJWTRejectsNotYetValidToken(t *testing.T) {
 }
 
 func TestOIDCJWTRejectsInvalidSignature(t *testing.T) {
-    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    verifier, issuer, _, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
     defer cleanup()
 
     otherKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -197,8 +197,15 @@ func TestOIDCJWTRejectsInvalidSignature(t *testing.T) {
     if _, err := verifier.Verify(context.Background(), token); err == nil {
         t.Fatal("expected token with invalid signature to be rejected")
     }
+}
 
-    _ = signingKey
+func TestOIDCJWTRejectsMalformedToken(t *testing.T) {
+    verifier, _, _, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    if _, err := verifier.Verify(context.Background(), "not-a-jwt"); err == nil {
+        t.Fatal("expected malformed token to be rejected")
+    }
 }
 
 func newTestOIDCVerifier(t *testing.T, audience string) (*oidc.IDTokenVerifier, string, *rsa.PrivateKey, func()) {
