@@ -16,11 +16,20 @@
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["official", "community", "derived"]
+          "enum": [
+            "official",
+            "community",
+            "derived"
+          ]
         },
         "status": {
           "type": "string",
-          "enum": ["healthy", "degraded", "unavailable", "stale"]
+          "enum": [
+            "healthy",
+            "degraded",
+            "unavailable",
+            "stale"
+          ]
         },
         "observedAt": {
           "type": "string",
@@ -44,7 +53,11 @@
     "dataEnvelope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["data", "provenance", "freshness"],
+      "required": [
+        "data",
+        "provenance",
+        "freshness"
+      ],
       "properties": {
         "data": {
           "type": "array",
@@ -55,7 +68,11 @@
         "provenance": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["source", "licenseUrl", "observedAt"],
+          "required": [
+            "source",
+            "licenseUrl",
+            "observedAt"
+          ],
           "properties": {
             "source": {
               "type": "string",
@@ -75,11 +92,18 @@
         "freshness": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["status", "fetchedAt"],
+          "required": [
+            "status",
+            "fetchedAt"
+          ],
           "properties": {
             "status": {
               "type": "string",
-              "enum": ["current", "aging", "stale"]
+              "enum": [
+                "current",
+                "aging",
+                "stale"
+              ]
             },
             "fetchedAt": {
               "type": "string",
@@ -89,5 +113,13 @@
         }
       }
     }
-  }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/health"
+    },
+    {
+      "$ref": "#/$defs/dataEnvelope"
+    }
+  ]
 }
