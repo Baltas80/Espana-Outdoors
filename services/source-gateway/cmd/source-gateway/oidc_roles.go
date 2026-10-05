@@ -3,14 +3,15 @@ package main
 import (
     "errors"
     "fmt"
+    "strings"
 )
 
 // authorizeClientRole accepts only a role explicitly assigned to the configured
 // OIDC client in resource_access. Realm-wide roles and roles belonging to any
 // other client are deliberately not considered authorization for this service.
 func authorizeClientRole(claims map[string]any, clientID, requiredRole string) error {
-    clientID = stringsTrim(clientID)
-    requiredRole = stringsTrim(requiredRole)
+    clientID = strings.TrimSpace(clientID)
+    requiredRole = strings.TrimSpace(requiredRole)
     if clientID == "" || requiredRole == "" {
         return errors.New("OIDC client and required role are required")
     }
@@ -32,19 +33,9 @@ func authorizeClientRole(claims map[string]any, clientID, requiredRole string) e
 
     for _, rawRole := range roles {
         role, ok := rawRole.(string)
-        if ok && stringsTrim(role) == requiredRole {
+        if ok && strings.TrimSpace(role) == requiredRole {
             return nil
         }
     }
     return fmt.Errorf("required client role %q missing", requiredRole)
-}
-
-func stringsTrim(value string) string {
-    for len(value) > 0 && (value[0] == ' ' || value[0] == '\t' || value[0] == '\n' || value[0] == '\r') {
-        value = value[1:]
-    }
-    for len(value) > 0 && (value[len(value)-1] == ' ' || value[len(value)-1] == '\t' || value[len(value)-1] == '\n' || value[len(value)-1] == '\r') {
-        value = value[:len(value)-1]
-    }
-    return value
 }
