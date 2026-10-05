@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espanaoutdoor.es/schemas/source-gateway.json",
+  "title": "España Outdoor Source Gateway data envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data", "provenance", "freshness"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "date",
+          "condition",
+          "min",
+          "max",
+          "precipitationProbability",
+          "precipitationMm",
+          "windSpeed",
+          "windDirection"
+        ],
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "condition": {
+            "type": "string",
+            "enum": ["clear", "partlyCloudy", "cloudy", "rain", "storm", "snow", "fog", "unknown"]
+          },
+          "min": { "type": ["number", "null"] },
+          "max": { "type": ["number", "null"] },
+          "precipitationProbability": { "type": ["number", "null"] },
+          "precipitationMm": { "type": ["number", "null"] },
+          "windSpeed": { "type": ["number", "null"] },
+          "windDirection": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "licenseUrl", "observedAt"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "licenseUrl": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "observedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "fetchedAt"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["current", "aging", "stale"]
+        },
+        "fetchedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
