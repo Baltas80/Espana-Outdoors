@@ -101,7 +101,35 @@ final class RemoteSourceGateway implements SourceGateway {
       );
     }
 
-    return [for (final item in data) _parseDataRecord(item)];
+    final provenance = json['provenance'] as Map;
+    final freshness = json['freshness'] as Map;
+    return SourceDataSnapshot(
+      data: [for (final item in data) _parseDataRecord(item)],
+      provenance: SourceProvenance(
+        source: _parseRequiredString(
+          provenance['source'],
+          'provenance.source',
+        ),
+        licenseUrl: _parseRequiredHttpsUrl(
+          provenance['licenseUrl'],
+          'provenance.licenseUrl',
+        ),
+        observedAt: _parseDateTime(
+          provenance['observedAt'],
+          'provenance.observedAt',
+        ),
+      ),
+      freshness: SourceFreshness(
+        status: _parseRequiredString(
+          freshness['status'],
+          'freshness.status',
+        ),
+        fetchedAt: _parseDateTime(
+          freshness['fetchedAt'],
+          'freshness.fetchedAt',
+        ),
+      ),
+    );
   }
 
   Future<Map<String, String>> _headers() async {
