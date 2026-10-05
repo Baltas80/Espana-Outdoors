@@ -192,6 +192,27 @@ func TestOIDCJWTRejectsNotYetValidToken(t *testing.T) {
     }
 }
 
+func TestOIDCJWTRejectsFutureIssuedAt(t *testing.T) {
+    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    token := signTestIDTokenWithClaims(t, signingKey, issuer, "espana-outdoor", map[string]any{
+        "iat": time.Now().Add(5 * time.Minute).Unix(),
+    })
+    verified, err := verifier.Verify(context.Background(), token)
+    if err != nil {
+        t.Fatalf("expected signature/issuer/audience validation to pass before temporal claim check: %v", err)
+    }
+
+    var claims map[string]any
+    if err := verified.Claims(&claims); err != nil {
+        t.Fatalf("decode claims: %v", err)
+    }
+    if err := validateTemporalClaims(claims, time.Now().UTC()); err == nil {
+        t.Fatal("expected future iat token to be rejected by gateway temporal validation")
+    }
+}
+
 func TestOIDCJWTRejectsInvalidSignature(t *testing.T) {
     verifier, issuer, _, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
     defer cleanup()
