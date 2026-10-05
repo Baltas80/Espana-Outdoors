@@ -616,7 +616,16 @@ func freshnessStatus(now time.Time, entry cacheEntry) string {
 }
 
 func validateTemporalClaims(claims map[string]any, now time.Time) error {
-    raw, ok := claims["nbf"]
+    for _, name := range []string{"nbf", "iat"} {
+        if err := validateFutureUnixClaim(claims, name, now); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+func validateFutureUnixClaim(claims map[string]any, name string, now time.Time) error {
+    raw, ok := claims[name]
     if !ok { return nil }
 
     var unix float64
@@ -628,11 +637,11 @@ func validateTemporalClaims(claims map[string]any, now time.Time) error {
     case int:
         unix = float64(value)
     default:
-        return errors.New("invalid nbf claim")
+        return fmt.Errorf("invalid %s claim", name)
     }
-    notBefore := time.Unix(int64(unix), 0)
-    if notBefore.After(now.Add(30 * time.Second)) {
-        return errors.New("token is not yet valid")
+    claimTime := time.Unix(int64(unix), 0)
+    if claimTime.After(now.Add(30 * time.Second)) {
+        return fmt.Errorf("token %s is in the future", name)
     }
     return nil
 }
