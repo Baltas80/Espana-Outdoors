@@ -7,15 +7,35 @@ First-party gateway for official live data. Provider credentials stay on the ser
 - AEMET OpenData municipality daily forecasts (`aemet-weather`).
 - AEMET API key is read only from `AEMET_API_KEY` at runtime.
 - `AEMET_API_KEY_EXPIRES_AT` is mandatory and is checked at startup.
-- The gateway uses OIDC bearer authentication and per-subject rate limiting.
+- The gateway uses OIDC bearer authentication, client-scoped role authorization, and per-subject rate limiting.
 - AEMET failures use bounded retry/backoff and stale-cache fallback.
+
+## OIDC authorization policy
+
+The gateway has two distinct OIDC controls:
+
+1. `OIDC_AUDIENCE` is the expected audience/client identifier accepted by the token verifier.
+2. `OIDC_REQUIRED_ROLE` is the exact application permission required by protected gateway endpoints.
+
+For authorization, the required role is accepted **only** from:
+
+`resource_access[OIDC_AUDIENCE].roles`
+
+The following are never treated as equivalent client authorization:
+
+- `realm_access.roles`;
+- roles under another `resource_access[client_id]`;
+- the same role name under a different client.
+
+Missing or malformed authorization claims fail closed with HTTP 403. Authorization is enforced by the backend after cryptographic OIDC validation; the Flutter client is not trusted to enforce permissions.
 
 ## Runtime configuration
 
 | Variable | Required | Purpose |
 |---|---:|---|
 | `OIDC_ISSUER` | yes | OIDC issuer used to validate product access tokens |
-| `OIDC_AUDIENCE` | yes | Expected access-token audience |
+| `OIDC_AUDIENCE` | yes | Expected access-token audience and client key for resource-scoped roles |
+| `OIDC_REQUIRED_ROLE` | yes | Exact role required under `resource_access[OIDC_AUDIENCE].roles` |
 | `AEMET_API_KEY` | yes | AEMET provider credential, runtime only |
 | `AEMET_API_KEY_EXPIRES_AT` | yes | RFC3339 expiry used for startup/health monitoring |
 | `AEMET_BASE_URL` | no | Defaults to `https://opendata.aemet.es/opendata/api` |
@@ -33,7 +53,7 @@ First-party gateway for official live data. Provider credentials stay on the ser
 - `GET /v1/sources/aemet-weather/health` — normalized provider health/freshness.
 - `GET /v1/sources/aemet-weather?municipalityCode=03099` — normalized forecast envelope.
 
-All `/v1/*` endpoints require a valid OIDC bearer token.
+All `/v1/*` endpoints require a valid OIDC bearer token and the configured client-scoped role.
 
 The client must never send the AEMET API key. The gateway attaches it only to the AEMET provider request.
 
