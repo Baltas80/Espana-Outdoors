@@ -7,6 +7,7 @@ import (
     "encoding/json"
     "net/http"
     "net/http/httptest"
+    "strings"
     "testing"
     "time"
 
@@ -14,6 +15,41 @@ import (
     jose "github.com/go-jose/go-jose/v4"
     "github.com/go-jose/go-jose/v4/jwt"
 )
+
+func TestProviderHTTPClientDoesNotFollowRedirects(t *testing.T) {
+    targetHit := false
+    target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+        targetHit = true
+        w.WriteHeader(http.StatusOK)
+    }))
+    defer target.Close()
+
+    redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+        http.Redirect(w, nil, target.URL, http.StatusFound)
+    }))
+    defer redirect.Close()
+
+    client := newProviderHTTPClient(time.Second)
+    response, err := client.Get(redirect.URL)
+    if err != nil {
+        t.Fatalf("provider client returned error: %v", err)
+    }
+    defer response.Body.Close()
+
+    if response.StatusCode != http.StatusFound {
+        t.Fatalf("expected redirect response to remain visible, got %d", response.StatusCode)
+    }
+    if targetHit {
+        t.Fatal("provider client followed redirect to another host")
+    }
+}
+
+func TestReadJSONBodyRejectsOversizedPayload(t *testing.T) {
+    oversized := `{"data":"` + strings.Repeat("x", maxProviderJSONBytes) + `"}`
+    if _, err := readJSONBody(strings.NewReader(oversized)); err == nil {
+        t.Fatal("expected oversized provider payload to be rejected")
+    }
+}
 
 func TestFreshnessStatus(t *testing.T) {
     now := time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC)
