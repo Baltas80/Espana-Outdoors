@@ -27,15 +27,24 @@ Allowed `status`: `healthy`, `degraded`, `unavailable`, `stale`.
 
 Query parameters are source-specific but must never contain provider secrets.
 
-The response may be a JSON array or:
+The response is a single JSON envelope. A top-level JSON array is invalid and must be rejected by clients.
 
 ```json
 {
-  "data": []
+  "data": [],
+  "provenance": {
+    "source": "AEMET OpenData",
+    "licenseUrl": "https://example.invalid/license",
+    "observedAt": "2026-09-23T12:00:00Z"
+  },
+  "freshness": {
+    "status": "current",
+    "fetchedAt": "2026-09-23T12:00:00Z"
+  }
 }
 ```
 
-Records must contain enough metadata for the consuming feature to expose source, timestamp/freshness and confidence. Safety-critical records must also carry an explicit expiry when applicable.
+The data envelope has no additional top-level fields. Its `provenance` and `freshness` objects also reject unknown fields. Weather records use the schema in `docs/api/source-gateway.schema.json`.
 
 ## Alerts normalized record
 
@@ -60,6 +69,12 @@ Records must contain enough metadata for the consuming feature to expose source,
 ```
 
 The gateway must reject or quarantine malformed upstream records instead of passing them through as trusted information.
+
+## Schema enforcement
+
+The public contract is intentionally closed: unknown fields, legacy top-level array responses, missing provenance/freshness metadata and invalid freshness states are rejected by the Flutter gateway client. The server must emit only the documented envelope.
+
+The machine-readable contract is `docs/api/source-gateway.schema.json`.
 
 ## Security requirements
 
