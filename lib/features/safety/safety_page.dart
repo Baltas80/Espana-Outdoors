@@ -32,6 +32,7 @@ class _SafetyPageState extends State<SafetyPage> {
       return;
     }
     final contact = await EmergencyContactDirectory.instance.spain();
+    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
