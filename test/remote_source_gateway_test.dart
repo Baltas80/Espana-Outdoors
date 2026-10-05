@@ -30,16 +30,21 @@ void main() {
     final snapshot = await gateway.health('aemet');
 
     expect(snapshot.sourceId, 'aemet');
+    expect(snapshot.kind.name, 'official');
     expect(snapshot.status.name, 'healthy');
     expect(snapshot.attribution, 'AEMET OpenData');
   });
 
-  test('accepts normalized data envelopes', () async {
+  test('accepts the strict normalized data envelope', () async {
     final client = MockClient((_) async {
       return http.Response(
         jsonEncode({
           'data': [
-            {'title': 'Aviso', 'level': 'yellow'},
+            {
+              'id': 'alert-1',
+              'title': 'Aviso',
+              'level': 'yellow',
+            },
           ],
           'provenance': {
             'source': 'AEMET OpenData',
@@ -61,6 +66,7 @@ void main() {
     );
     final records = await gateway.fetch('alerts');
 
+    expect(records, hasLength(1));
     expect(records.single['title'], 'Aviso');
     expect(records.single['level'], 'yellow');
   });
@@ -79,7 +85,10 @@ void main() {
       client: client,
     );
 
-    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
+    expect(
+      () => gateway.fetch('alerts'),
+      throwsA(isA<FormatException>()),
+    );
   });
 
   test('rejects unexpected data envelope fields', () async {
@@ -106,7 +115,38 @@ void main() {
       client: client,
     );
 
-    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
+    expect(
+      () => gateway.fetch('alerts'),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('rejects incomplete data provenance', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'data': [],
+          'provenance': {
+            'source': 'AEMET OpenData',
+            'licenseUrl': 'https://example.test/license',
+          },
+          'freshness': {
+            'status': 'current',
+            'fetchedAt': '2026-09-23T12:00:00Z',
+          },
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(
+      () => gateway.fetch('alerts'),
+      throwsA(isA<FormatException>()),
+    );
   });
 
   test('rejects non-object data records', () async {
@@ -132,34 +172,22 @@ void main() {
       client: client,
     );
 
-    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
+    expect(
+      () => gateway.fetch('alerts'),
+      throwsA(isA<FormatException>()),
+    );
   });
 
-  test('rejects malformed typed data records', () async {
+  test('rejects unexpected health fields', () async {
     final client = MockClient((_) async {
       return http.Response(
         jsonEncode({
-          'data': [
-            {
-              'date': '05-10-2026',
-              'condition': 'clear',
-              'min': '10',
-              'max': 25,
-              'precipitationProbability': 0,
-              'precipitationMm': 0,
-              'windSpeed': 12,
-              'windDirection': 'NE',
-            },
-          ],
-          'provenance': {
-            'source': 'AEMET OpenData',
-            'licenseUrl': 'https://example.test/license',
-            'observedAt': '2026-09-23T12:00:00Z',
-          },
-          'freshness': {
-            'status': 'current',
-            'fetchedAt': '2026-09-23T12:00:00Z',
-          },
+          'kind': 'official',
+          'status': 'healthy',
+          'observedAt': '2026-09-23T12:00:00Z',
+          'licenseUrl': 'https://example.test/license',
+          'attribution': 'AEMET OpenData',
+          'unexpected': true,
         }),
         200,
       );
@@ -169,16 +197,21 @@ void main() {
       client: client,
     );
 
-    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
+    expect(
+      () => gateway.health('aemet'),
+      throwsA(isA<FormatException>()),
+    );
   });
 
-  test('rejects malformed freshness timestamps instead of inventing current time', () async {
+  test('rejects malformed freshness timestamps', () async {
     final client = MockClient((_) async {
       return http.Response(
         jsonEncode({
           'kind': 'official',
           'status': 'healthy',
           'observedAt': 'not-a-timestamp',
+          'licenseUrl': 'https://example.test/license',
+          'attribution': 'AEMET OpenData',
         }),
         200,
       );
@@ -195,55 +228,7 @@ void main() {
     );
   });
 
-  test('rejects non-HTTPS source gateway endpoints', () async {
-    expect(
-      () => RemoteSourceGateway(
-        baseUri: Uri.parse('http://api.example.test'),
-        client: MockClient((_) async => http.Response('{}', 200)),
-      ),
-      throwsArgumentError,
-    );
-  });
-
-  test('rejects unknown source kind instead of falling back to official', () async {
-    final client = MockClient((_) async {
-      return http.Response(
-        jsonEncode({
-          'kind': 'unknown',
-          'status': 'healthy',
-          'observedAt': '2026-09-23T12:00:00Z',
-        }),
-        200,
-      );
-    });
-    final gateway = RemoteSourceGateway(
-      baseUri: Uri.parse('https://api.example.test'),
-      client: client,
-    );
-
-    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
-  });
-
-  test('rejects unknown source status instead of falling back to unavailable', () async {
-    final client = MockClient((_) async {
-      return http.Response(
-        jsonEncode({
-          'kind': 'official',
-          'status': 'unknown',
-          'observedAt': '2026-09-23T12:00:00Z',
-        }),
-        200,
-      );
-    });
-    final gateway = RemoteSourceGateway(
-      baseUri: Uri.parse('https://api.example.test'),
-      client: client,
-    );
-
-    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
-  });
-
-  test('rejects non-HTTPS license URLs', () async {
+  test('rejects invalid license URLs', () async {
     final client = MockClient((_) async {
       return http.Response(
         jsonEncode({
@@ -251,6 +236,7 @@ void main() {
           'status': 'healthy',
           'observedAt': '2026-09-23T12:00:00Z',
           'licenseUrl': 'http://example.test/license',
+          'attribution': 'AEMET OpenData',
         }),
         200,
       );
@@ -260,17 +246,21 @@ void main() {
       client: client,
     );
 
-    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
+    expect(
+      () => gateway.health('aemet'),
+      throwsA(isA<FormatException>()),
+    );
   });
 
-  test('rejects mismatched source IDs returned by gateway', () async {
+  test('rejects unknown source kind', () async {
     final client = MockClient((_) async {
       return http.Response(
         jsonEncode({
-          'sourceId': 'different-source',
-          'kind': 'official',
+          'kind': 'unknown',
           'status': 'healthy',
           'observedAt': '2026-09-23T12:00:00Z',
+          'licenseUrl': 'https://example.test/license',
+          'attribution': 'AEMET OpenData',
         }),
         200,
       );
@@ -280,6 +270,43 @@ void main() {
       client: client,
     );
 
-    expect(() => gateway.health('aemet'), throwsA(isA<FormatException>()));
+    expect(
+      () => gateway.health('aemet'),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('rejects unknown source status', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'kind': 'official',
+          'status': 'unknown',
+          'observedAt': '2026-09-23T12:00:00Z',
+          'licenseUrl': 'https://example.test/license',
+          'attribution': 'AEMET OpenData',
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(
+      () => gateway.health('aemet'),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('rejects non-HTTPS source gateway endpoints', () {
+    expect(
+      () => RemoteSourceGateway(
+        baseUri: Uri.parse('http://api.example.test'),
+        client: MockClient((_) async => http.Response('{}', 200)),
+      ),
+      throwsArgumentError,
+    );
   });
 }
