@@ -21,6 +21,8 @@ Allowed `kind`: `official`, `community`, `derived`.
 
 Allowed `status`: `healthy`, `degraded`, `unavailable`, `stale`.
 
+The health envelope is closed: unknown fields are invalid. `licenseUrl` must use HTTPS and timestamps must be valid date-time strings.
+
 ## Data
 
 `GET /v1/sources/{sourceId}`
@@ -44,7 +46,9 @@ The response is a single JSON envelope. A top-level JSON array is invalid and mu
 }
 ```
 
-The data envelope has no additional top-level fields. Its `provenance` and `freshness` objects also reject unknown fields. The generic gateway contract requires each data item to be a JSON object; the item fields remain source-specific and are validated by the corresponding source adapter.
+The data envelope has exactly three top-level fields: `data`, `provenance` and `freshness`. The provenance and freshness objects are also closed and reject unknown fields.
+
+The generic gateway contract requires each data item to be a JSON object. Item fields remain source-specific and are validated by the corresponding source adapter.
 
 ## Alerts normalized record
 
@@ -64,7 +68,16 @@ The data envelope has no additional top-level fields. Its `provenance` and `fres
       "expiresAt": "2026-09-23T18:00:00Z",
       "certainty": "high"
     }
-  ]
+  ],
+  "provenance": {
+    "source": "AEMET OpenData",
+    "licenseUrl": "https://example.invalid/license",
+    "observedAt": "2026-09-23T12:00:00Z"
+  },
+  "freshness": {
+    "status": "current",
+    "fetchedAt": "2026-09-23T12:00:00Z"
+  }
 }
 ```
 
@@ -72,9 +85,11 @@ The gateway must reject or quarantine malformed upstream records instead of pass
 
 ## Schema enforcement
 
-The public contract is intentionally closed: unknown fields, legacy top-level array responses, missing provenance/freshness metadata and invalid freshness states are rejected by the Flutter gateway client. The server must emit only the documented envelope.
+The public contract is intentionally closed for its transport envelope: unknown fields, legacy top-level array responses, missing provenance/freshness metadata and invalid freshness states are rejected by the Flutter gateway client.
 
 The machine-readable generic contract is `docs/api/source-gateway.schema.json`.
+
+Source-specific item schemas must be versioned independently from the transport envelope so the generic gateway client does not become coupled to one provider.
 
 ## Security requirements
 
