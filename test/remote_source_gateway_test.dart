@@ -64,11 +64,19 @@ void main() {
       baseUri: Uri.parse('https://api.example.test/'),
       client: client,
     );
-    final records = await gateway.fetch('alerts');
+    final snapshot = await gateway.fetch('alerts');
 
-    expect(records, hasLength(1));
-    expect(records.single['title'], 'Aviso');
-    expect(records.single['level'], 'yellow');
+    expect(snapshot.data, hasLength(1));
+    expect(snapshot.data.single['title'], 'Aviso');
+    expect(snapshot.data.single['level'], 'yellow');
+    expect(snapshot.provenance.source, 'AEMET OpenData');
+    expect(snapshot.provenance.licenseUrl, 'https://example.test/license');
+    expect(
+      snapshot.provenance.observedAt,
+      DateTime.utc(2026, 9, 23, 12),
+    );
+    expect(snapshot.freshness.status, 'current');
+    expect(snapshot.freshness.fetchedAt, DateTime.utc(2026, 9, 23, 12));
   });
 
   test('rejects legacy top-level list responses', () async {
