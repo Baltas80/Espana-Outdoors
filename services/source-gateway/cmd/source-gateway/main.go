@@ -560,6 +560,10 @@ func (s *server) authenticate(w http.ResponseWriter, r *http.Request) (string, b
     }
     var claims map[string]any
     if err := token.Claims(&claims); err != nil { s.writeError(w, http.StatusUnauthorized, "invalid authentication"); return "", false }
+    if err := validateTemporalClaims(claims, time.Now().UTC()); err != nil {
+        s.writeError(w, http.StatusUnauthorized, "invalid authentication")
+        return "", false
+    }
     subject, _ := claims["sub"].(string)
     if strings.TrimSpace(subject) == "" { s.writeError(w, http.StatusUnauthorized, "invalid authentication"); return "", false }
     return subject, true
@@ -601,4 +605,26 @@ func freshnessStatus(now time.Time, entry cacheEntry) string {
     default:
         return "unavailable"
     }
+}
+
+func validateTemporalClaims(claims map[string]any, now time.Time) error {
+    raw, ok := claims["nbf"]
+    if !ok { return nil }
+
+    var unix float64
+    switch value := raw.(type) {
+    case float64:
+        unix = value
+    case int64:
+        unix = float64(value)
+    case int:
+        unix = float64(value)
+    default:
+        return errors.New("invalid nbf claim")
+    }
+    notBefore := time.Unix(int64(unix), 0)
+    if notBefore.After(now.Add(30 * time.Second)) {
+        return errors.New("token is not yet valid")
+    }
+    return nil
 }
