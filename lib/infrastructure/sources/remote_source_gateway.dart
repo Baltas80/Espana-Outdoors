@@ -70,7 +70,7 @@ final class RemoteSourceGateway implements SourceGateway {
   }
 
   @override
-  Future<List<Map<String, Object?>>> fetch(
+  Future<SourceDataSnapshot> fetch(
     String sourceId, {
     Map<String, Object?> parameters = const {},
   }) async {
