@@ -7,7 +7,7 @@ final class OidcService {
     required OidcConfig config,
     FlutterAppAuth? appAuth,
   })  : _config = config,
-        _appAuth = appAuth ?? const FlutterAppAuth();
+        _appAuth = appAuth ?? FlutterAppAuth();
 
   final OidcConfig _config;
   final FlutterAppAuth _appAuth;
