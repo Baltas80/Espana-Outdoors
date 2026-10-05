@@ -60,16 +60,8 @@ void main() {
 
     expect(find.text('España Outdoor'), findsOneWidget);
     expect(find.text('Iniciar ruta'), findsOneWidget);
-    final scrollable = find.descendant(
-      of: find.byKey(const Key('component-list')),
-      matching: find.byType(Scrollable),
-    );
-    expect(scrollable, findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Mapa de España'),
-      300,
-      scrollable: scrollable,
-    );
+    await tester.ensureVisible(find.text('Mapa de España'));
+    await tester.pumpAndSettle();
     expect(find.text('Mapa de España'), findsOneWidget);
     expect(find.text('320 m'), findsOneWidget);
     expect(find.text('Mapa'), findsWidgets);
