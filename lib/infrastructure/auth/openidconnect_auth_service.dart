@@ -42,6 +42,9 @@ final class OpenIdConnectAuthService {
 
   Future<OpenIdIdentity> signIn(BuildContext context) async {
     final client = await _getClient();
+    if (!context.mounted) {
+      throw StateError('OIDC login context is no longer mounted.');
+    }
     return client.loginInteractive(
       context: context,
       title: 'Iniciar sesión en España Outdoor',
