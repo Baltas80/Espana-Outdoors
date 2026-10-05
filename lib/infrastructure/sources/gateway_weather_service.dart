@@ -17,14 +17,13 @@ final class GatewayWeatherService implements WeatherService {
   Future<WeatherForecast> dailyMunicipalityForecast(
     String municipalityCode,
   ) async {
-    final records = await _gateway.fetch(
+    final dataSnapshot = await _gateway.fetch(
       sourceId,
       parameters: {'municipalityCode': municipalityCode},
     );
-    final snapshot = await _gateway.health(sourceId);
 
     final days = <WeatherDay>[];
-    for (final record in records) {
+    for (final record in dataSnapshot.data) {
       final dateText = record['date']?.toString();
       final date = dateText == null ? null : DateTime.tryParse(dateText);
       if (date == null) continue;
@@ -46,9 +45,9 @@ final class GatewayWeatherService implements WeatherService {
 
     return WeatherForecast(
       days: List.unmodifiable(days),
-      source: snapshot.attribution ?? 'AEMET OpenData',
-      fetchedAt: snapshot.observedAt,
-      sourceUpdatedAt: snapshot.observedAt,
+      source: dataSnapshot.provenance.source,
+      fetchedAt: dataSnapshot.freshness.fetchedAt,
+      sourceUpdatedAt: dataSnapshot.provenance.observedAt,
     );
   }
 
