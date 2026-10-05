@@ -109,6 +109,69 @@ void main() {
     expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
   });
 
+  test('rejects non-object data records', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'data': [42],
+          'provenance': {
+            'source': 'AEMET OpenData',
+            'licenseUrl': 'https://example.test/license',
+            'observedAt': '2026-09-23T12:00:00Z',
+          },
+          'freshness': {
+            'status': 'current',
+            'fetchedAt': '2026-09-23T12:00:00Z',
+          },
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
+  });
+
+  test('rejects malformed typed data records', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'data': [
+            {
+              'date': '05-10-2026',
+              'condition': 'clear',
+              'min': '10',
+              'max': 25,
+              'precipitationProbability': 0,
+              'precipitationMm': 0,
+              'windSpeed': 12,
+              'windDirection': 'NE',
+            },
+          ],
+          'provenance': {
+            'source': 'AEMET OpenData',
+            'licenseUrl': 'https://example.test/license',
+            'observedAt': '2026-09-23T12:00:00Z',
+          },
+          'freshness': {
+            'status': 'current',
+            'fetchedAt': '2026-09-23T12:00:00Z',
+          },
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
+  });
+
   test('rejects malformed freshness timestamps instead of inventing current time', () async {
     final client = MockClient((_) async {
       return http.Response(
