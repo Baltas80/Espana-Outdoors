@@ -45,7 +45,6 @@ Missing or malformed authorization claims fail closed with HTTP 403. Authorizati
 | `CACHE_STALE_TTL` | no | Defaults to `40m` |
 | `RATE_LIMIT_RPS` | no | Defaults to `2` |
 | `RATE_LIMIT_BURST` | no | Defaults to `10` |
-| `ALLOW_HTTP_DEV` | no | Local-only development escape hatch; must be false in production |
 
 ## API
 
