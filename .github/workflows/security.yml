@@ -73,3 +73,29 @@ jobs:
       - uses: github/codeql-action/analyze@v4.38.2
         with:
           category: /language:actions
+
+  go-codeql:
+    name: CodeQL - Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: github/codeql-action/init@v4.38.2
+        with:
+          languages: go
+      - uses: github/codeql-action/autobuild@v4.38.2
+      - uses: github/codeql-action/analyze@v4.38.2
+        with:
+          category: /language:go
+
+  dart-static-analysis:
+    name: Dart static analysis (CodeQL unavailable)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart analyze --fatal-infos
