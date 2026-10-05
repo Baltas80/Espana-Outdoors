@@ -41,6 +41,15 @@ void main() {
           'data': [
             {'title': 'Aviso', 'level': 'yellow'},
           ],
+          'provenance': {
+            'source': 'AEMET OpenData',
+            'licenseUrl': 'https://example.test/license',
+            'observedAt': '2026-09-23T12:00:00Z',
+          },
+          'freshness': {
+            'status': 'current',
+            'fetchedAt': '2026-09-23T12:00:00Z',
+          },
         }),
         200,
       );
@@ -54,6 +63,50 @@ void main() {
 
     expect(records.single['title'], 'Aviso');
     expect(records.single['level'], 'yellow');
+  });
+
+  test('rejects legacy top-level list responses', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode([
+          {'title': 'Aviso'},
+        ]),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
+  });
+
+  test('rejects unexpected data envelope fields', () async {
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'data': [],
+          'provenance': {
+            'source': 'AEMET OpenData',
+            'licenseUrl': 'https://example.test/license',
+            'observedAt': '2026-09-23T12:00:00Z',
+          },
+          'freshness': {
+            'status': 'current',
+            'fetchedAt': '2026-09-23T12:00:00Z',
+          },
+          'unexpected': true,
+        }),
+        200,
+      );
+    });
+    final gateway = RemoteSourceGateway(
+      baseUri: Uri.parse('https://api.example.test'),
+      client: client,
+    );
+
+    expect(() => gateway.fetch('alerts'), throwsA(isA<FormatException>()));
   });
 
   test('rejects malformed freshness timestamps instead of inventing current time', () async {
