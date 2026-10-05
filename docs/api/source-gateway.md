@@ -50,6 +50,8 @@ The data envelope has exactly three top-level fields: `data`, `provenance` and `
 
 The generic gateway contract requires each data item to be a JSON object. Item fields remain source-specific and are validated by the corresponding source adapter.
 
+The client preserves the envelope metadata as part of the source data snapshot. `freshness.fetchedAt` is the retrieval timestamp and `provenance.observedAt` is the provider/source observation timestamp; consumers must not replace these with a later health-check timestamp.
+
 ## Alerts normalized record
 
 `GET /v1/sources/alerts`
