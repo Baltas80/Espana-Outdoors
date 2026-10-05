@@ -23,6 +23,7 @@ import (
 
 const (
     sourceID = "aemet-weather"
+    maxProviderJSONBytes = 2 << 20
     aemetAttribution = "AEMET OpenData"
     aemetLicenseURL = "https://www.aemet.es/es/datos_abiertos/AEMET_OpenData"
     keyWarningWindow = 14 * 24 * time.Hour
@@ -94,7 +95,12 @@ func main() {
 
     s := &server{
         cfg: cfg,
-        client: &http.Client{Timeout: cfg.clientTimeout},
+        client: &http.Client{
+            Timeout: cfg.clientTimeout,
+            CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+                return http.ErrUseLastResponse
+            },
+        },
         verifier: provider.Verifier(&oidc.Config{ClientID: cfg.oidcAudience}),
         log: log,
         cache: make(map[string]cacheEntry),
@@ -385,7 +391,10 @@ func (s *server) getJSONWithRetry(ctx context.Context, rawURL string, headers ma
 
 func readJSONBody(body io.Reader) (map[string]any, error) {
     var value map[string]any
-    if err := json.NewDecoder(body).Decode(&value); err != nil { return nil, err }
+    limited := io.LimitReader(body, maxProviderJSONBytes)
+    if err := json.NewDecoder(limited).Decode(&value); err != nil {
+        return nil, err
+    }
     return value, nil
 }
 
