@@ -197,8 +197,11 @@ final class RemoteSourceGateway implements SourceGateway {
 
   static Map<String, Object?> _parseDataRecord(Object? value) {
     if (value is! Map) {
-      throw const FormatException('Source gateway data record must be an object.');
+      throw const FormatException(
+        'Source gateway data record must be an object.',
+      );
     }
+
     final keys = value.keys.map((key) => '$key').toSet();
     const expected = {
       'date',
@@ -211,32 +214,104 @@ final class RemoteSourceGateway implements SourceGateway {
       'windDirection',
     };
     if (keys.length != expected.length || !keys.containsAll(expected)) {
-      throw const FormatException('Source gateway data record schema is invalid.');
+      throw const FormatException(
+        'Source gateway data record schema is invalid.',
+      );
     }
 
     final date = value['date'];
-    if (date is! String || !RegExp(r'^\d{4}-\d{2}-\d{2}
-    const required = {'kind', 'status', 'observedAt', 'licenseUrl', 'attribution'};
+    if (date is! String || !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(date)) {
+      throw const FormatException(
+        'Source gateway data record date is invalid.',
+      );
+    }
+
+    final condition = value['condition'];
+    if (condition is! String ||
+        !const {
+          'clear',
+          'partlyCloudy',
+          'cloudy',
+          'rain',
+          'storm',
+          'snow',
+          'fog',
+          'unknown',
+        }.contains(condition)) {
+      throw const FormatException(
+        'Source gateway data record condition is invalid.',
+      );
+    }
+
+    for (final field in const [
+      'min',
+      'max',
+      'precipitationProbability',
+      'precipitationMm',
+      'windSpeed',
+    ]) {
+      final fieldValue = value[field];
+      if (fieldValue != null && fieldValue is! num) {
+        throw FormatException(
+          'Source gateway data record field $field must be numeric or null.',
+        );
+      }
+    }
+
+    final windDirection = value['windDirection'];
+    if (windDirection != null && windDirection is! String) {
+      throw const FormatException(
+        'Source gateway data record windDirection is invalid.',
+      );
+    }
+
+    return Map<String, Object?>.from(value);
+  }
+
+  static void _validateHealthEnvelope(Map<String, dynamic> json) {
+    const required = {
+      'kind',
+      'status',
+      'observedAt',
+      'licenseUrl',
+      'attribution',
+    };
     const optional = {'expiresAt'};
     final keys = json.keys.toSet();
-    final unexpected = keys.where((key) => !required.contains(key) && !optional.contains(key));
+    final unexpected = keys.where(
+      (key) => !required.contains(key) && !optional.contains(key),
+    );
     if (unexpected.isNotEmpty || !keys.containsAll(required)) {
       throw const FormatException('Source gateway health schema is invalid.');
     }
-    if (json['kind'] is! String || json['status'] is! String || json['observedAt'] is! String) {
-      throw const FormatException('Source gateway health schema has invalid field types.');
+
+    if (json['kind'] is! String ||
+        json['status'] is! String ||
+        json['observedAt'] is! String) {
+      throw const FormatException(
+        'Source gateway health schema has invalid field types.',
+      );
     }
-    if (json['licenseUrl'] is! String || json['attribution'] is! String) {
-      throw const FormatException('Source gateway health schema has invalid metadata types.');
+
+    if (json['licenseUrl'] is! String ||
+        json['attribution'] is! String) {
+      throw const FormatException(
+        'Source gateway health schema has invalid metadata types.',
+      );
     }
+
     if (json['expiresAt'] != null && json['expiresAt'] is! String) {
-      throw const FormatException('Source gateway health schema has invalid expiresAt.');
+      throw const FormatException(
+        'Source gateway health schema has invalid expiresAt.',
+      );
     }
   }
 
   static void _validateDataEnvelope(Map<String, dynamic> json) {
     const topLevel = {'data', 'provenance', 'freshness'};
-    final unexpected = json.keys.where((key) => !topLevel.contains(key));
+    final unexpected = json.keys.where(
+      (key) => !topLevel.contains(key),
+    );
     if (unexpected.isNotEmpty) {
       throw FormatException(
         'Source gateway data envelope has unexpected fields: ' +
@@ -247,30 +322,40 @@ final class RemoteSourceGateway implements SourceGateway {
 
     final provenance = json['provenance'];
     if (provenance is! Map) {
-      throw const FormatException('Source gateway provenance is missing or malformed.');
+      throw const FormatException(
+        'Source gateway provenance is missing or malformed.',
+      );
     }
     final provenanceKeys = provenance.keys.map((key) => '$key').toSet();
     const expectedProvenance = {'source', 'licenseUrl', 'observedAt'};
     if (!provenanceKeys.containsAll(expectedProvenance) ||
         provenanceKeys.length != expectedProvenance.length) {
-      throw const FormatException('Source gateway provenance schema is invalid.');
+      throw const FormatException(
+        'Source gateway provenance schema is invalid.',
+      );
     }
 
     final freshness = json['freshness'];
     if (freshness is! Map) {
-      throw const FormatException('Source gateway freshness is missing or malformed.');
+      throw const FormatException(
+        'Source gateway freshness is missing or malformed.',
+      );
     }
     final freshnessKeys = freshness.keys.map((key) => '$key').toSet();
     const expectedFreshness = {'status', 'fetchedAt'};
     if (!freshnessKeys.containsAll(expectedFreshness) ||
         freshnessKeys.length != expectedFreshness.length) {
-      throw const FormatException('Source gateway freshness schema is invalid.');
+      throw const FormatException(
+        'Source gateway freshness schema is invalid.',
+      );
     }
 
     final status = freshness['status'];
     if (status is! String ||
         !const {'current', 'aging', 'stale'}.contains(status)) {
-      throw const FormatException('Source gateway freshness status is invalid.');
+      throw const FormatException(
+        'Source gateway freshness status is invalid.',
+      );
     }
   }
 
