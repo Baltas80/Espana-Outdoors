@@ -145,6 +145,62 @@ func TestOIDCAudienceRejectsMissingAudience(t *testing.T) {
     }
 }
 
+func TestOIDCJWTR​​ejectsWrongIssuer(t *testing.T) {
+    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    token := signTestIDTokenWithClaims(t, signingKey, issuer, "espana-outdoor", map[string]any{
+        "iss": "https://unexpected.example/realms/other",
+    })
+
+    if _, err := verifier.Verify(context.Background(), token); err == nil {
+        t.Fatal("expected token with wrong issuer to be rejected")
+    }
+}
+
+func TestOIDCJWTRejectsExpiredToken(t *testing.T) {
+    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    token := signTestIDTokenWithClaims(t, signingKey, issuer, "espana-outdoor", map[string]any{
+        "exp": time.Now().Add(-1 * time.Minute).Unix(),
+    })
+
+    if _, err := verifier.Verify(context.Background(), token); err == nil {
+        t.Fatal("expected expired token to be rejected")
+    }
+}
+
+func TestOIDCJWTRejectsNotYetValidToken(t *testing.T) {
+    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    token := signTestIDTokenWithClaims(t, signingKey, issuer, "espana-outdoor", map[string]any{
+        "nbf": time.Now().Add(5 * time.Minute).Unix(),
+    })
+
+    if _, err := verifier.Verify(context.Background(), token); err == nil {
+        t.Fatal("expected not-yet-valid token to be rejected")
+    }
+}
+
+func TestOIDCJWTRejectsInvalidSignature(t *testing.T) {
+    verifier, issuer, signingKey, cleanup := newTestOIDCVerifier(t, "espana-outdoor")
+    defer cleanup()
+
+    otherKey, err := rsa.GenerateKey(rand.Reader, 2048)
+    if err != nil {
+        t.Fatalf("generate alternate signing key: %v", err)
+    }
+
+    token := signTestIDToken(t, otherKey, issuer, "espana-outdoor")
+    if _, err := verifier.Verify(context.Background(), token); err == nil {
+        t.Fatal("expected token with invalid signature to be rejected")
+    }
+
+    _ = signingKey
+}
+
 func newTestOIDCVerifier(t *testing.T, audience string) (*oidc.IDTokenVerifier, string, *rsa.PrivateKey, func()) {
     t.Helper()
 
@@ -182,12 +238,17 @@ func newTestOIDCVerifier(t *testing.T, audience string) (*oidc.IDTokenVerifier, 
 }
 
 func signTestIDToken(t *testing.T, key *rsa.PrivateKey, issuer, audience string) string {
+    return signTestIDTokenWithClaims(t, key, issuer, audience, nil)
+}
+
+func signTestIDTokenWithClaims(t *testing.T, key *rsa.PrivateKey, issuer, audience string, overrides map[string]any) string {
     t.Helper()
 
     signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: key}, nil)
     if err != nil {
         t.Fatalf("create signer: %v", err)
     }
+
     claims := map[string]any{
         "iss": issuer,
         "sub": "test-user",
@@ -195,6 +256,10 @@ func signTestIDToken(t *testing.T, key *rsa.PrivateKey, issuer, audience string)
         "iat": time.Now().Unix(),
         "exp": time.Now().Add(5 * time.Minute).Unix(),
     }
+    for name, value := range overrides {
+        claims[name] = value
+    }
+
     token, err := jwt.Signed(signer).Claims(claims).Serialize()
     if err != nil {
         t.Fatalf("serialize token: %v", err)
