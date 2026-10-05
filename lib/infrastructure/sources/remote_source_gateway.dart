@@ -51,6 +51,8 @@ final class RemoteSourceGateway implements SourceGateway {
       throw const FormatException('Invalid source gateway health response.');
     }
 
+    _validateHealthEnvelope(json);
+
     final responseSourceId = json['sourceId'];
     if (responseSourceId != null && responseSourceId != sourceId) {
       throw const FormatException('Source gateway returned a mismatched sourceId.');
@@ -192,6 +194,25 @@ final class RemoteSourceGateway implements SourceGateway {
       throw const FormatException('Source gateway licenseUrl must use HTTPS.');
     }
     return value;
+  }
+
+  static void _validateHealthEnvelope(Map<String, dynamic> json) {
+    const required = {'kind', 'status', 'observedAt', 'licenseUrl', 'attribution'};
+    const optional = {'expiresAt'};
+    final keys = json.keys.toSet();
+    final unexpected = keys.where((key) => !required.contains(key) && !optional.contains(key));
+    if (unexpected.isNotEmpty || !keys.containsAll(required)) {
+      throw const FormatException('Source gateway health schema is invalid.');
+    }
+    if (json['kind'] is! String || json['status'] is! String || json['observedAt'] is! String) {
+      throw const FormatException('Source gateway health schema has invalid field types.');
+    }
+    if (json['licenseUrl'] is! String || json['attribution'] is! String) {
+      throw const FormatException('Source gateway health schema has invalid metadata types.');
+    }
+    if (json['expiresAt'] != null && json['expiresAt'] is! String) {
+      throw const FormatException('Source gateway health schema has invalid expiresAt.');
+    }
   }
 
   static void _validateDataEnvelope(Map<String, dynamic> json) {
