@@ -51,6 +51,14 @@ func TestReadJSONBodyRejectsOversizedPayload(t *testing.T) {
     }
 }
 
+func TestReadJSONBodyRejectsContentBeyondSizeLimit(t *testing.T) {
+    valid := `{"ok":true}`
+    oversized := valid + strings.Repeat(" ", maxProviderJSONBytes-len(valid)+1)
+    if _, err := readJSONBody(strings.NewReader(oversized)); err == nil {
+        t.Fatal("expected payload containing content beyond the size limit to be rejected")
+    }
+}
+
 func TestFreshnessStatus(t *testing.T) {
     now := time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC)
     entry := cacheEntry{
