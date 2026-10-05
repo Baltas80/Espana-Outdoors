@@ -48,6 +48,7 @@ type config struct {
     port string
     oidcIssuer string
     oidcAudience string
+    oidcRequiredRole string
     aemetKey string
     aemetKeyExpiresAt time.Time
     aemetBaseURL string
@@ -143,6 +144,8 @@ func loadConfig(now time.Time) (config, error) {
     }
     audience, err := requiredEnv("OIDC_AUDIENCE")
     if err != nil { return config{}, err }
+    requiredRole, err := requiredEnv("OIDC_REQUIRED_ROLE")
+    if err != nil { return config{}, err }
     key, err := requiredEnv("AEMET_API_KEY")
     if err != nil { return config{}, err }
     keyExpiryText, err := requiredEnv("AEMET_API_KEY_EXPIRES_AT")
@@ -174,6 +177,7 @@ func loadConfig(now time.Time) (config, error) {
         port: envOrDefault("PORT", "8080"),
         oidcIssuer: strings.TrimRight(issuerURL.String(), "/"),
         oidcAudience: audience,
+        oidcRequiredRole: requiredRole,
         aemetKey: key,
         aemetKeyExpiresAt: keyExpiry,
         aemetBaseURL: aemetBase,
@@ -562,6 +566,10 @@ func (s *server) authenticate(w http.ResponseWriter, r *http.Request) (string, b
     if err := token.Claims(&claims); err != nil { s.writeError(w, http.StatusUnauthorized, "invalid authentication"); return "", false }
     if err := validateTemporalClaims(claims, time.Now().UTC()); err != nil {
         s.writeError(w, http.StatusUnauthorized, "invalid authentication")
+        return "", false
+    }
+    if err := authorizeClientRole(claims, s.cfg.oidcAudience, s.cfg.oidcRequiredRole); err != nil {
+        s.writeError(w, http.StatusForbidden, "insufficient authorization")
         return "", false
     }
     subject, _ := claims["sub"].(string)
