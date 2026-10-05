@@ -95,12 +95,7 @@ func main() {
 
     s := &server{
         cfg: cfg,
-        client: &http.Client{
-            Timeout: cfg.clientTimeout,
-            CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
-                return http.ErrUseLastResponse
-            },
-        },
+        client: newProviderHTTPClient(cfg.clientTimeout),
         verifier: provider.Verifier(&oidc.Config{ClientID: cfg.oidcAudience}),
         log: log,
         cache: make(map[string]cacheEntry),
@@ -139,6 +134,15 @@ func main() {
     shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
     _ = srv.Shutdown(shutdownCtx)
+}
+
+func newProviderHTTPClient(timeout time.Duration) *http.Client {
+    return &http.Client{
+        Timeout: timeout,
+        CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+            return http.ErrUseLastResponse
+        },
+    }
 }
 
 func loadConfig(now time.Time) (config, error) {
