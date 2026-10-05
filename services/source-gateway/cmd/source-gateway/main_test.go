@@ -178,9 +178,17 @@ func TestOIDCJWTRejectsNotYetValidToken(t *testing.T) {
     token := signTestIDTokenWithClaims(t, signingKey, issuer, "espana-outdoor", map[string]any{
         "nbf": time.Now().Add(5 * time.Minute).Unix(),
     })
+    verified, err := verifier.Verify(context.Background(), token)
+    if err != nil {
+        t.Fatalf("expected signature/issuer/audience validation to pass before temporal claim check: %v", err)
+    }
 
-    if _, err := verifier.Verify(context.Background(), token); err == nil {
-        t.Fatal("expected not-yet-valid token to be rejected")
+    var claims map[string]any
+    if err := verified.Claims(&claims); err != nil {
+        t.Fatalf("decode claims: %v", err)
+    }
+    if err := validateTemporalClaims(claims, time.Now().UTC()); err == nil {
+        t.Fatal("expected not-yet-valid token to be rejected by gateway temporal validation")
     }
 }
 
