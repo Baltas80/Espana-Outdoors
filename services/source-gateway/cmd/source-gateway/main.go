@@ -394,9 +394,16 @@ func (s *server) getJSONWithRetry(ctx context.Context, rawURL string, headers ma
 }
 
 func readJSONBody(body io.Reader) (map[string]any, error) {
+    payload, err := io.ReadAll(io.LimitReader(body, maxProviderJSONBytes+1))
+    if err != nil {
+        return nil, err
+    }
+    if len(payload) > maxProviderJSONBytes {
+        return nil, errors.New("provider response exceeds maximum JSON size")
+    }
+
     var value map[string]any
-    limited := io.LimitReader(body, maxProviderJSONBytes)
-    if err := json.NewDecoder(limited).Decode(&value); err != nil {
+    if err := json.Unmarshal(payload, &value); err != nil {
         return nil, err
     }
     return value, nil
