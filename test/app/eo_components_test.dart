@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('premium component system renders', (tester) async {
+    final scrollController = ScrollController();
+    addTearDown(scrollController.dispose);
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData.dark(useMaterial3: true),
@@ -11,6 +13,7 @@ void main() {
           appBar: const EOAppBar(title: 'España Outdoor'),
           body: ListView(
             key: const Key('component-list'),
+            controller: scrollController,
             padding: const EdgeInsets.all(EOSpacing.lg),
             children: [
               const EOButton(label: 'Iniciar ruta', onPressed: null),
@@ -60,7 +63,7 @@ void main() {
 
     expect(find.text('España Outdoor'), findsOneWidget);
     expect(find.text('Iniciar ruta'), findsOneWidget);
-    await tester.ensureVisible(find.text('Mapa de España'));
+    scrollController.jumpTo(scrollController.position.maxScrollExtent);
     await tester.pumpAndSettle();
     expect(find.text('Mapa de España'), findsOneWidget);
     expect(find.text('320 m'), findsOneWidget);
