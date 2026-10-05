@@ -15,6 +15,8 @@ void main() {
     expect(forecast.days.single.condition.name, 'clear');
     expect(forecast.days.single.maxTemperatureC, 27.5);
     expect(forecast.source, 'AEMET OpenData');
+    expect(forecast.fetchedAt, DateTime.utc(2026, 9, 23, 12));
+    expect(forecast.sourceUpdatedAt, DateTime.utc(2026, 9, 23, 11));
   });
 }
 
@@ -32,22 +34,33 @@ final class _FakeGateway implements SourceGateway {
   }
 
   @override
-  Future<List<Map<String, Object?>>> fetch(
+  Future<SourceDataSnapshot> fetch(
     String sourceId, {
     Map<String, Object?> parameters = const {},
   }) async {
     expect(parameters['municipalityCode'], '03099');
-    return [
-      {
-        'date': '2026-09-23',
-        'condition': 'clear',
-        'min': 13.0,
-        'max': 27.5,
-        'precipitationProbability': 0,
-        'precipitationMm': 0,
-        'windSpeed': 15,
-        'windDirection': 'NE',
-      },
-    ];
+    return SourceDataSnapshot(
+      data: [
+        {
+          'date': '2026-09-23',
+          'condition': 'clear',
+          'min': 13.0,
+          'max': 27.5,
+          'precipitationProbability': 0,
+          'precipitationMm': 0,
+          'windSpeed': 15,
+          'windDirection': 'NE',
+        },
+      ],
+      provenance: SourceProvenance(
+        source: 'AEMET OpenData',
+        licenseUrl: 'https://example.test/license',
+        observedAt: DateTime.utc(2026, 9, 23, 11),
+      ),
+      freshness: SourceFreshness(
+        status: 'stale',
+        fetchedAt: DateTime.utc(2026, 9, 23, 12),
+      ),
+    );
   }
 }
