@@ -44,7 +44,7 @@ The response is a single JSON envelope. A top-level JSON array is invalid and mu
 }
 ```
 
-The data envelope has no additional top-level fields. Its `provenance` and `freshness` objects also reject unknown fields. Weather records use the schema in `docs/api/source-gateway.schema.json`.
+The data envelope has no additional top-level fields. Its `provenance` and `freshness` objects also reject unknown fields. The generic gateway contract requires each data item to be a JSON object; the item fields remain source-specific and are validated by the corresponding source adapter.
 
 ## Alerts normalized record
 
@@ -74,7 +74,7 @@ The gateway must reject or quarantine malformed upstream records instead of pass
 
 The public contract is intentionally closed: unknown fields, legacy top-level array responses, missing provenance/freshness metadata and invalid freshness states are rejected by the Flutter gateway client. The server must emit only the documented envelope.
 
-The machine-readable contract is `docs/api/source-gateway.schema.json`.
+The machine-readable generic contract is `docs/api/source-gateway.schema.json`.
 
 ## Security requirements
 
