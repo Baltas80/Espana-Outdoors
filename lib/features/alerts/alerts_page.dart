@@ -32,9 +32,9 @@ class _AlertsPageState extends State<AlertsPage> {
     if (!config.isConfigured) return const [];
 
     final gateway = RemoteSourceGateway(baseUri: config.baseUri!);
-    final records = await gateway.fetch('alerts');
+    final snapshot = await gateway.fetch('alerts');
     return [
-      for (final record in records)
+      for (final record in snapshot.data)
         if (_AlertRecord.tryParse(record) case final alert?) alert,
     ];
   }
