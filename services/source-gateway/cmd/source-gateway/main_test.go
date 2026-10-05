@@ -24,8 +24,8 @@ func TestProviderHTTPClientDoesNotFollowRedirects(t *testing.T) {
     }))
     defer target.Close()
 
-    redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-        http.Redirect(w, nil, target.URL, http.StatusFound)
+    redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        http.Redirect(w, r, target.URL, http.StatusFound)
     }))
     defer redirect.Close()
 
