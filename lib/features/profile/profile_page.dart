@@ -38,7 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _signIn() async {
-    if (!_auth.config.isConfigured) {
+    if (!_auth.isConfigured) {
       _show('Identidad OIDC no configurada para este entorno.');
       return;
     }
