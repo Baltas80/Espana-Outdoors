@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import '../../app/outdoor_visuals.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +10,7 @@ import '../../core/location/location_controller.dart';
 import '../../core/rescue/rescue_link_config.dart';
 import '../../core/rescue/rescue_link_gateway.dart';
 import '../../core/rescue/rescue_link_policy.dart';
-import '../../infrastructure/auth/openidconnect_auth_service.dart';
+import '../../core/auth/oidc_service.dart';
 import '../../infrastructure/rescue/http_rescue_link_gateway.dart';
 
 class RescueLinkPage extends ConsumerStatefulWidget {
@@ -23,8 +21,8 @@ class RescueLinkPage extends ConsumerStatefulWidget {
 }
 
 class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
-  late final OpenIdConnectAuthService _auth =
-      OpenIdConnectAuthService(OidcConfig.fromEnvironment());
+  late final OidcService _auth =
+      OidcService(config: OidcConfig.fromEnvironment());
   late final RescueLinkConfig _config = RescueLinkConfig.fromEnvironment();
   final http.Client _httpClient = http.Client();
   RescueLinkRemoteSession? _session;
@@ -42,7 +40,6 @@ class _RescueLinkPageState extends ConsumerState<RescueLinkPage> {
   void dispose() {
     _expiryTimer?.cancel();
     _httpClient.close();
-    unawaited(_auth.dispose());
     super.dispose();
   }
 

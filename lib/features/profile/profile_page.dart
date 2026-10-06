@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/photo_atlas.dart';
 import '../../core/auth/oidc_config.dart';
-import '../../infrastructure/auth/openidconnect_auth_service.dart';
+import '../../core/auth/oidc_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,8 +13,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late final OpenIdConnectAuthService _auth =
-      OpenIdConnectAuthService(OidcConfig.fromEnvironment());
+  late final OidcService _auth =
+      OidcService(config: OidcConfig.fromEnvironment());
   bool? _signedIn;
   bool _busy = false;
 
@@ -24,14 +24,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _refreshAuth();
   }
 
-  @override
-  void dispose() {
-    _auth.dispose();
-    super.dispose();
-  }
-
   Future<void> _refreshAuth() async {
-    if (!_auth.config.isConfigured) {
+    if (!_auth.isConfigured) {
       if (mounted) setState(() => _signedIn = false);
       return;
     }
@@ -50,7 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
     setState(() => _busy = true);
     try {
-      await _auth.signIn(context);
+      await _auth.signIn();
       await _refreshAuth();
     } on Object catch (error) {
       if (mounted) _show('No se pudo iniciar sesión: $error');
