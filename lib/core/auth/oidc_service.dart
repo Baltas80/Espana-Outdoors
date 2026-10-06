@@ -13,7 +13,7 @@ final class OidcService {
     FlutterSecureStorage? storage,
   })  : _config = config,
         _appAuth = appAuth ?? FlutterAppAuth(),
-        _storage = storage ?? const FlutterSecureStorage();
+        _storage = storage ?? FlutterSecureStorage();
 
   final OidcConfig _config;
   final FlutterAppAuth _appAuth;
