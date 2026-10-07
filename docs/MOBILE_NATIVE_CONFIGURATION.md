@@ -4,7 +4,7 @@ España Outdoor es Android + iOS/iPadOS. El proyecto guarda deliberadamente la l
 
 El script tool/configure_mobile_native.py aplica la configuración mínima necesaria para el seguimiento GPS en segundo plano:
 
-- Android: coarse/fine location, background location, foreground service y foreground-service location.
+- Android: coarse/fine location, background location, foreground service y foreground-service location; el placeholder de callback OIDC `appAuthRedirectScheme` coincide con `com.espanaoutdoors`.
 - iOS: textos de permiso de ubicación y UIBackgroundModes=location.
 
 La aplicación utiliza las APIs maduras de geolocator, incluyendo AndroidSettings, AppleSettings y ForegroundNotificationConfig, en lugar de añadir otro SDK de geolocalización.

@@ -99,10 +99,27 @@ def patch_android() -> None:
     gradle = gradle_path.read_text(encoding="utf-8")
     if gradle_path.suffix == ".kts":
         gradle = gradle.replace("minSdk = flutter.minSdkVersion", "minSdk = 24")
+        placeholder = (
+            '        manifestPlaceholders["appAuthRedirectScheme"] = '
+            '"com.espanaoutdoors"'
+        )
     else:
         gradle = gradle.replace(
             "minSdkVersion flutter.minSdkVersion",
             "minSdkVersion 24",
+        )
+        placeholder = (
+            '        manifestPlaceholders = '
+            '[appAuthRedirectScheme: "com.espanaoutdoors"]'
+        )
+    if "appAuthRedirectScheme" not in gradle:
+        default_config = "    defaultConfig {"
+        if default_config not in gradle:
+            raise SystemExit("Android Gradle file has no defaultConfig block.")
+        gradle = gradle.replace(
+            default_config,
+            f"{default_config}\n{placeholder}",
+            1,
         )
     gradle_path.write_text(gradle, encoding="utf-8")
 
