@@ -40,7 +40,10 @@ def patch_android() -> None:
             + text[marker_end + 1 :]
         )
 
-    network_security = ROOT / "android" / "app" / "src" / "main" / "res" / "xml" / "network_security_config.xml"
+    network_security = (
+        ROOT / "android" / "app" / "src" / "main" / "res" / "xml"
+        / "network_security_config.xml"
+    )
     network_security.parent.mkdir(parents=True, exist_ok=True)
     network_security.write_text(
         '''<?xml version="1.0" encoding="utf-8"?>
@@ -68,23 +71,15 @@ def patch_android() -> None:
             + text[application_end:]
         )
 
-    callback = """    <activity
-        android:name="io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity"
-        android:exported="true">
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data
-          android:scheme="com.espanaoutdoors"
-          android:host="oauth2redirect" />
-      </intent-filter>
-    </activity>"""
-    if "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity" not in text:
-        application_end = text.rfind("</application>")
-        if application_end < 0:
-            raise SystemExit("Android manifest has no </application> element.")
-        text = text[:application_end] + callback + "\n" + text[application_end:]
+    # flutter_appauth's Android AppAuth library handles the redirect receiver.
+    # Do not add the legacy callback activity from the retired OpenID Connect
+    # dependency.
+    legacy_callback = "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity"
+    if legacy_callback in text:
+        raise SystemExit(
+            "Generated Android manifest contains the retired OpenIdConnect "
+            "callback activity. Remove the legacy manifest entry."
+        )
 
     manifest.write_text(text, encoding="utf-8")
 
@@ -99,11 +94,30 @@ def patch_android() -> None:
     gradle = gradle_path.read_text(encoding="utf-8")
     if gradle_path.suffix == ".kts":
         gradle = gradle.replace("minSdk = flutter.minSdkVersion", "minSdk = 24")
+        placeholder = (
+            '        manifestPlaceholders["appAuthRedirectScheme"] = '
+            '"com.espanaoutdoors"'
+        )
     else:
         gradle = gradle.replace(
             "minSdkVersion flutter.minSdkVersion",
             "minSdkVersion 24",
         )
+        placeholder = (
+            '        manifestPlaceholders = '
+            '[appAuthRedirectScheme: "com.espanaoutdoors"]'
+        )
+
+    if "appAuthRedirectScheme" not in gradle:
+        default_config = "    defaultConfig {"
+        if default_config not in gradle:
+            raise SystemExit("Android Gradle file has no defaultConfig block.")
+        gradle = gradle.replace(
+            default_config,
+            f"{default_config}\n{placeholder}",
+            1,
+        )
+
     gradle_path.write_text(gradle, encoding="utf-8")
 
 
