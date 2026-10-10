@@ -67,7 +67,7 @@ jobs:
       - name: Verify CI build profile
         run: python3 tool/verify_build_profile.py --profile ci
       - name: Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
       - name: Upload resolved Dart dependency lock evidence
         uses: actions/upload-artifact@v7.0.0
         with:
@@ -186,7 +186,7 @@ jobs:
       - name: Verify iOS native configuration
         run: python3 tool/verify_mobile_native.py --platform ios
       - name: Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       - name: Test
