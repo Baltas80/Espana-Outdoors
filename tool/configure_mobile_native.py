@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import plistlib
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,15 +72,15 @@ def patch_android() -> None:
             + text[application_end:]
         )
 
-    # flutter_appauth's Android AppAuth library handles the redirect receiver.
-    # Do not add the legacy callback activity from the retired OpenID Connect
-    # dependency.
-    legacy_callback = "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity"
-    if legacy_callback in text:
-        raise SystemExit(
-            "Generated Android manifest contains the retired OpenIdConnect "
-            "callback activity. Remove the legacy manifest entry."
-        )
+    # AppAuth owns its redirect receiver. Remove the callback activity left by
+    # the retired OpenID Connect dependency so repeated native setup is safe.
+    legacy_callback = re.compile(
+        r'\s*<activity\b(?=[^>]*android:name="'
+        r'io\.concerti\.openidconnect_android\.OpenIdConnectCallbackReceiverActivity"'
+        r')[^>]*>.*?</activity>',
+        re.DOTALL,
+    )
+    text = legacy_callback.sub("", text)
 
     manifest.write_text(text, encoding="utf-8")
 
