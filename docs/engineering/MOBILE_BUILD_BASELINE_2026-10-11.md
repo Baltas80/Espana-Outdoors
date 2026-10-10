@@ -63,7 +63,7 @@ Consequences: Android APK/AAB verification, release-manifest generation and arti
 2. Verify the scheme during Android native configuration, so CI fails at a focused guard rather than during Gradle manifest merge.
 3. Remove the obsolete callback activity associated with the retired `openidconnect` dependency; make this cleanup idempotent.
 4. Document the native configuration contract.
-5. Commit the `pubspec.lock` generated on the pinned Flutter 3.47.5 runner, retain the resolved lock as a short-retention CI artifact, and enforce the committed lock in CI, Android staging and release-candidate builds.
+5. Commit the `pubspec.lock` generated on the pinned Flutter 3.47.5 runner and retain its resolved contents as CI evidence. Keep the build-fix PR focused on code and lockfile; add `--enforce-lockfile` to workflows in a follow-up after this baseline passes.
 
 ## Release baseline acceptance criteria
 
@@ -83,7 +83,7 @@ A commit is a validated CI baseline only when all relevant jobs and steps are gr
 - A lockfile was resolved by GitHub Actions using Flutter `3.47.5` in CI run `38094153740`, then committed to this branch as `9e6754243df004af6344a0f7891def8ccdef067b`.
 - The checked-in `pubspec.lock` is 35,547 bytes; GitHub blob SHA: `15695c531315a6b9d956e74097ed02020d3a9ea2`.
 - Source artifact: [dart-dependency-lock-95cc0d3190187f5e426dec0cef6d4c2f74158d7e](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094153740); artifact SHA-256: `f02a0751b656449e6287ef10462e3959c25ad85d94cc370c717c8cafc202ea64`.
-- The main CI, Android staging and release-candidate workflows now run `flutter pub get --enforce-lockfile`.
+- This stabilization PR deliberately leaves workflow definitions unchanged so the existing CI/staging checks can validate the code fix without requiring approval of workflow-file edits. Normal `flutter pub get` consumes the committed lockfile; adding `--enforce-lockfile` is a follow-up hardening step after the baseline is green.
 - The lockfile reports minimum SDK constraints Dart `>=3.13.0` and Flutter `>=3.47.0`, while `pubspec.yaml` declares lower minima. The CI target is pinned to Flutter `3.47.5`; support for the older declared minima has not been demonstrated and must not be claimed without a separate compatibility decision and test matrix.
 
 ## Evidence policy
