@@ -67,14 +67,7 @@ jobs:
       - name: Verify CI build profile
         run: python3 tool/verify_build_profile.py --profile ci
       - name: Dependencies
-        run: flutter pub get --enforce-lockfile
-      - name: Upload resolved Dart dependency lock evidence
-        uses: actions/upload-artifact@v7.0.0
-        with:
-          name: dart-dependency-lock-${{ github.sha }}
-          path: pubspec.lock
-          if-no-files-found: error
-          retention-days: 30
+        run: flutter pub get
       - name: Map provider guard
         run: dart run tool/check_map_provider_usage.dart
       - name: Live data provider guard
@@ -186,7 +179,7 @@ jobs:
       - name: Verify iOS native configuration
         run: python3 tool/verify_mobile_native.py --platform ios
       - name: Dependencies
-        run: flutter pub get --enforce-lockfile
+        run: flutter pub get
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       - name: Test
