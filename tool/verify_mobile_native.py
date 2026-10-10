@@ -36,6 +36,13 @@ def verify_android() -> None:
             + ", ".join(missing)
         )
 
+    legacy_callback = "io.concerti.openidconnect_android.OpenIdConnectCallbackReceiverActivity"
+    if legacy_callback in text:
+        raise SystemExit(
+            "Legacy OpenIdConnect callback activity is present after migration "
+            "to flutter_appauth."
+        )
+
     gradle_candidates = (
         ROOT / "android" / "app" / "build.gradle.kts",
         ROOT / "android" / "app" / "build.gradle",
@@ -48,12 +55,30 @@ def verify_android() -> None:
     if not re.search(r"minSdk(?:Version\s+|\s*=\s*)24\b", content):
         raise SystemExit("Android minSdk 24 was not enforced by native configuration.")
 
+    kotlin_placeholder = re.search(
+        r'manifestPlaceholders\s*\[\s*"appAuthRedirectScheme"\s*\]\s*='
+        r'\s*"com\.espanaoutdoors"',
+        content,
+    )
+    groovy_placeholder = re.search(
+        r'manifestPlaceholders\s*=\s*\['
+        r'[^]]*appAuthRedirectScheme\s*:\s*"com\.espanaoutdoors"',
+        content,
+    )
+    if not (kotlin_placeholder or groovy_placeholder):
+        raise SystemExit(
+            "Android appAuthRedirectScheme manifest placeholder was not "
+            "configured as com.espanaoutdoors."
+        )
+
     if "agus_maps_flutter" in content.lower() or "comaps" in content.lower():
         raise SystemExit("Forbidden Agus/CoMaps Android configuration detected.")
 
     print("android_manifest=verified")
     print("android_permissions=verified")
     print("android_min_sdk=24")
+    print("android_auth_redirect_scheme=verified")
+    print("android_no_legacy_oidc_callback=verified")
 
 
 def verify_ios() -> None:
