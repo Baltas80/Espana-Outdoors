@@ -47,13 +47,23 @@ but no value for <appAuthRedirectScheme> is provided.
 
 Consequences: Android APK/AAB verification, release-manifest generation and artifact upload were skipped. This baseline must not be labeled release-ready.
 
+### GitHub Actions CI — run 37827938182, attempt 2 (rerun)
+
+- Run attempt: https://github.com/Baltas80/Espana-Outdoors/actions/runs/37827938182/attempts/2
+- Commit SHA: `1d39f25783e87b7d68bb1d394461b84b4d8d7cca`
+- Conclusion: **failure**, confirming the baseline failure is reproducible.
+- `flutter analyze`, focused routing/offline/safety tests and the full test suite passed again.
+- Source Gateway and iOS build jobs remained successful.
+- Android release failed with the same missing `appAuthRedirectScheme` Gradle placeholder at `:app:processReleaseMainManifest`; Android artifact verification and upload were skipped.
+
+
 ## Remediation included in this branch
 
 1. Configure `appAuthRedirectScheme=com.espanaoutdoors` in the generated Android Gradle `defaultConfig` for both Kotlin DSL and Groovy.
 2. Verify the scheme during Android native configuration, so CI fails at a focused guard rather than during Gradle manifest merge.
 3. Remove the obsolete callback activity associated with the retired `openidconnect` dependency; make this cleanup idempotent.
 4. Document the native configuration contract.
-5. Retain the resolved `pubspec.lock` as a CI artifact for each run, so the lockfile can be committed and dependency resolution can be enforced rather than regenerated silently.
+5. Commit the `pubspec.lock` generated on the pinned Flutter 3.47.5 runner, retain the resolved lock as a short-retention CI artifact, and enforce the committed lock in CI, Android staging and release-candidate builds.
 
 ## Release baseline acceptance criteria
 
@@ -68,9 +78,13 @@ A commit is a validated CI baseline only when all relevant jobs and steps are gr
 - The separate security workflow passes.
 - Any external build/deploy check failures are recorded separately and investigated; do not conflate them with app compilation.
 
-## Dependency reproducibility caveat
+## Dependency reproducibility
 
-The baseline commit does not track `pubspec.lock`. Therefore its caret-constrained Dart dependencies are not fully frozen in Git, even though CI pins Flutter to `3.47.5`. This branch adds a short-retention CI artifact for the resolved lockfile so the exact resolution can be captured. Before claiming reproducibility, commit that file and update application build workflows to use `flutter pub get --enforce-lockfile`.
+- A lockfile was resolved by GitHub Actions using Flutter `3.47.5` in CI run `38094153740`, then committed to this branch as `9e6754243df004af6344a0f7891def8ccdef067b`.
+- The checked-in `pubspec.lock` is 35,547 bytes; GitHub blob SHA: `15695c531315a6b9d956e74097ed02020d3a9ea2`.
+- Source artifact: [dart-dependency-lock-95cc0d3190187f5e426dec0cef6d4c2f74158d7e](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094153740); artifact SHA-256: `f02a0751b656449e6287ef10462e3959c25ad85d94cc370c717c8cafc202ea64`.
+- The main CI, Android staging and release-candidate workflows now run `flutter pub get --enforce-lockfile`.
+- The lockfile reports minimum SDK constraints Dart `>=3.13.0` and Flutter `>=3.47.0`, while `pubspec.yaml` declares lower minima. The CI target is pinned to Flutter `3.47.5`; support for the older declared minima has not been demonstrated and must not be claimed without a separate compatibility decision and test matrix.
 
 ## Evidence policy
 
