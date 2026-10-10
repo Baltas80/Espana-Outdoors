@@ -89,3 +89,10 @@ A commit is a validated CI baseline only when all relevant jobs and steps are gr
 ## Evidence policy
 
 Record each baseline or remediation run by its GitHub Actions URL, run attempt, commit SHA, conclusion, job-level outcomes and key failed step. Do not overwrite a previous result with a later rerun; preserve both attempts. Record artifact SHA-256 values from the generated manifest for successful Android release builds. Physical-device validation remains separate from CI and is not implied by a green workflow.
+
+## Validation run coordination
+
+- Original remediation branch: `fix/reproducible-android-baseline-20261011`, PR #90.
+- Isolated validation branch: `fix/reproducible-android-baseline-validation-20261011`, PR #91.
+- Reason: the earlier PR ref retained a CI run in progress with the Source Gateway job reporting no steps; newer CI/staging runs stayed pending. The validation PR records fresh checks on a distinct ref. This is an execution-coordination measure, not evidence that the build has passed.
+- Do not merge either PR until CI and Android staging for the exact latest head SHA complete successfully and Android release artifacts are verified.
