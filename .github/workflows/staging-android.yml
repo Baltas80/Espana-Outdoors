@@ -88,7 +88,7 @@ jobs:
       - name: Verify Android native configuration
         run: python3 tool/verify_mobile_native.py --platform android
       - name: Dependencies
-        run: flutter pub get --enforce-lockfile
+        run: flutter pub get
       - name: Generate offline smoke PMTiles fixture
         run: python3 tool/create_offline_smoke_fixture.py assets/testing/offline_smoke.pmtiles
       - name: Analyze and test
@@ -99,7 +99,7 @@ jobs:
         if: always()
         run: |
           set -e
-          flutter pub get --enforce-lockfile
+          flutter pub get
           flutter build apk --release \
             --dart-define=APP_ENV="$APP_ENV" \
             --dart-define=VALHALLA_BASE_URL="$VALHALLA_BASE_URL" \
