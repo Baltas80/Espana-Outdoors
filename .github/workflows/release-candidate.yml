@@ -46,7 +46,7 @@ jobs:
           flutter --version
           flutter create . --platforms=android --org com.espanaoutdoors --overwrite
           cp "${RUNNER_TEMP}/pubspec.yaml" pubspec.yaml
-          cp "${RUNNER_TEMP}/pubspec.lock" pubspec.yaml
+          cp "${RUNNER_TEMP}/pubspec.lock" pubspec.lock
           cp "${RUNNER_TEMP}/main.dart" lib/main.dart
           if [[ -f "${RUNNER_TEMP}/analysis_options.yaml" ]]; then cp "${RUNNER_TEMP}/analysis_options.yaml" analysis_options.yaml; fi
           if [[ -f "${RUNNER_TEMP}/widget_test.dart" ]]; then cp "${RUNNER_TEMP}/widget_test.dart" test/widget_test.dart; fi
