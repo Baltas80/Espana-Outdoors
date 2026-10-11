@@ -83,7 +83,7 @@ jobs:
         run: python3 tool/verify_mobile_native.py --platform android
 
       - name: Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Analyze and test
         run: |
@@ -197,7 +197,7 @@ jobs:
         run: python3 tool/verify_mobile_native.py --platform ios
 
       - name: Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Analyze and test
         run: |
