@@ -96,3 +96,43 @@ Record each baseline or remediation run by its GitHub Actions URL, run attempt, 
 - Isolated validation branch: `fix/reproducible-android-baseline-validation-20261011`, PR #91.
 - Reason: the earlier PR ref retained a CI run in progress with the Source Gateway job reporting no steps; newer CI/staging runs stayed pending. The validation PR records fresh checks on a distinct ref. This is an execution-coordination measure, not evidence that the build has passed.
 - Do not merge either PR until CI and Android staging for the exact latest head SHA complete successfully and Android release artifacts are verified.
+
+## Validation evidence — PR #91, first complete green run
+
+### Tested references
+
+- PR: [#91](https://github.com/Baltas80/Espana-Outdoors/pull/91)
+- PR head SHA: `bede1f29162bd62785100c7c07f32d2496c462c8`
+- Base/master SHA at test time: `1d39f25783e87b7d68bb1d394461b84b4d8d7cca`
+- GitHub-generated PR merge commit used by the release manifest: `a7087d96602afed6bda2b5c3a47495a72635b674`
+- Flutter SDK: `3.47.5`, stable channel
+- App version: `0.1.0+5`
+
+### Run outcomes
+
+| Workflow | Run / attempt | Result | Evidence |
+|---|---|---|---|
+| CI | [38094647092 / attempt 1](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094647092) | **success** | Analyze, focused routing/offline/safety tests, full test suite, Android release build, APK/AAB verification, release manifest generation, artifact upload, coverage upload, Source Gateway and iOS build all passed |
+| Android staging | [38094647190 / attempt 1](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094647190) | **success** | Native configuration guard, analysis/tests, staging APK build and verification, Android map native smoke and evidence upload passed |
+| Security baseline | [38094647166 / attempt 1](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094647166) | **success** | Security workflow completed successfully |
+
+### Release artifact evidence
+
+The `android-release` artifact was downloaded and its manifest inspected; the manifest's APK/AAB SHA-256 values were independently recomputed from the archive contents and matched.
+
+- [android-release artifact, ID 11684829454](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094647092/artifacts/11684829454)
+  - Artifact ZIP SHA-256: `75cca6c6aba355b6c4a9c13599a5f92532ba7a90e8c7eb517bff4b22f6b42bb4`
+  - APK: `app-release.apk`, 124,050,425 bytes; SHA-256: `17ee19b92c6525cbf2493a1d82ab8ad81a0a5ba3961e31fd653779fd23cd453d`
+  - AAB: `app-release.aab`, 124,233,667 bytes; SHA-256: `9014aa49dc9676efdb1ae6014dffc234b83c7cb789770999d5c2832099999f4a`
+- [android-staging-apk artifact, ID 11685433211](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094647190/artifacts/11685433211)
+  - Artifact ZIP SHA-256: `01c6b6fb3030af9fa1f691e7af0d0ae1bd2af66b795403b6bd24ec17bccb6fe1`
+- [android-map-smoke artifact, ID 11685613240](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094647190/artifacts/11685613240)
+  - Artifact ZIP SHA-256: `e79e70210c8db23e5ee3c8acb0a83ded967efe3d07da190ea4ee49c3a4232656`
+- [coverage artifact, ID 11685048759](https://github.com/Baltas80/Espana-Outdoors/actions/runs/38094647092/artifacts/11685048759)
+  - Artifact ZIP SHA-256: `de93d7fa7d94b492351ea07c6dccf60f23940ccd4b317349db05bbce24587254`
+
+These hashes identify the exact artifacts from these runs. Any subsequent commit must receive a fresh green CI/staging/security run before being considered the release baseline.
+
+### Current interpretation
+
+The AppAuth placeholder failure reproduced on the original master commit and is resolved in this tested PR merge commit. This is the first complete green Android release + staging smoke + iOS + security result on the remediation branch. It is not yet the final master baseline: the evidence update itself creates a new commit and must be validated on the resulting SHA before merge. Workflow-level `--enforce-lockfile` remains a follow-up hardening item; the committed `pubspec.lock` is currently consumed by standard `flutter pub get`, but strict enforcement has not been tested in these runs.
