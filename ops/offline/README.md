@@ -20,11 +20,11 @@ Protomaps Basemap tilesets are OSM-derived Produced Works under ODbL; the basema
 
 ## Source acquisition
 
-Example Spain extract:
+Example dated Spain snapshot (the selected snapshot must exist in Geofabrik's archive):
 
-    https://download.geofabrik.de/europe/spain-latest.osm.pbf
+    https://download.geofabrik.de/europe/spain-261012.osm.pbf
 
-Record the exact extract timestamp, upstream URL and SHA-256 in the release/build record. Do not rely on the mutable latest filename as the version identifier.
+The production release gate rejects mutable `*-latest.osm.pbf` URLs. Record the exact snapshot URL, retrieval timestamp and SHA-256 in the release/build record; the dated filename is the source version identifier.
 
 ## PMTiles build
 

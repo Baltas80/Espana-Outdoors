@@ -186,3 +186,12 @@ jobs:
         run: flutter test
       - name: Build configured iOS candidate
         run: flutter build ios --release --no-codesign --dart-define=APP_ENV=ci
+
+  
+  pmtiles-input-validation:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Test versioned Geofabrik source validation
+        run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v

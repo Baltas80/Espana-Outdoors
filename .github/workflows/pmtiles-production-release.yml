@@ -54,13 +54,8 @@ jobs:
             exit 1
           fi
 
-          case "${OSM_URL}" in
-            https://download.geofabrik.de/*.osm.pbf) ;;
-            *)
-              echo "OSM_URL must be an HTTPS Geofabrik OSM PBF URL."
-              exit 1
-              ;;
-          esac
+          python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
+          python3 ops/offline/validate_geofabrik_spain_url.py "${OSM_URL}"
 
       - name: Download pinned PMTiles CLI
         shell: bash
