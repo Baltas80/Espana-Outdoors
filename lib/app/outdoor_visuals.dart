@@ -22,7 +22,7 @@ class OutdoorVisualHero extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            _VisualAsset(asset: asset, semanticsLabel: title),
+            OutdoorAssetImage(asset: asset, semanticsLabel: title),
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -72,36 +72,64 @@ class OutdoorVisualHero extends StatelessWidget {
   }
 }
 
-class _VisualAsset extends StatelessWidget {
-  const _VisualAsset({required this.asset, required this.semanticsLabel});
+/// Decodes raster assets near their rendered pixel size and supports SVG marks.
+class OutdoorAssetImage extends StatelessWidget {
+  const OutdoorAssetImage({
+    super.key,
+    required this.asset,
+    this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
+    this.semanticsLabel,
+  });
 
   final String asset;
-  final String semanticsLabel;
+  final BoxFit fit;
+  final AlignmentGeometry alignment;
+  final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
     if (asset.toLowerCase().endsWith('.svg')) {
-      return SvgPicture.asset(
-        asset,
-        fit: BoxFit.cover,
-        semanticsLabel: semanticsLabel,
-      );
+      return SvgPicture.asset(asset, fit: fit, semanticsLabel: semanticsLabel);
     }
-    return Image.asset(
-      asset,
-      fit: BoxFit.cover,
-      filterQuality: FilterQuality.high,
-      semanticLabel: semanticsLabel,
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final cacheWidth = width.isFinite
+            ? (width * MediaQuery.devicePixelRatioOf(context))
+                  .ceil()
+                  .clamp(1, 4096)
+                  .toInt()
+            : null;
+
+        return Image.asset(
+          asset,
+          fit: fit,
+          alignment: alignment,
+          filterQuality: FilterQuality.medium,
+          cacheWidth: cacheWidth,
+          semanticLabel: semanticsLabel,
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            if (wasSynchronouslyLoaded) return child;
+            return AnimatedOpacity(
+              opacity: frame == null ? 0 : 1,
+              duration: const Duration(milliseconds: 180),
+              child: frame == null ? const SizedBox.expand() : child,
+            );
+          },
+          errorBuilder: (context, error, stackTrace) => ColoredBox(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: const Center(child: Icon(Icons.landscape_outlined)),
+          ),
+        );
+      },
     );
   }
 }
 
 class OutdoorAssetIcon extends StatelessWidget {
-  const OutdoorAssetIcon({
-    super.key,
-    required this.asset,
-    this.size = 44,
-  });
+  const OutdoorAssetIcon({super.key, required this.asset, this.size = 44});
 
   final String asset;
   final double size;

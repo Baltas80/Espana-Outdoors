@@ -17,6 +17,20 @@ ui_dump() {
   adb exec-out uiautomator dump /dev/tty 2>/dev/null >"${file}" || true
 }
 
+capture_failure_evidence() {
+  local temp_dir="${RUNNER_TEMP:-/tmp}"
+  adb logcat -d >"${temp_dir}/espana-outdoor-map-logcat.txt" || true
+  adb shell dumpsys activity activities >"${temp_dir}/espana-activity.txt" 2>&1 || true
+  adb shell dumpsys window windows >"${temp_dir}/espana-window-state.txt" 2>&1 || true
+  adb exec-out screencap -p >"${temp_dir}/espana-outdoor-map.png" 2>/dev/null || true
+  echo "Application PID: $(adb shell pidof "${package_name}" 2>/dev/null | tr -d '\r\n' || true)"
+  echo "Foreground activity:"
+  adb shell dumpsys activity activities 2>/dev/null | grep -E "mResumedActivity|topResumedActivity" | tail -n 5 || true
+  echo "Relevant runtime diagnostics:"
+  grep -Ein "ANR in|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|AndroidRuntime|flutter" \
+    "${temp_dir}/espana-outdoor-map-logcat.txt" | tail -n 160 || true
+}
+
 wait_outside_anr() {
   local file="${RUNNER_TEMP:-/tmp}/espana-system-dialog.xml"
   local result="${RUNNER_TEMP:-/tmp}/espana-system-anr.txt"
@@ -139,10 +153,14 @@ if start < 0 or end < 0:
     raise SystemExit(2)
 root = ET.fromstring(raw[start:end + len("</hierarchy>")])
 candidates = []
+def is_mapa_label(value):
+    labels = [line.strip() for line in value.splitlines() if line.strip()]
+    return bool(labels) and all(label == "Mapa" for label in labels)
+
 for node in root.iter("node"):
     text = (node.attrib.get("text") or "").strip()
     desc = (node.attrib.get("content-desc") or "").strip()
-    if text != "Mapa" and desc != "Mapa":
+    if not is_mapa_label(text) and not is_mapa_label(desc):
         continue
     match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
     if match:
@@ -169,6 +187,7 @@ for attempt in $(seq 1 30); do
   fi
   if ! adb shell pidof "${package_name}" >/dev/null 2>&1; then
     echo "FAIL: application process disappeared while waiting for Mapa."
+    capture_failure_evidence
     exit 1
   fi
   echo "Mapa not visible yet; waiting (${attempt}/30)."
@@ -177,6 +196,7 @@ for attempt in $(seq 1 30); do
 
 if test "${map_found}" -ne 1; then
   echo "FAIL: Could not find visible Mapa navigation destination after bounded startup wait."
+  capture_failure_evidence
   cat "${window_file}"
   exit 1
 fi

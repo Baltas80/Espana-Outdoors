@@ -62,7 +62,7 @@ class _RoutesPageState extends State<RoutesPage> {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [
           const OutdoorVisualHero(
-            asset: 'assets/images/routes/cami_ronda_costa_brava.jpg',
+            asset: 'assets/images/routes/cami_ronda_costa_brava.webp',
             title: 'Descubre rutas por España',
             subtitle: 'Rutas con contexto y preparación offline.',
           ),
@@ -92,7 +92,7 @@ class _RoutesPageState extends State<RoutesPage> {
           ),
           const SizedBox(height: 16),
           _RouteVisualCard(
-            asset: 'assets/images/routes/lagos_covadonga.jpg',
+            asset: 'assets/images/routes/lagos_covadonga.webp',
             icon: 'assets/visuals/icons/routes.svg',
             title: 'Lagos de Covadonga',
             subtitle: 'Picos de Europa · Asturias',
@@ -101,7 +101,7 @@ class _RoutesPageState extends State<RoutesPage> {
           ),
           const SizedBox(height: 12),
           _RouteVisualCard(
-            asset: 'assets/images/routes/mulhacen_sierra_nevada.jpg',
+            asset: 'assets/images/routes/mulhacen_sierra_nevada.webp',
             icon: 'assets/visuals/icons/natura.svg',
             title: 'Mulhacén · Sierra Nevada',
             subtitle: 'Sierra Nevada · Granada',
@@ -110,7 +110,7 @@ class _RoutesPageState extends State<RoutesPage> {
           ),
           const SizedBox(height: 12),
           _RouteVisualCard(
-            asset: 'assets/images/routes/caminito_del_rey.jpg',
+            asset: 'assets/images/routes/caminito_del_rey.webp',
             icon: 'assets/visuals/icons/map.svg',
             title: 'Caminito del Rey',
             subtitle: 'Málaga · Andalucía',
@@ -191,11 +191,11 @@ class _RouteVisualCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              asset,
+            OutdoorAssetImage(
+              asset: asset,
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
-              semanticLabel: title,
+              alignment: Alignment.topCenter,
+              semanticsLabel: title,
             ),
             DecoratedBox(
               decoration: BoxDecoration(
@@ -274,10 +274,7 @@ class _RouteVisualCard extends StatelessWidget {
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,
-                child: InkWell(
-                  onTap: onTap,
-                  splashColor: Colors.white24,
-                ),
+                child: InkWell(onTap: onTap, splashColor: Colors.white24),
               ),
             ),
           ],

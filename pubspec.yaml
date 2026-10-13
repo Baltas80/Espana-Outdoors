@@ -57,4 +57,21 @@ flutter:
     - assets/landscapes/
     - assets/flora_fauna/flora/
     - assets/flora_fauna/fauna/
-    - assets/images/routes/
+    - assets/images/routes/catalog.json
+    - assets/images/routes/banos_popea_bejarano.webp
+    - assets/images/routes/gargantas_de_los_infiernos.webp
+    - assets/images/routes/caminito_del_rey.webp
+    - assets/images/routes/lagos_covadonga.webp
+    - assets/images/routes/cami_ronda_costa_brava.webp
+    - assets/images/routes/mulhacen_sierra_nevada.webp
+    - assets/images/routes/ruta_volcanes_la_palma.webp
+    - assets/images/routes/lagos_colomers.webp
+    - assets/images/routes/penalara.webp
+    - assets/images/routes/cami_de_cavalls.webp
+    - assets/images/routes/picos_de_europa.webp
+    - assets/images/routes/carros_de_foc.webp
+    - assets/images/routes/gr11_transpirenaica.webp
+    - assets/images/routes/canon_rio_bailon_zuheros.webp
+    - assets/images/routes/senda_teide.webp
+    - assets/images/routes/pantaneros_chulilla.webp
+    - assets/images/routes/ruta_del_cares.webp
