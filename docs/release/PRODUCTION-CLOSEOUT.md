@@ -4,7 +4,13 @@ This document is the release-control checklist for the final parallel workstream
 
 ## A. Android physical QA
 
-The CI Android artifact is necessary but not sufficient. Install the exact CI APK/AAB build under test on a physical Android device and record:
+**Artifact selection is part of the release gate.** The CI job deliberately builds with `APP_ENV=ci` and does not inject production map endpoints. Its artifact is named `android-ci-validation`; it is for build/test evidence only and must not be used as the production-ready app on a phone.
+
+Use:
+- `android-staging-apk` from a successful **Android staging** run for pre-production app and map smoke tests. A passing emulator smoke is not proof that production services are deployed.
+- `android-release-candidate` from the **Release candidate** workflow for production-profile validation. That workflow must pass its real HTTPS endpoint gates before the APK/AAB is considered a candidate.
+
+Install the exact selected APK on a physical Android device and record:
 
 - device model and Android version;
 - build identifier / commit SHA;
@@ -20,7 +26,7 @@ The CI Android artifact is necessary but not sufficient. Install the exact CI AP
 - background location / screen-off;
 - battery and thermal sanity.
 
-Known manual observation: the current production-style build reports `MAP_PMTILES_URL is not configured` when no approved PMTiles endpoint is injected. This is a real production blocker, not a test failure to hide.
+Known manual observation: the map screen reports `No hay PMTiles configurado: falta MAP_PMTILES_URL y OFFLINE_CATALOG_URL` when the CI-profile APK is installed without a verified local archive. Do not suppress this error. Confirm the artifact profile first; production readiness still depends on verifying the real PMTiles/catalog endpoints and testing the production candidate on-device.
 
 ## B. iOS physical QA
 
