@@ -32,15 +32,15 @@ permissions:
 
 env:
   APP_ENV: staging
-  OFFLINE_CATALOG_URL: https://maps.espanaoutdoor.es/catalog/spain.json
-  MAP_PMTILES_URL: ''
-  VALHALLA_BASE_URL: https://routing.espanaoutdoor.es
-  SOURCE_GATEWAY_BASE_URL: https://api.espanaoutdoor.es
-  RESCUE_LINK_BASE_URL: https://rescue.espanaoutdoor.es
-  OIDC_ISSUER: https://auth.espanaoutdoor.es/realms/espana-outdoor
-  OIDC_CLIENT_ID: espana-outdoors-mobile
-  OIDC_REDIRECT_URI: com.espanaoutdoors://oauth2redirect
-  MAP_ATTRIBUTION: "© OpenStreetMap contributors"
+  OFFLINE_CATALOG_URL: ${{ secrets.OFFLINE_CATALOG_URL }}
+  MAP_PMTILES_URL: ${{ secrets.MAP_PMTILES_URL }}
+  VALHALLA_BASE_URL: ${{ secrets.VALHALLA_BASE_URL }}
+  SOURCE_GATEWAY_BASE_URL: ${{ secrets.SOURCE_GATEWAY_BASE_URL }}
+  RESCUE_LINK_BASE_URL: ${{ secrets.RESCUE_LINK_BASE_URL }}
+  OIDC_ISSUER: ${{ secrets.OIDC_ISSUER }}
+  OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
+  OIDC_REDIRECT_URI: ${{ vars.OIDC_REDIRECT_URI }}
+  MAP_ATTRIBUTION: ${{ vars.MAP_ATTRIBUTION }}
 
 jobs:
   android-staging:
