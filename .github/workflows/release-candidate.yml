@@ -77,6 +77,11 @@ jobs:
       - name: Verify production build profile
         run: python3 tool/verify_build_profile.py --profile production
 
+      - name: Verify production PMTiles HTTP range support
+        run: bash ops/offline/verify-pmtiles-http.sh
+
+      - name: Verify published offline catalog and PMTiles metadata
+        run: bash ops/offline/verify-map-catalog.sh
 
       - name: Apply Android native configuration
         run: python3 tool/configure_mobile_native.py --platform android
