@@ -49,7 +49,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
   @override
   void dispose() {
-    _styleFuture.then((style) => style.dispose());
+    _disposeStyleWhenReady(_styleFuture);
     super.dispose();
   }
   @override
@@ -273,7 +273,7 @@ class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
   }
   @override
   void dispose() {
-    _styleFuture.then((style) => style.dispose());
+    _disposeStyleWhenReady(_styleFuture);
     super.dispose();
   }
   @override
@@ -306,5 +306,14 @@ class _MapMessage extends StatelessWidget {
         EOButton(label: 'Reintentar', icon: Icons.refresh, onPressed: onRetry),
       ]),
     ),
+  );
+}
+
+void _disposeStyleWhenReady(Future<vt.Style> styleFuture) {
+  styleFuture.then<void>(
+    (style) => style.dispose(),
+    onError: (Object _, StackTrace __) {
+      // FutureBuilder reports the load error; no style exists to dispose.
+    },
   );
 }
