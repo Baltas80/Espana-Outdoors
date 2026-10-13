@@ -194,4 +194,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
       - name: Test versioned Geofabrik source validation
-        run: python3 -m unittest ops.offline.test_validate_geofabrik_spain_url -v
+        run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
