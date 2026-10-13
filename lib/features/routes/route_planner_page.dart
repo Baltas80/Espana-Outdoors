@@ -8,6 +8,7 @@ import '../../core/location/location_controller.dart';
 import '../../core/routing/routing_provider.dart';
 import '../map/map_page.dart';
 import 'destination_coordinate_input.dart';
+import 'route_preview_card.dart';
 
 class RoutePlannerPage extends ConsumerStatefulWidget {
   const RoutePlannerPage({super.key});
@@ -18,6 +19,8 @@ class RoutePlannerPage extends ConsumerStatefulWidget {
 
 class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
   LatLng? _destination;
+  // Keep the request origin paired with its result as the live GPS can move.
+  LatLng? _routeOrigin;
   RouteResult? _route;
   bool _busy = false;
 
@@ -33,6 +36,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
     if (result == null || !mounted) return;
     setState(() {
       _destination = result;
+      _routeOrigin = null;
       _route = null;
     });
   }
@@ -64,14 +68,15 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
         return;
       }
 
+      final origin = LatLng(location.latitude, location.longitude);
       final result = await service.route(
-        RouteRequest(
-          points: [LatLng(location.latitude, location.longitude), destination],
-          profile: 'hiking',
-        ),
+        RouteRequest(points: [origin, destination], profile: 'hiking'),
       );
       if (!mounted) return;
-      setState(() => _route = result);
+      setState(() {
+        _routeOrigin = origin;
+        _route = result;
+      });
     } on Object catch (error) {
       if (mounted) _show(error.toString());
     } finally {
@@ -85,6 +90,9 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
     );
   }
 
+  String _coordinates(LatLng point) =>
+      '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
+
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(locationControllerProvider).position;
@@ -94,10 +102,6 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
         (location == null
             ? const LatLng(40.4168, -3.7038)
             : LatLng(location.latitude, location.longitude));
-
-    final destinationLabel = destination == null
-        ? 'Sin destino seleccionado.'
-        : 'Destino: ${destination.latitude.toStringAsFixed(5)}, ${destination.longitude.toStringAsFixed(5)}';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Planificar ruta')),
@@ -119,6 +123,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                   ? null
                   : (point) => setState(() {
                       _destination = point;
+                      _routeOrigin = null;
                       _route = null;
                     }),
             ),
@@ -127,34 +132,45 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
             left: 16,
             right: 16,
             top: 16,
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Ruta de senderismo',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(destinationLabel),
-                    if (destination == null)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 4),
-                        child: Text(
-                          'Toca un punto del mapa para colocar el destino.',
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * .45,
+              ),
+              child:
+                  _route != null && _routeOrigin != null && destination != null
+                  ? RoutePreviewCard(
+                      origin: _routeOrigin!,
+                      destination: destination,
+                      route: _route!,
+                    )
+                  : Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Ruta de senderismo',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              destination == null
+                                  ? 'Sin destino seleccionado.'
+                                  : 'Destino: ${_coordinates(destination)}',
+                            ),
+                            if (destination == null)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Toca un punto del mapa para colocar el destino.',
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                    if (_route != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        '${((_route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((_route!.durationSeconds ?? 0) / 60).round()} min',
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+                    ),
             ),
           ),
           Positioned(
