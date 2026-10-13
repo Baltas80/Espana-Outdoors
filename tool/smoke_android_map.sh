@@ -153,10 +153,14 @@ if start < 0 or end < 0:
     raise SystemExit(2)
 root = ET.fromstring(raw[start:end + len("</hierarchy>")])
 candidates = []
+def is_mapa_label(value):
+    labels = [line.strip() for line in value.splitlines() if line.strip()]
+    return bool(labels) and all(label == "Mapa" for label in labels)
+
 for node in root.iter("node"):
     text = (node.attrib.get("text") or "").strip()
     desc = (node.attrib.get("content-desc") or "").strip()
-    if text != "Mapa" and desc != "Mapa":
+    if not is_mapa_label(text) and not is_mapa_label(desc):
         continue
     match = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
     if match:
