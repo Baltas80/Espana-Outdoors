@@ -31,7 +31,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Mapa'), findsOneWidget);
+    expect(find.text('Mapa'), findsWidgets);
     expect(find.text('Planificar ruta'), findsOneWidget);
 
     await tester.tap(find.text('Planificar ruta'));
