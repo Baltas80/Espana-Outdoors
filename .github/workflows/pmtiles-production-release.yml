@@ -54,7 +54,7 @@ jobs:
             exit 1
           fi
 
-          python3 -m unittest ops.offline.test_validate_geofabrik_spain_url -v
+          python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
           python3 ops/offline/validate_geofabrik_spain_url.py "${OSM_URL}"
 
       - name: Download pinned PMTiles CLI
