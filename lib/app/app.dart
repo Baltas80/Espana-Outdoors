@@ -41,7 +41,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       _BackNavigationScope(fallback: fallback, child: child);
 
   static final _router = GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/map',
     routes: [
       GoRoute(
         path: '/splash',
