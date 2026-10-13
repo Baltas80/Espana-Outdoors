@@ -7,6 +7,7 @@ import '../../core/contracts/routing_service.dart';
 import '../../core/location/location_controller.dart';
 import '../../core/routing/routing_provider.dart';
 import '../map/map_page.dart';
+import 'destination_coordinate_input.dart';
 
 class RoutePlannerPage extends ConsumerStatefulWidget {
   const RoutePlannerPage({super.key});
@@ -22,43 +23,13 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
 
   Future<void> _showDestinationDialog() async {
     final existing = _destination;
-    final latController = TextEditingController(text: existing?.latitude.toString() ?? '');
-    final lonController = TextEditingController(text: existing?.longitude.toString() ?? '');
     final result = await showDialog<LatLng>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Destino'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: latController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-              decoration: const InputDecoration(labelText: 'Latitud'),
-            ),
-            TextField(
-              controller: lonController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-              decoration: const InputDecoration(labelText: 'Longitud'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-          FilledButton(
-            onPressed: () {
-              final lat = double.tryParse(latController.text.trim());
-              final lon = double.tryParse(lonController.text.trim());
-              if (lat == null || lon == null || lat.abs() > 90 || lon.abs() > 180) return;
-              Navigator.pop(context, LatLng(lat, lon));
-            },
-            child: const Text('Usar destino'),
-          ),
-        ],
+      builder: (_) => _DestinationDialog(
+        initialLatitude: existing?.latitude.toString() ?? '',
+        initialLongitude: existing?.longitude.toString() ?? '',
       ),
     );
-    latController.dispose();
-    lonController.dispose();
     if (result == null || !mounted) return;
     setState(() {
       _destination = result;
@@ -95,10 +66,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
 
       final result = await service.route(
         RouteRequest(
-          points: [
-            LatLng(location.latitude, location.longitude),
-            destination,
-          ],
+          points: [LatLng(location.latitude, location.longitude), destination],
           profile: 'hiking',
         ),
       );
@@ -110,6 +78,7 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       if (mounted) setState(() => _busy = false);
     }
   }
+
   void _show(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message.replaceFirst('Exception: ', ''))),
@@ -120,7 +89,8 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
   Widget build(BuildContext context) {
     final location = ref.watch(locationControllerProvider).position;
     final destination = _destination;
-    final center = destination ??
+    final center =
+        destination ??
         (location == null
             ? const LatLng(40.4168, -3.7038)
             : LatLng(location.latitude, location.longitude));
@@ -135,7 +105,9 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
         children: [
           Positioned.fill(
             child: PmTilesMapViewport(
-              key: ValueKey('${center.latitude}:${center.longitude}:${_route?.points.length ?? 0}'),
+              key: ValueKey(
+                '${center.latitude}:${center.longitude}:${_route?.points.length ?? 0}',
+              ),
               initialCenter: center,
               initialZoom: destination == null ? 12 : 14,
               routePoints: _route?.points ?? const <LatLng>[],
@@ -146,9 +118,9 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
               onTap: _busy
                   ? null
                   : (point) => setState(() {
-                        _destination = point;
-                        _route = null;
-                      }),
+                      _destination = point;
+                      _route = null;
+                    }),
             ),
           ),
           Positioned(
@@ -161,7 +133,10 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Ruta de senderismo', style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Text(
+                      'Ruta de senderismo',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 4),
                     Text(destinationLabel),
                     if (destination == null)
@@ -170,7 +145,8 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                         child: Text(
                           'Toca un punto del mapa para colocar el destino.',
                         ),
-                      ),                    if (_route != null) ...[
+                      ),
+                    if (_route != null) ...[
                       const SizedBox(height: 6),
                       Text(
                         '${((_route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((_route!.durationSeconds ?? 0) / 60).round()} min',
@@ -200,7 +176,9 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: _busy ? null : () => context.push('/navigation', extra: _route),
+                      onPressed: _busy
+                          ? null
+                          : () => context.push('/navigation', extra: _route),
                       icon: const Icon(Icons.navigation_outlined),
                       label: const Text('Iniciar navegación'),
                     ),
@@ -222,4 +200,109 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       ),
     );
   }
+}
+
+class _DestinationDialog extends StatefulWidget {
+  const _DestinationDialog({
+    required this.initialLatitude,
+    required this.initialLongitude,
+  });
+
+  final String initialLatitude;
+  final String initialLongitude;
+
+  @override
+  State<_DestinationDialog> createState() => _DestinationDialogState();
+}
+
+class _DestinationDialogState extends State<_DestinationDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _latitudeController;
+  late final TextEditingController _longitudeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _latitudeController = TextEditingController(text: widget.initialLatitude);
+    _longitudeController = TextEditingController(text: widget.initialLongitude);
+  }
+
+  @override
+  void dispose() {
+    _latitudeController.dispose();
+    _longitudeController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_formKey.currentState?.validate() != true) return;
+
+    final latitude = validateDestinationCoordinate(
+      _latitudeController.text,
+      axis: DestinationCoordinateAxis.latitude,
+    );
+    final longitude = validateDestinationCoordinate(
+      _longitudeController.text,
+      axis: DestinationCoordinateAxis.longitude,
+    );
+    if (!latitude.isValid || !longitude.isValid) return;
+
+    Navigator.pop(context, LatLng(latitude.value!, longitude.value!));
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Destino'),
+    content: SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Introduce coordenadas decimales. Puedes usar coma o punto.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _latitudeController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
+              textInputAction: TextInputAction.next,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              decoration: const InputDecoration(labelText: 'Latitud'),
+              validator: (value) => validateDestinationCoordinate(
+                value,
+                axis: DestinationCoordinateAxis.latitude,
+              ).errorMessage,
+            ),
+            TextFormField(
+              controller: _longitudeController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: true,
+              ),
+              textInputAction: TextInputAction.done,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              decoration: const InputDecoration(labelText: 'Longitud'),
+              validator: (value) => validateDestinationCoordinate(
+                value,
+                axis: DestinationCoordinateAxis.longitude,
+              ).errorMessage,
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancelar'),
+      ),
+      FilledButton(onPressed: _submit, child: const Text('Usar destino')),
+    ],
+  );
 }
