@@ -1,0 +1,5 @@
+236f226d64da127b11a9aadb7d424574a7fb837a:lib/infrastructure/auth/openidconnect_auth_service.dart:generic-api-key:26
+7d9c0f2939a11b691e949184eb738226d0968a2e:site/index.html:jwt:11
+7f6398a4aae9335a32bcbe3fa7fa41f930b6d092:lib/core/navigation/waypoint_controller.dart:generic-api-key:12
+33c3ab2cc3f8cd9a1339c370d23a44c20e93df2f:infra/.env.example:generic-api-key:10
+53c1901bd9b24ae4c5455a68af095ef90c33fa70:lib/infrastructure/auth/openidconnect_auth_service.dart:generic-api-key:26
