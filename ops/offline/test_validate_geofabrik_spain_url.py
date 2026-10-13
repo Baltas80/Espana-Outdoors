@@ -2,7 +2,7 @@
 
 import unittest
 
-from ops.offline.validate_geofabrik_spain_url import validation_error
+from validate_geofabrik_spain_url import validation_error
 
 
 class GeofabrikSpainUrlTests(unittest.TestCase):
