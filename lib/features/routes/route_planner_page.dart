@@ -5,8 +5,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/contracts/routing_service.dart';
 import '../../core/location/location_controller.dart';
-import '../../core/routing/routing_config.dart';
-import '../../infrastructure/routing/valhalla_routing_service.dart';
+import '../../core/routing/routing_provider.dart';
 import '../map/map_page.dart';
 
 class RoutePlannerPage extends ConsumerStatefulWidget {
@@ -68,31 +67,32 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
   }
 
   Future<void> _calculate() async {
+    if (_busy) return;
+
+    final service = ref.read(routingServiceProvider);
+    if (service == null) {
+      _show('Routing no está configurado en esta instalación.');
+      return;
+    }
+
     final destination = _destination;
     if (destination == null) {
       _show('Selecciona primero un destino.');
       return;
     }
 
-    var location = ref.read(locationControllerProvider).position;
-    if (location == null) {
-      await ref.read(locationControllerProvider.notifier).locate();
-      location = ref.read(locationControllerProvider).position;
-    }
-    if (location == null) {
-      _show('Necesitamos tu ubicación para calcular la ruta.');
-      return;
-    }
-
-    final config = RoutingConfig.fromEnvironment();
-    if (!config.isConfigured) {
-      _show('Routing no está configurado en este APK.');
-      return;
-    }
-
     setState(() => _busy = true);
     try {
-      final service = ValhallaRoutingService(baseUri: config.baseUri!);
+      var location = ref.read(locationControllerProvider).position;
+      if (location == null) {
+        await ref.read(locationControllerProvider.notifier).locate();
+        location = ref.read(locationControllerProvider).position;
+      }
+      if (location == null) {
+        _show('Necesitamos tu ubicación para calcular la ruta.');
+        return;
+      }
+
       final result = await service.route(
         RouteRequest(
           points: [
@@ -110,7 +110,6 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
       if (mounted) setState(() => _busy = false);
     }
   }
-
   void _show(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message.replaceFirst('Exception: ', ''))),
