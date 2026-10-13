@@ -32,6 +32,10 @@ jobs:
         env:
           SHOPIFY_STOREFRONT_TOKEN: ${{ secrets.SHOPIFY_STOREFRONT_TOKEN }}
         run: |
+          if [ -z "$SHOPIFY_STOREFRONT_TOKEN" ]; then
+            echo "::error::SHOPIFY_STOREFRONT_TOKEN secret is missing; refusing to publish an unconfigured store."
+            exit 1
+          fi
           printf 'window.ESPANA_OUTDOOR_SHOPIFY_STOREFRONT_TOKEN=%s;\n' "$(python3 -c 'import json,os; print(json.dumps(os.environ["SHOPIFY_STOREFRONT_TOKEN"]))')" > site/shopify-config.js
 
       - name: Build official route catalog
