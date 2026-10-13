@@ -24,13 +24,9 @@ PLANETILER_URL="https://github.com/onthegomap/planetiler/releases/download/v${PL
 
 : "${OSM_URL:?Set OSM_URL explicitly to an immutable/versioned Geofabrik Spain OSM PBF URL}"
 
-case "$OSM_URL" in
-  https://download.geofabrik.de/*.osm.pbf) ;;
-  *)
-    echo "ERROR: OSM_URL must be an HTTPS Geofabrik OSM PBF URL." >&2
-    exit 1
-    ;;
-esac
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+python3 "${SCRIPT_DIR}/validate_geofabrik_spain_url.py" "${OSM_URL}"
+
 
 mkdir -p "$DATA_DIR"
 PBF="$DATA_DIR/spain.osm.pbf"
