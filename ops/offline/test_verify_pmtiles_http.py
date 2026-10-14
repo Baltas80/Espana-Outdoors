@@ -23,6 +23,10 @@ def value_after(flag):
     except (ValueError, IndexError):
         return None
 
+if value_after("--proto-redir") != "=https":
+    print("redirect protocol must be restricted to HTTPS", file=sys.stderr)
+    raise SystemExit(90)
+
 header_path = value_after("--dump-header")
 is_head = "--head" in args
 mode = os.environ.get("MOCK_CURL_MODE", "valid")

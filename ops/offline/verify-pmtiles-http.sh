@@ -12,7 +12,7 @@ tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
 echo "Checking HTTPS HEAD response..."
-if ! head_status="$(curl --silent --show-error --location \
+if ! head_status="$(curl --silent --show-error --location --proto-redir '=https' \
   --connect-timeout 5 --max-time 20 --head \
   --dump-header "$tmp_dir/head.headers" --output /dev/null \
   --write-out '%{http_code}' "$MAP_PMTILES_URL")"; then
@@ -54,7 +54,7 @@ echo "Checking byte-range support (strict 2 KiB response cap)..."
 # server ignores Range or returns an unbounded/chunked body, head closes the
 # pipe after 2 KiB and curl fails instead of downloading the whole map.
 set +e
-curl --silent --show-error --location \
+curl --silent --show-error --location --proto-redir '=https' \
   --connect-timeout 5 --max-time 30 \
   --range 0-1023 --dump-header "$tmp_dir/range.headers" \
   "$MAP_PMTILES_URL" | head -c 2049 > "$tmp_dir/range.body"

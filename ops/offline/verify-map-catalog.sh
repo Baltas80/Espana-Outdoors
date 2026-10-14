@@ -11,7 +11,7 @@ esac
 tmp_catalog="$(mktemp)"
 trap 'rm -f "$tmp_catalog"' EXIT
 
-curl --fail --silent --show-error --location \
+curl --fail --silent --show-error --location --proto-redir '=https' \
   --connect-timeout 5 --max-time 15 \
   --output "$tmp_catalog" "${OFFLINE_CATALOG_URL}"
 

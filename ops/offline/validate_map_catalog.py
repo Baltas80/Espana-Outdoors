@@ -59,13 +59,23 @@ def validate_catalog_payload(
     for key in ("licenseUrl", "downloadUrl"):
         value = spain[key]
         parsed = urllib.parse.urlparse(value if isinstance(value, str) else "")
-        if parsed.scheme != "https" or not parsed.netloc:
-            raise ValueError(f"{key} must be a complete HTTPS URL.")
+        if (
+            parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username is not None
+            or parsed.password is not None
+        ):
+            raise ValueError(f"{key} must be a complete HTTPS URL without embedded credentials.")
 
     if configured_pmtiles_url:
         configured = urllib.parse.urlparse(configured_pmtiles_url)
-        if configured.scheme != "https" or not configured.netloc:
-            raise ValueError("MAP_PMTILES_URL must be a complete HTTPS URL.")
+        if (
+            configured.scheme != "https"
+            or not configured.hostname
+            or configured.username is not None
+            or configured.password is not None
+        ):
+            raise ValueError("MAP_PMTILES_URL must be a complete HTTPS URL without embedded credentials.")
         if configured_pmtiles_url != spain["downloadUrl"]:
             raise ValueError(
                 "Configured MAP_PMTILES_URL does not match the Spain catalog downloadUrl."
@@ -112,6 +122,11 @@ def validate_catalog_file(
         with urllib.request.urlopen(request, timeout=15) as response:
             if response.status != 200:
                 raise ValueError(f"PMTiles HEAD returned HTTP {response.status}.")
+            final_url = urllib.parse.urlparse(response.geturl())
+            if final_url.scheme != "https" or not final_url.hostname:
+                raise ValueError("PMTiles HEAD redirected to a non-HTTPS URL.")
+            if final_url.username or final_url.password:
+                raise ValueError("PMTiles final URL must not include embedded credentials.")
             remote_size = response.headers.get("Content-Length")
     except (OSError, urllib.error.URLError) as exc:
         raise ValueError(f"PMTiles HEAD request failed: {exc}") from exc
