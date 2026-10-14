@@ -79,6 +79,7 @@ api_request() {
 }
 
 printf 'Checking Cloudflare R2 bucket "%s"...\n' "$R2_BUCKET"
+bucket_created=false
 bucket_path="/accounts/${R2_ACCOUNT_ID}/r2/buckets/${R2_BUCKET}"
 bucket_code="$(curl --silent --show-error --connect-timeout 10 --max-time 45 \
   --output "$tmp_dir/bucket.json" --write-out '%{http_code}' \
@@ -92,6 +93,7 @@ elif [[ "$bucket_code" == "404" ]]; then
     "$(jq -cn --arg name "$R2_BUCKET" --arg location "$LOCATION_HINT" \
       '{name:$name, locationHint:$location, storageClass:"Standard"}')" >/dev/null \
     || fail "Could not create R2 bucket."
+  bucket_created=true
 else
   jq -c '{success, errors, messages}' "$tmp_dir/bucket.json" >&2 2>/dev/null || true
   fail "Could not read R2 bucket (HTTP ${bucket_code}); check API token scope and account ID."
@@ -104,6 +106,9 @@ existing="$(printf '%s' "$domain_list" | jq -c --arg domain "$DOMAIN" \
   '[.result.domains[]? | select(.domain == $domain)] | first // empty')"
 
 if [[ -z "$existing" ]]; then
+  if [[ "$bucket_created" != "true" ]]; then
+    fail "The bucket already existed but does not have this domain attached. Refusing to expose an uninspected bucket via a public domain; use a new dedicated map-only bucket."
+  fi
   printf 'Attaching HTTPS custom domain...\n'
   api_request POST "$domains_path" \
     "$(jq -cn --arg domain "$DOMAIN" --arg zone "$CLOUDFLARE_ZONE_ID" \

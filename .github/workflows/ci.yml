@@ -206,5 +206,7 @@ jobs:
           grep -q 'CLOUDFLARE_API_TOKEN' "$RUNNER_TEMP/r2-provision.stderr"
       - name: Test versioned Geofabrik source validation
         run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
+      - name: Test R2 provisioning public-bucket safety
+        run: python3 -m unittest discover -s ops/offline -p 'test_provision_r2_storage.py' -v
       - name: Test immutable R2 object guard
         run: python3 -m unittest discover -s ops/offline -p 'test_assert_r2_object_absent.py' -v
