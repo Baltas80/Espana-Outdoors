@@ -195,3 +195,5 @@ jobs:
         uses: actions/checkout@v7.0.1
       - name: Test versioned Geofabrik source validation
         run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
+      - name: Test PMTiles HTTP range gate
+        run: python3 -m unittest discover -s ops/offline -p 'test_verify_pmtiles_http.py' -v
