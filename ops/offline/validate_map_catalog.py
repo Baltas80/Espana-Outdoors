@@ -18,6 +18,23 @@ from pathlib import Path
 from typing import Any
 
 
+class HTTPSOnlyRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Reject any redirect that leaves HTTPS, including temporary downgrade hops."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        target = urllib.parse.urlparse(newurl)
+        if (
+            target.scheme != "https"
+            or not target.hostname
+            or target.username is not None
+            or target.password is not None
+        ):
+            raise ValueError(
+                "PMTiles redirect must remain HTTPS and must not include embedded credentials."
+            )
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 REQUIRED_SPAIN_FIELDS = (
     "name",
     "description",
@@ -119,7 +136,8 @@ def validate_catalog_file(
         headers={"User-Agent": "Espana-Outdoor-Catalog-Smoke/1.0"},
     )
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
+        opener = urllib.request.build_opener(HTTPSOnlyRedirectHandler())
+        with opener.open(request, timeout=15) as response:
             if response.status != 200:
                 raise ValueError(f"PMTiles HEAD returned HTTP {response.status}.")
             final_url = urllib.parse.urlparse(response.geturl())

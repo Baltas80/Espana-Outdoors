@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import unittest
+from email.message import Message
+from io import BytesIO
+from urllib.request import Request
 
-from validate_map_catalog import validate_catalog_payload
+from validate_map_catalog import HTTPSOnlyRedirectHandler, validate_catalog_payload
 
 
 def _entry(region_id: str = "spain") -> dict[str, object]:
@@ -23,6 +26,33 @@ def _entry(region_id: str = "spain") -> dict[str, object]:
 
 
 class MapCatalogContractTests(unittest.TestCase):
+    def test_redirect_handler_rejects_https_downgrade(self) -> None:
+        handler = HTTPSOnlyRedirectHandler()
+        request = Request("https://maps.example.invalid/spain.pmtiles", method="HEAD")
+        with self.assertRaisesRegex(ValueError, "must remain HTTPS"):
+            handler.redirect_request(
+                request,
+                BytesIO(b""),
+                302,
+                "Found",
+                Message(),
+                "http://insecure.example.invalid/spain.pmtiles",
+            )
+
+    def test_redirect_handler_accepts_https_target(self) -> None:
+        handler = HTTPSOnlyRedirectHandler()
+        request = Request("https://maps.example.invalid/spain.pmtiles", method="HEAD")
+        redirected = handler.redirect_request(
+            request,
+            BytesIO(b""),
+            302,
+            "Found",
+            Message(),
+            "https://cdn.example.invalid/spain.pmtiles",
+        )
+        self.assertIsNotNone(redirected)
+        self.assertEqual(redirected.full_url, "https://cdn.example.invalid/spain.pmtiles")
+
     def test_valid_catalog_selects_spain_entry(self) -> None:
         result = validate_catalog_payload([_entry("madrid"), _entry("spain")])
         self.assertEqual(result["id"], "spain")
