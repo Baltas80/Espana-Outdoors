@@ -141,28 +141,5 @@ Future<OfflineRegion> _loadCatalogRegion() async {
     );
   }
 
-  final decoded = jsonDecode(response.body);
-  Map<String, Object?>? raw;
-
-  if (decoded is Map) {
-    raw = Map<String, Object?>.from(decoded);
-  } else if (decoded is List) {
-    final entries = decoded
-        .whereType<Map>()
-        .map((item) => Map<String, Object?>.from(item))
-        .toList(growable: false);
-    for (final entry in entries) {
-      if (entry['id']?.toString().toLowerCase() == 'spain') {
-        raw = entry;
-        break;
-      }
-    }
-    raw ??= entries.isEmpty ? null : entries.first;
-  }
-
-  if (raw == null) {
-    throw StateError('El catálogo cartográfico no tiene un formato válido.');
-  }
-
-  return OfflineRegion.fromJson(raw);
+  return parseSpainCatalogEntry(jsonDecode(response.body));
 }
