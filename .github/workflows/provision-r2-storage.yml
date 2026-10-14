@@ -8,6 +8,11 @@ on:
         type: boolean
         required: true
         default: false
+      confirm_public_bucket:
+        description: "Confirm this bucket contains only public map/catalog files and all objects may be exposed over HTTPS"
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -19,7 +24,7 @@ concurrency:
 jobs:
   provision-r2:
     name: Provision R2 bucket and custom HTTPS domain
-    if: ${{ inputs.confirm_provision == true }}
+    if: ${{ inputs.confirm_provision == true && inputs.confirm_public_bucket == true }}
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     environment: maps-production
