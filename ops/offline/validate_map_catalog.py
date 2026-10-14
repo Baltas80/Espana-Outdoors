@@ -7,6 +7,7 @@ without relying on live production endpoints.
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -18,6 +19,8 @@ from typing import Any
 
 
 REQUIRED_SPAIN_FIELDS = (
+    "name",
+    "description",
     "providerId",
     "licenseUrl",
     "attribution",
@@ -76,18 +79,25 @@ def validate_catalog_payload(
     if type(size) is not int or size <= 0:
         raise ValueError("Catalog spain sizeBytes must be a positive integer.")
 
-    if not isinstance(spain["attribution"], str) or not spain["attribution"].strip():
-        raise ValueError("Catalog spain attribution must not be empty.")
+    for key in ("name", "description", "attribution"):
+        if not isinstance(spain[key], str) or not spain[key].strip():
+            raise ValueError(f"Catalog spain {key} must not be empty.")
 
-    if not isinstance(spain["updatedAt"], str) or not spain["updatedAt"].strip():
+    updated_at = spain["updatedAt"]
+    if not isinstance(updated_at, str) or not updated_at.strip():
         raise ValueError("Catalog spain updatedAt must not be empty.")
+    try:
+        parsed_updated_at = datetime.datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("Catalog spain updatedAt must be an ISO-8601 timestamp.") from exc
+    if parsed_updated_at.tzinfo is None:
+        raise ValueError("Catalog spain updatedAt must include a timezone.")
 
     return spain
 
 
 def validate_catalog_file(
     catalog_path: Path,
-    catalog_url: str,
     configured_pmtiles_url: str = "",
 ) -> dict[str, Any]:
     payload = json.loads(catalog_path.read_text(encoding="utf-8"))
@@ -106,6 +116,8 @@ def validate_catalog_file(
     except (OSError, urllib.error.URLError) as exc:
         raise ValueError(f"PMTiles HEAD request failed: {exc}") from exc
 
+    if remote_size is None:
+        raise ValueError("PMTiles HEAD must provide Content-Length.")
     if remote_size is not None:
         try:
             parsed_remote_size = int(remote_size)
@@ -139,7 +151,6 @@ def main() -> int:
     try:
         validate_catalog_file(
             args.catalog_file,
-            catalog_url,
             configured_pmtiles_url,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:

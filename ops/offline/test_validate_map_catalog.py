@@ -49,6 +49,17 @@ class MapCatalogContractTests(unittest.TestCase):
         )
         self.assertEqual(result["id"], "spain")
 
+    def test_catalog_requires_name_description_and_timezone_timestamp(self) -> None:
+        missing_name = _entry()
+        missing_name["name"] = ""
+        with self.assertRaisesRegex(ValueError, "name"):
+            validate_catalog_payload([missing_name])
+
+        bad_timestamp = _entry()
+        bad_timestamp["updatedAt"] = "not-a-date"
+        with self.assertRaisesRegex(ValueError, "ISO-8601"):
+            validate_catalog_payload([bad_timestamp])
+
     def test_catalog_requires_approved_provider_and_valid_checksum(self) -> None:
         invalid_provider = _entry()
         invalid_provider["providerId"] = "unknown-provider"
