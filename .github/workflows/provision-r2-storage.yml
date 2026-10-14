@@ -1,0 +1,63 @@
+name: Provision PMTiles R2 storage
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_provision:
+        description: "Confirm creation/configuration of the production R2 bucket and HTTPS custom domain"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maps-production-r2-provision
+  cancel-in-progress: false
+
+jobs:
+  provision-r2:
+    name: Provision R2 bucket and custom HTTPS domain
+    if: \${{ inputs.confirm_provision == true }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: maps-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Check required tooling
+        run: |
+          set -euo pipefail
+          command -v bash
+          command -v curl
+          command -v jq
+          command -v python3
+
+      - name: Provision bucket and HTTPS custom domain
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+          R2_ACCOUNT_ID: \${{ secrets.R2_ACCOUNT_ID }}
+          CLOUDFLARE_ZONE_ID: \${{ vars.CLOUDFLARE_ZONE_ID }}
+          R2_BUCKET: \${{ vars.R2_BUCKET }}
+          R2_LOCATION_HINT: \${{ vars.R2_LOCATION_HINT || 'weur' }}
+          MAPS_PUBLIC_BASE_URL: \${{ vars.MAPS_PUBLIC_BASE_URL }}
+        run: bash ops/offline/provision-r2-storage.sh
+
+      - name: Record non-secret provisioning evidence
+        if: success()
+        env:
+          R2_BUCKET: \${{ vars.R2_BUCKET }}
+          MAPS_PUBLIC_BASE_URL: \${{ vars.MAPS_PUBLIC_BASE_URL }}
+          GITHUB_SHA: \${{ github.sha }}
+          GITHUB_RUN_ID: \${{ github.run_id }}
+          GITHUB_REPOSITORY: \${{ github.repository }}
+        run: |
+          {
+            echo "R2 bucket: \${R2_BUCKET}"
+            echo "Public base URL: \${MAPS_PUBLIC_BASE_URL}"
+            echo "Provisioning commit: \${GITHUB_SHA}"
+            echo "Workflow run: https://github.com/\${GITHUB_REPOSITORY}/actions/runs/\${GITHUB_RUN_ID}"
+          } >> "$GITHUB_STEP_SUMMARY"
