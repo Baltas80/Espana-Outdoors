@@ -1,0 +1,30 @@
+name: Public PMTiles verifier
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "ops/offline/verify-public-pmtiles-sha256.sh"
+      - "ops/offline/test_verify_public_pmtiles_sha256.py"
+      - ".github/workflows/public-pmtiles-integrity-verifier.yml"
+  push:
+    branches: [master]
+    paths:
+      - "ops/offline/verify-public-pmtiles-sha256.sh"
+      - "ops/offline/test_verify_public_pmtiles_sha256.py"
+      - ".github/workflows/public-pmtiles-integrity-verifier.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Validate shell syntax
+        run: bash -n ops/offline/verify-public-pmtiles-sha256.sh
+      - name: Test public PMTiles integrity verifier
+        run: python3 -m unittest discover -s ops/offline -p 'test_verify_public_pmtiles_sha256.py' -v
