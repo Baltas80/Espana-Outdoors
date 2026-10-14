@@ -27,6 +27,7 @@ def value_after(flag):
 method = value_after("--request") or "GET"
 output = value_after("--output")
 url = args[-1]
+mode = os.environ.get("MOCK_CURL_MODE", "existing_unconfigured_bucket")
 log = os.environ.get("MOCK_CURL_CALL_LOG")
 if log:
     with open(log, "a", encoding="utf-8") as stream:
@@ -37,7 +38,24 @@ if url.endswith("/r2/buckets/maps-prod"):
     payload = {"success": True, "result": {"name": "maps-prod"}}
 elif url.endswith("/r2/buckets/maps-prod/domains/custom"):
     status = "200"
-    payload = {"success": True, "result": {"domains": []}}
+    if mode == "bad_domain_status":
+        payload = {
+            "success": True,
+            "result": {
+                "domains": [{
+                    "domain": "maps.example.invalid",
+                    "zoneId": "b" * 32,
+                    "enabled": False,
+                    "minTLS": "1.0",
+                    "status": {"ownership": "active", "ssl": "active"},
+                }]
+            },
+        }
+    else:
+        payload = {"success": True, "result": {"domains": []}}
+elif method == "PUT" and url.endswith("/domains/custom/maps.example.invalid"):
+    status = "200"
+    payload = {"success": True, "result": {"domain": "maps.example.invalid"}}
 else:
     status = "500"
     payload = {"success": False, "errors": [{"message": "Unexpected mocked API request"}]}
@@ -73,6 +91,24 @@ class R2ProvisioningSafetyTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temp.cleanup()
+
+    def test_does_not_accept_an_active_but_disabled_domain_with_weak_tls(self) -> None:
+        env = self.env.copy()
+        env.update({
+            "MOCK_CURL_MODE": "bad_domain_status",
+            "R2_DOMAIN_WAIT_ATTEMPTS": "1",
+            "R2_DOMAIN_WAIT_SECONDS": "1",
+        })
+        result = subprocess.run(
+            ["bash", str(SCRIPT)],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("did not become active and enabled", result.stderr)
 
     def test_existing_unconfigured_bucket_is_not_exposed(self) -> None:
         result = subprocess.run(
