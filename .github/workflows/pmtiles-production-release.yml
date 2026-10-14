@@ -201,6 +201,7 @@ jobs:
         run: |
           set -euo pipefail
           export OFFLINE_CATALOG_URL="${MAPS_PUBLIC_BASE_URL%/}/catalog/spain.json"
+          export MAP_PMTILES_URL="${MAPS_PUBLIC_BASE_URL%/}/basemap/spain/${VERSION}/spain.pmtiles"
           bash ops/offline/verify-map-catalog.sh
 
       - name: Verify HTTPS and byte range
