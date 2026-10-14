@@ -43,7 +43,7 @@ Security baseline jobs completed successfully:
 - Open Graph image policy
 - CodeQL for Go
 
-The Android staging workflow completed successfully. This is CI evidence only; it is not equivalent to installing the build on a physical Android device and testing GPS, background recording, offline maps, navigation or SOS in field conditions.
+The Android staging workflow completed successfully, including its Android emulator map-native smoke step (`tool/smoke_android_map.sh ... online`) and upload of logcat, window hierarchy and screenshot evidence. This establishes an emulator-based online map smoke only; it is not equivalent to physical-device testing or offline end-to-end acceptance. GPS, background recording, offline maps, navigation and SOS still require the relevant field/device checks.
 
 ## Artifacts retained by GitHub Actions
 
@@ -52,6 +52,8 @@ At capture time, the following artifacts were available and had not expired:
 | Workflow run | Artifact | Size | Artifact ID |
 | --- | --- | ---: | ---: |
 | CI — 38561872373 | `android-release` (APK/AAB bundle) | 210,362,935 bytes | 11892953589 |
+
+GitHub artifact metadata reports SHA-256 digest `f9108a53a736b2c4ad2543f7dbe2cd5a45d9d70834539c968ab902f03fd533a0` for the `android-release` archive. This is the archive digest reported by GitHub, not a separately calculated digest for each APK/AAB inside it.
 | CI — 38561872373 | `coverage` | 9,182 bytes | 11892908659 |
 | Android staging — 38561872588 | `android-staging-apk` | 86,656,098 bytes | 11893282727 |
 | Android staging — 38561872588 | `android-map-smoke-38561872588` | 1,901,436 bytes | 11892379090 |
@@ -73,7 +75,7 @@ Do not provision or republish infrastructure just to re-check a service that is 
 
 ## Next recommended sequence
 
-1. Download and archive the APK/AAB artifacts from the successful CI run.
+1. Download and archive the APK/AAB artifacts from the successful CI run; calculate independent SHA-256 digests for the extracted APK and AAB and record their exact filenames and build metadata.
 2. Run the live PMTiles integrity gate against the current public catalog and record the actual output and timestamp.
 3. Install the candidate on a physical Android device and execute a documented smoke checklist, including offline operation and route recording.
 4. Record defects with reproducible steps; fix them on isolated branches and rerun CI.
