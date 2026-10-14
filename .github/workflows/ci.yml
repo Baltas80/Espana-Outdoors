@@ -35,6 +35,11 @@ jobs:
         run: python3 -m unittest discover -s ops/offline -p 'test_provision_r2_storage.py' -v
       - name: Test immutable R2 object guard
         run: python3 -m unittest discover -s ops/offline -p 'test_assert_r2_object_absent.py' -v
+      - name: Validate public PMTiles integrity verifier
+        run: |
+          set -euo pipefail
+          bash -n ops/offline/verify-public-pmtiles-sha256.sh
+          python3 -m unittest discover -s ops/offline -p 'test_verify_public_pmtiles_sha256.py' -v
 
   source-gateway:
     runs-on: ubuntu-24.04
