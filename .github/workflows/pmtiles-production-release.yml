@@ -107,13 +107,7 @@ jobs:
           # R2 releases are immutable. Refuse to publish a version that already exists.
           # Keep the existence check immediately adjacent to the write and verify the
           # resulting object afterwards. Do not use unsupported conditional-put flags.
-          if aws s3api head-object \
-            --bucket "${R2_BUCKET}" \
-            --key "${prefix}/spain.pmtiles" \
-            --endpoint-url "${endpoint}" >/dev/null 2>&1; then
-            echo "ERROR: immutable PMTiles object already exists at ${prefix}/spain.pmtiles" >&2
-            exit 1
-          fi
+          bash ops/offline/assert-r2-object-absent.sh "${R2_BUCKET}" "${prefix}/spain.pmtiles" "${endpoint}"
 
           aws s3 cp build/maps/spain.pmtiles \
             "s3://${R2_BUCKET}/${prefix}/spain.pmtiles" \
@@ -175,7 +169,7 @@ jobs:
           }
 
           Path("build/maps/spain.json").write_text(
-              json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+              json.dumps([payload], ensure_ascii=False, indent=2) + "\n",
               encoding="utf-8",
           )
           PY

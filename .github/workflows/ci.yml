@@ -198,6 +198,7 @@ jobs:
         run: |
           set -euo pipefail
           bash -n ops/offline/provision-r2-storage.sh
+          bash -n ops/offline/assert-r2-object-absent.sh
           if env -i PATH="$PATH" bash ops/offline/provision-r2-storage.sh > "$RUNNER_TEMP/r2-provision.stderr" 2>&1; then
             echo "Provisioning script unexpectedly accepted missing credentials."
             exit 1
@@ -205,3 +206,5 @@ jobs:
           grep -q 'CLOUDFLARE_API_TOKEN' "$RUNNER_TEMP/r2-provision.stderr"
       - name: Test versioned Geofabrik source validation
         run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
+      - name: Test immutable R2 object guard
+        run: python3 -m unittest discover -s ops/offline -p 'test_assert_r2_object_absent.py' -v

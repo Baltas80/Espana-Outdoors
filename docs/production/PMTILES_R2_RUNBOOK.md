@@ -30,7 +30,7 @@ In GitHub repository Settings → Environments, create maps-production and confi
 - MAPS_PUBLIC_BASE_URL: HTTPS origin only, e.g. https://maps.<owned-domain>; no path, query string, port or trailing object name.
 - R2_LOCATION_HINT: optional; defaults to weur. This is a placement hint, not a data-residency guarantee.
 
-The provisioning token is only for managing the bucket and its custom domain. S3-compatible object-upload credentials (R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY) must be generated separately and scoped to the production bucket for the later upload workflow. Do not reuse or expose the provisioning token as an S3 secret.
+The provisioning token is only for managing the bucket and its custom domain. S3-compatible object credentials (`R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`) must be generated separately and scoped to the production map bucket. The release workflow uses bucket HEAD and object HEAD operations before writing immutable keys; the credential policy must permit these read checks as well as writes. Do not reuse or expose the provisioning token as an S3 secret.
 
 ## Provision bucket and HTTPS domain
 
