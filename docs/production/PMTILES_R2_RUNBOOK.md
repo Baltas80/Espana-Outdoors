@@ -6,7 +6,7 @@ Publish the reviewed spain.pmtiles package through a controlled HTTPS domain on 
 
 ## Architecture
 
-- Cloudflare R2 bucket stores public, read-only map packages and the offline catalog.
+- Cloudflare R2 bucket stores public, read-only map packages and the offline catalog. A custom domain makes the bucket's objects publicly readable: use a dedicated map-only bucket and never reuse a bucket that contains private or unrelated objects.
 - A custom HTTPS domain in the same Cloudflare account exposes the bucket through Cloudflare's R2 custom-domain service.
 - Upload credentials remain server-side in GitHub Actions. No provider credentials are shipped in the mobile binary.
 - The r2.dev development endpoint is not enabled by the provisioning script.
@@ -39,7 +39,7 @@ After the workflow changes have landed on master:
 1. Open GitHub Actions → **Provision PMTiles R2 storage**.
 2. Run workflow on master, explicitly checking confirm_provision.
 3. The workflow uses the protected maps-production environment and calls ops/offline/provision-r2-storage.sh.
-4. The script is idempotent: it creates the bucket only if missing, attaches/enables the requested custom domain, sets minimum TLS to 1.2, and waits for Cloudflare domain ownership and TLS states to become active. It never deletes a bucket or removes existing objects.
+4. The script is idempotent: it creates the bucket only if missing, attaches/enables the requested custom domain, sets minimum TLS to 1.2, and waits for Cloudflare domain ownership and TLS states to become active. The workflow requires two confirmations, including an explicit acknowledgement that all objects in the selected bucket may be public. It never deletes a bucket or removes existing objects.
 5. Save the successful Actions run URL as provisioning evidence.
 
 The script intentionally fails closed if identifiers are invalid, the API token lacks access, the domain cannot be attached, or ownership/TLS does not become active. Do not bypass these checks.
