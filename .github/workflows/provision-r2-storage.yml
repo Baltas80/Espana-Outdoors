@@ -51,13 +51,13 @@ jobs:
         env:
           R2_BUCKET: ${{ vars.R2_BUCKET }}
           MAPS_PUBLIC_BASE_URL: ${{ vars.MAPS_PUBLIC_BASE_URL }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
+          PROVISION_COMMIT: ${{ github.sha }}
+          PROVISION_RUN_ID: ${{ github.run_id }}
+          PROVISION_REPOSITORY: ${{ github.repository }}
         run: |
           {
             echo "R2 bucket: ${R2_BUCKET}"
             echo "Public base URL: ${MAPS_PUBLIC_BASE_URL}"
-            echo "Provisioning commit: ${GITHUB_SHA}"
-            echo "Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "Provisioning commit: ${PROVISION_COMMIT}"
+            echo "Workflow run: https://github.com/${PROVISION_REPOSITORY}/actions/runs/${PROVISION_RUN_ID}"
           } >> "$GITHUB_STEP_SUMMARY"
