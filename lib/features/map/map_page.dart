@@ -49,7 +49,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
   @override
   void dispose() {
-    _styleFuture.then((style) => style.dispose());
+    _disposeStyleWhenReady(_styleFuture);
     super.dispose();
   }
   @override
@@ -129,6 +129,15 @@ class _MapPageState extends ConsumerState<MapPage> {
                   ),
                 ],
               ),
+            ),
+          ),
+          Positioned(
+            left: EOSpacing.lg,
+            bottom: 72,
+            child: EOButton(
+              label: 'Planificar ruta',
+              icon: Icons.alt_route,
+              onPressed: () => context.push('/routes/planner'),
             ),
           ),
           Positioned(
@@ -218,7 +227,20 @@ class _PmTilesLayer extends StatelessWidget {
 
     return FlutterMap(
       mapController: mapController,
-      options: MapOptions(initialCenter: center, initialZoom: zoom, minZoom: 3, maxZoom: 18, onTap: onTap == null ? null : (_, point) => onTap!(point)),
+      options: MapOptions(
+        initialCenter: center,
+        initialZoom: zoom,
+        initialCameraFit: routePoints.length >= 2
+            ? CameraFit.coordinates(
+                coordinates: routePoints,
+                padding: const EdgeInsets.fromLTRB(32, 120, 32, 220),
+                maxZoom: 15,
+              )
+            : null,
+        minZoom: 3,
+        maxZoom: 18,
+        onTap: onTap == null ? null : (_, point) => onTap!(point),
+      ),
       children: [
         vt.VectorTileLayer(theme: style.theme, tileProviders: style.providers, rasterSources: style.rasterSources, sprites: style.sprites, logger: const vt.Logger.console(), showLabels: true),
         if (routePoints.length >= 2)
@@ -251,7 +273,7 @@ class _PmTilesMapViewportState extends State<PmTilesMapViewport> {
   }
   @override
   void dispose() {
-    _styleFuture.then((style) => style.dispose());
+    _disposeStyleWhenReady(_styleFuture);
     super.dispose();
   }
   @override
@@ -284,5 +306,14 @@ class _MapMessage extends StatelessWidget {
         EOButton(label: 'Reintentar', icon: Icons.refresh, onPressed: onRetry),
       ]),
     ),
+  );
+}
+
+void _disposeStyleWhenReady(Future<vt.Style> styleFuture) {
+  styleFuture.then<void>(
+    (style) => style.dispose(),
+    onError: (Object _, StackTrace __) {
+      // FutureBuilder reports the load error; no style exists to dispose.
+    },
   );
 }
