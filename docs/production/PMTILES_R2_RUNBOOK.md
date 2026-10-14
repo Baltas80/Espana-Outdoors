@@ -60,7 +60,8 @@ The script intentionally fails closed if identifiers are invalid, the API token 
 Run the existing repository gates against the final object and catalog:
 
 - ops/offline/verify-pmtiles-http.sh: URL uses HTTPS, HEAD returns 200, and Range: bytes=0-1023 returns 206 plus Content-Range.
-- ops/offline/verify-map-catalog.sh: catalog schema, metadata, SHA format, HTTPS URL and remote object size are valid.
+- ops/offline/verify-map-catalog.sh: catalog schema, metadata, SHA format, HTTPS URL and remote object size are valid. This is a lightweight check and does not prove the public file's bytes match the SHA-256.
+- For a full end-to-end integrity check, run `bash ops/offline/verify-public-pmtiles-sha256.sh https://maps.espanaoutdoor.es/catalog/spain.json`. It downloads the complete PMTiles object and verifies exact byte size and SHA-256 against the live catalog; expect roughly 1.27 GB of transfer for the currently catalogued Spain map, plus temporary disk space and variable time depending on connection speed. This is a manual acceptance gate, not a routine lightweight CI check.
 - Test a production Android build on-device: online map render, offline region download with checksum validation, then airplane-mode map rendering.
 
 For the HTTP check, use the final versioned object URL, e.g. https://<maps-domain>/basemap/spain/<YYYY-MM-DD>/spain.pmtiles, only after the object has been uploaded. This is the immutable path used by the production publication workflow. The catalog itself is published at https://<maps-domain>/catalog/spain.json. A domain with an empty bucket is provisioned infrastructure, not a published map.
@@ -72,9 +73,10 @@ For the HTTP check, use the final versioned object URL, e.g. https://<maps-domai
 - Stable HTTPS object URL returns 200 to HEAD.
 - Byte-range request returns 206 and a valid Content-Range.
 - Catalog has verified licence, attribution, timestamp, size and SHA-256.
+- Full public-file SHA-256 verification passes using `ops/offline/verify-public-pmtiles-sha256.sh`.
 - Online Android map renders; regional offline download verifies the checksum; airplane-mode rendering works.
 - No placeholder endpoints or credentials in the release configuration or app binary.
 
 ## Current state
 
-The repository now contains a guarded provisioning workflow and idempotent provisioning script. **Actual provisioning still requires the project owner's Cloudflare account, a domain zone in that account, and the maps-production secrets/variables above.** Provisioning the storage endpoint does not itself build or upload the Spain PMTiles package; publication and mobile verification remain separate gates.
+The repository contains a guarded R2 provisioning workflow and publication workflow. The bucket `espana-outdoor-maps` and `maps.espanaoutdoor.es` are already configured and public HTTP HEAD/Range checks have passed. Do not rerun provisioning unless API inspection shows a configuration problem. Full public-file SHA-256 verification and on-device offline validation remain separate acceptance gates.
