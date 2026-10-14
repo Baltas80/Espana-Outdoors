@@ -197,3 +197,5 @@ jobs:
         run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
       - name: Test PMTiles HTTP range gate
         run: python3 -m unittest discover -s ops/offline -p 'test_verify_pmtiles_http.py' -v
+      - name: Test offline map catalog contract
+        run: python3 -m unittest discover -s ops/offline -p 'test_validate_map_catalog.py' -v
