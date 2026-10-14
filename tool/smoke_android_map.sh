@@ -78,6 +78,24 @@ PY
 
     IFS='|' read -r kind owner wait_x wait_y <"${result}"
     test "${kind}" = "SYSTEM_ANR"
+
+    # Some Google API emulator images repeatedly ANR in the first-run setup
+    # package. Tapping Wait causes the same blocking system dialog to return,
+    # leaving the app under test permanently in the background. Contain only
+    # this known emulator setup process, then explicitly restore the app.
+    if [[ "${owner}" == "com.google.android.googlesdksetup" ]]; then
+      echo "Stopping wedged Google SDK setup process in CI emulator."
+      adb shell am force-stop "${owner}" || true
+      sleep 2
+      adb shell am force-stop "${package_name}" || true
+      adb shell monkey -p "${package_name}" 1 >/tmp/espana-monkey-recovery.log 2>&1 || {
+        cat /tmp/espana-monkey-recovery.log
+        exit 1
+      }
+      sleep 3
+      continue
+    fi
+
     if test -n "${wait_x}" && test -n "${wait_y}"; then
       echo "Dismissing system ANR for ${owner} with Wait"
       adb shell input tap "${wait_x}" "${wait_y}"
