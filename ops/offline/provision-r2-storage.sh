@@ -5,16 +5,16 @@ set -euo pipefail
 # This script never creates DNS records outside Cloudflare's R2 custom-domain flow,
 # never enables the r2.dev endpoint, and never prints API credentials.
 
-: "\${CLOUDFLARE_API_TOKEN:?Set CLOUDFLARE_API_TOKEN in the maps-production GitHub Environment}"
-: "\${R2_ACCOUNT_ID:?Set R2_ACCOUNT_ID in the maps-production GitHub Environment}"
-: "\${CLOUDFLARE_ZONE_ID:?Set CLOUDFLARE_ZONE_ID as a maps-production environment variable}"
-: "\${R2_BUCKET:?Set R2_BUCKET as a maps-production environment variable}"
-: "\${MAPS_PUBLIC_BASE_URL:?Set MAPS_PUBLIC_BASE_URL as a maps-production environment variable}"
+: "${CLOUDFLARE_API_TOKEN:?Set CLOUDFLARE_API_TOKEN in the maps-production GitHub Environment}"
+: "${R2_ACCOUNT_ID:?Set R2_ACCOUNT_ID in the maps-production GitHub Environment}"
+: "${CLOUDFLARE_ZONE_ID:?Set CLOUDFLARE_ZONE_ID as a maps-production environment variable}"
+: "${R2_BUCKET:?Set R2_BUCKET as a maps-production environment variable}"
+: "${MAPS_PUBLIC_BASE_URL:?Set MAPS_PUBLIC_BASE_URL as a maps-production environment variable}"
 
 API_BASE="https://api.cloudflare.com/client/v4"
-LOCATION_HINT="\${R2_LOCATION_HINT:-weur}"
-WAIT_ATTEMPTS="\${R2_DOMAIN_WAIT_ATTEMPTS:-36}"
-WAIT_SECONDS="\${R2_DOMAIN_WAIT_SECONDS:-10}"
+LOCATION_HINT="${R2_LOCATION_HINT:-weur}"
+WAIT_ATTEMPTS="${R2_DOMAIN_WAIT_ATTEMPTS:-36}"
+WAIT_SECONDS="${R2_DOMAIN_WAIT_SECONDS:-10}"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
@@ -57,7 +57,7 @@ PY
 api_request() {
   local method="$1"
   local path="$2"
-  local payload="\${3:-}"
+  local payload="${3:-}"
   local output_file="$tmp_dir/response.json"
   local code
   local -a args
@@ -65,11 +65,11 @@ api_request() {
   args=(--silent --show-error --connect-timeout 10 --max-time 45
         --output "$output_file" --write-out '%{http_code}'
         --request "$method"
-        --header "Authorization: Bearer \${CLOUDFLARE_API_TOKEN}"
+        --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
         --header 'Content-Type: application/json')
   if [[ -n "$payload" ]]; then args+=(--data "$payload"); fi
 
-  code="$(curl "\${args[@]}" "\${API_BASE}\${path}")" || fail "Cloudflare API request failed at \${path} (network/TLS error)."
+  code="$(curl "${args[@]}" "${API_BASE}${path}")" || fail "Cloudflare API request failed at ${path} (network/TLS error)."
   if [[ "$code" != 2?? ]] || ! jq -e '.success == true' "$output_file" >/dev/null 2>&1; then
     printf 'Cloudflare API response (%s %s, HTTP %s):\n' "$method" "$path" "$code" >&2
     jq -c '{success, errors, messages}' "$output_file" >&2 2>/dev/null || cat "$output_file" >&2
@@ -79,25 +79,25 @@ api_request() {
 }
 
 printf 'Checking Cloudflare R2 bucket "%s"...\n' "$R2_BUCKET"
-bucket_path="/accounts/\${R2_ACCOUNT_ID}/r2/buckets/\${R2_BUCKET}"
+bucket_path="/accounts/${R2_ACCOUNT_ID}/r2/buckets/${R2_BUCKET}"
 bucket_code="$(curl --silent --show-error --connect-timeout 10 --max-time 45 \
   --output "$tmp_dir/bucket.json" --write-out '%{http_code}' \
-  --header "Authorization: Bearer \${CLOUDFLARE_API_TOKEN}" \
-  "\${API_BASE}\${bucket_path}")" || fail "Cloudflare API request failed while checking the bucket."
+  --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  "${API_BASE}${bucket_path}")" || fail "Cloudflare API request failed while checking the bucket."
 if [[ "$bucket_code" == "200" ]] && jq -e '.success == true and .result.name == env.R2_BUCKET' "$tmp_dir/bucket.json" >/dev/null; then
   printf 'Bucket already exists; leaving its data and settings untouched.\n'
 elif [[ "$bucket_code" == "404" ]]; then
   printf 'Creating bucket in location hint "%s"...\n' "$LOCATION_HINT"
-  api_request POST "/accounts/\${R2_ACCOUNT_ID}/r2/buckets" \
+  api_request POST "/accounts/${R2_ACCOUNT_ID}/r2/buckets" \
     "$(jq -cn --arg name "$R2_BUCKET" --arg location "$LOCATION_HINT" \
       '{name:$name, locationHint:$location, storageClass:"Standard"}')" >/dev/null \
     || fail "Could not create R2 bucket."
 else
   jq -c '{success, errors, messages}' "$tmp_dir/bucket.json" >&2 2>/dev/null || true
-  fail "Could not read R2 bucket (HTTP \${bucket_code}); check API token scope and account ID."
+  fail "Could not read R2 bucket (HTTP ${bucket_code}); check API token scope and account ID."
 fi
 
-domains_path="/accounts/\${R2_ACCOUNT_ID}/r2/buckets/\${R2_BUCKET}/domains/custom"
+domains_path="/accounts/${R2_ACCOUNT_ID}/r2/buckets/${R2_BUCKET}/domains/custom"
 printf 'Checking custom domain "%s"...\n' "$DOMAIN"
 domain_list="$(api_request GET "$domains_path")" || fail "Could not list custom domains for the R2 bucket."
 existing="$(printf '%s' "$domain_list" | jq -c --arg domain "$DOMAIN" \
@@ -113,7 +113,7 @@ elif [[ "$(printf '%s' "$existing" | jq -r '.zoneId // empty')" != "$CLOUDFLARE_
   fail "The domain is attached to this bucket with a different zone ID; refusing to mutate it."
 elif [[ "$(printf '%s' "$existing" | jq -r '.enabled // false')" != "true" || "$(printf '%s' "$existing" | jq -r '.minTLS // "1.0"')" != "1.2" ]]; then
   printf 'Enabling the existing custom domain with minimum TLS 1.2...\n'
-  api_request PUT "\${domains_path}/\${DOMAIN}" \
+  api_request PUT "${domains_path}/${DOMAIN}" \
     '{"enabled":true,"minTLS":"1.2"}' >/dev/null \
     || fail "Could not update the existing custom-domain settings."
 else
@@ -138,7 +138,7 @@ for ((attempt=1; attempt<=WAIT_ATTEMPTS; attempt++)); do
   if (( attempt < WAIT_ATTEMPTS )); then sleep "$WAIT_SECONDS"; fi
 done
 
-[[ "\${ownership:-}" == "active" && "\${ssl:-}" == "active" ]] || \
+[[ "${ownership:-}" == "active" && "${ssl:-}" == "active" ]] || \
   fail "Domain/TLS did not become active before timeout. Re-run after correcting the domain configuration."
 
 printf '\nR2 storage endpoint provisioned:\n'
