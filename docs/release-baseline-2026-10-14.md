@@ -45,16 +45,27 @@ Security baseline jobs completed successfully:
 
 The Android staging workflow completed successfully. This is CI evidence only; it is not equivalent to installing the build on a physical Android device and testing GPS, background recording, offline maps, navigation or SOS in field conditions.
 
-## Production acceptance still outstanding
+## Artifacts retained by GitHub Actions
 
-Passing CI does not establish the following:
+At capture time, the following artifacts were available and had not expired:
+
+| Workflow run | Artifact | Size | Artifact ID |
+| --- | --- | ---: | ---: |
+| CI — 38561872373 | `android-release` (APK/AAB bundle) | 210,362,935 bytes | 11892953589 |
+| CI — 38561872373 | `coverage` | 9,182 bytes | 11892908659 |
+| Android staging — 38561872588 | `android-staging-apk` | 86,656,098 bytes | 11893282727 |
+| Android staging — 38561872588 | `android-map-smoke-38561872588` | 1,901,436 bytes | 11892379090 |
+
+Artifacts are downloadable from their respective run pages while GitHub retains them. Their existence is not proof that a physical-device field test has passed. Before release, extract and preserve the APK/AAB, calculate independent SHA-256 digests and tie them to the source commit and build metadata.
+
+## Production acceptance still outstanding
 
 1. **Live public PMTiles integrity:** the new verifier has automated unit tests, but the full live-object check has not been evidenced here. The documented operation downloads the complete map (about 1.27 GB) and verifies exact byte count and SHA-256.
 2. **Physical-device QA:** GPS accuracy, background/foreground transitions, battery impact, Android permission flows, offline package install/resume, and navigation behavior need device-based acceptance tests.
 3. **Offline end-to-end acceptance:** verify download, checksum, storage, map rendering, route guidance and failure/recovery with connectivity disabled.
 4. **SOS / Rescue Link operational acceptance:** verify permission denial, unavailable connectivity, expired/invalid links, privacy behavior and clear user-facing limitations. Do not represent these flows as a guaranteed emergency service.
 5. **Production services and secrets:** CI success does not prove that production Valhalla, map catalog/R2, OIDC, RevenueCat or Sentry runtime configuration is valid in the deployed environment.
-6. **Release provenance:** retain the actual APK/AAB artifact, SHA-256 values, Flutter/toolchain versions and test evidence for each release candidate.
+6. **Release provenance:** preserve APK/AAB, SHA-256 values, Flutter/toolchain versions and test evidence for each release candidate.
 
 ## Operational rule
 
@@ -62,7 +73,7 @@ Do not provision or republish infrastructure just to re-check a service that is 
 
 ## Next recommended sequence
 
-1. Download and archive the APK/AAB from the successful CI run if the artifacts are retained.
+1. Download and archive the APK/AAB artifacts from the successful CI run.
 2. Run the live PMTiles integrity gate against the current public catalog and record the actual output and timestamp.
 3. Install the candidate on a physical Android device and execute a documented smoke checklist, including offline operation and route recording.
 4. Record defects with reproducible steps; fix them on isolated branches and rerun CI.
