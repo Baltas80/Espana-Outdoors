@@ -111,13 +111,21 @@ if [[ -z "$existing" ]]; then
     || fail "Could not attach domain. Verify the domain is a zone in this same Cloudflare account and is not attached to another bucket."
 elif [[ "$(printf '%s' "$existing" | jq -r '.zoneId // empty')" != "$CLOUDFLARE_ZONE_ID" ]]; then
   fail "The domain is attached to this bucket with a different zone ID; refusing to mutate it."
-elif [[ "$(printf '%s' "$existing" | jq -r '.enabled // false')" != "true" || "$(printf '%s' "$existing" | jq -r '.minTLS // "1.0"')" != "1.2" ]]; then
-  printf 'Enabling the existing custom domain with minimum TLS 1.2...\n'
-  api_request PUT "${domains_path}/${DOMAIN}" \
-    '{"enabled":true,"minTLS":"1.2"}' >/dev/null \
-    || fail "Could not update the existing custom-domain settings."
 else
-  printf 'Custom domain is already attached and enabled.\n'
+  current_enabled="$(printf '%s' "$existing" | jq -r '.enabled // false')"
+  current_min_tls="$(printf '%s' "$existing" | jq -r '.minTLS // "unknown"')"
+  case "$current_min_tls" in
+    1.2|1.3) target_min_tls="$current_min_tls" ;;
+    *) target_min_tls="1.2" ;;
+  esac
+  if [[ "$current_enabled" != "true" || "$current_min_tls" != "$target_min_tls" ]]; then
+    printf 'Enabling the existing custom domain with minimum TLS %s...\n' "$target_min_tls"
+    api_request PUT "${domains_path}/${DOMAIN}" \
+      "$(jq -cn --arg min_tls "$target_min_tls" '{enabled:true,minTLS:$min_tls}')" >/dev/null \
+      || fail "Could not update the existing custom-domain settings."
+  else
+    printf 'Custom domain is already attached, enabled, and enforces TLS %s.\n' "$current_min_tls"
+  fi
 fi
 
 printf 'Waiting for Cloudflare ownership and TLS certificate status...\n'
@@ -145,6 +153,6 @@ printf '\nR2 storage endpoint provisioned:\n'
 printf '  bucket: %s\n' "$R2_BUCKET"
 printf '  domain: https://%s\n' "$DOMAIN"
 printf '  object URL pattern after publication: https://%s/basemap/spain/<VERSION>/spain.pmtiles\n' "$DOMAIN"
-printf '  TLS minimum: 1.2\n'
+printf '  TLS minimum: %s\n' "$(printf '%s' "$status" | jq -r '.minTLS // "unknown"')"
 printf '  r2.dev endpoint: not enabled by this script\n'
 printf '\nNext gate: upload the reviewed PMTiles artifact and verify HEAD 200 plus Range 206/Content-Range.\n'
