@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "\${MAP_PMTILES_URL:?set MAP_PMTILES_URL to the real production HTTPS object URL}"
+: "${MAP_PMTILES_URL:?set MAP_PMTILES_URL to the real production HTTPS object URL}"
 
 case "$MAP_PMTILES_URL" in
   https://*) ;;
@@ -58,9 +58,9 @@ curl --silent --show-error --location \
   --connect-timeout 5 --max-time 30 \
   --range 0-1023 --dump-header "$tmp_dir/range.headers" \
   "$MAP_PMTILES_URL" | head -c 2049 > "$tmp_dir/range.body"
-pipeline_status=("\${PIPESTATUS[@]}")
+pipeline_status=("${PIPESTATUS[@]}")
 set -e
-curl_status="\${pipeline_status[0]:-1}"
+curl_status="${pipeline_status[0]:-1}"
 if [[ "$curl_status" != "0" ]]; then
   echo "ERROR: range request failed or exceeded the 2 KiB response cap; refusing an unbounded map download." >&2
   exit 1
