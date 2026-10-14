@@ -128,15 +128,15 @@ jobs:
             echo "aab_file=$(basename "$aab")"
             echo "aab_size_bytes=$(stat -c '%s' "$aab")"
             echo "aab_sha256=$(sha256sum "$aab" | cut -d ' ' -f1)"
-          } > build/android-release-manifest.txt
+          } > build/android-ci-validation-manifest.txt
       - name: Upload Android build artifacts
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: android-release
+          name: android-ci-validation
           path: |
             build/app/outputs/flutter-apk/*.apk
             build/app/outputs/bundle/release/*.aab
-            build/android-release-manifest.txt
+            build/android-ci-validation-manifest.txt
       - name: Upload coverage
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -195,3 +195,7 @@ jobs:
         uses: actions/checkout@v7.0.1
       - name: Test versioned Geofabrik source validation
         run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
+      - name: Test PMTiles HTTP range gate
+        run: python3 -m unittest discover -s ops/offline -p 'test_verify_pmtiles_http.py' -v
+      - name: Test offline map catalog contract
+        run: python3 -m unittest discover -s ops/offline -p 'test_validate_map_catalog.py' -v
