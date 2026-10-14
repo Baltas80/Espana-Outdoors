@@ -141,8 +141,11 @@ for ((attempt=1; attempt<=WAIT_ATTEMPTS; attempt++)); do
   [[ -n "$status" ]] || fail "Cloudflare no longer lists the configured custom domain."
   ownership="$(printf '%s' "$status" | jq -r '.status.ownership // "unknown"')"
   ssl="$(printf '%s' "$status" | jq -r '.status.ssl // "unknown"')"
-  printf 'Attempt %s/%s: ownership=%s tls=%s\n' "$attempt" "$WAIT_ATTEMPTS" "$ownership" "$ssl"
-  if [[ "$ownership" == "active" && "$ssl" == "active" ]]; then
+  enabled="$(printf '%s' "$status" | jq -r '.enabled // false')"
+  min_tls="$(printf '%s' "$status" | jq -r '.minTLS // "unknown"')"
+  printf 'Attempt %s/%s: ownership=%s tls=%s enabled=%s minTLS=%s\n' "$attempt" "$WAIT_ATTEMPTS" "$ownership" "$ssl" "$enabled" "$min_tls"
+  if [[ "$ownership" == "active" && "$ssl" == "active" && "$enabled" == "true" ]] \
+    && [[ "$min_tls" == "1.2" || "$min_tls" == "1.3" ]]; then
     break
   fi
   if [[ "$ownership" == "blocked" || "$ownership" == "error" || "$ssl" == "error" || "$ssl" == "deactivated" ]]; then
@@ -151,8 +154,10 @@ for ((attempt=1; attempt<=WAIT_ATTEMPTS; attempt++)); do
   if (( attempt < WAIT_ATTEMPTS )); then sleep "$WAIT_SECONDS"; fi
 done
 
-[[ "${ownership:-}" == "active" && "${ssl:-}" == "active" ]] || \
-  fail "Domain/TLS did not become active before timeout. Re-run after correcting the domain configuration."
+[[ "${ownership:-}" == "active" && "${ssl:-}" == "active" && "${enabled:-false}" == "true" ]] || \
+  fail "Domain ownership/TLS did not become active and enabled before timeout. Re-run after correcting the domain configuration."
+[[ "${min_tls:-}" == "1.2" || "${min_tls:-}" == "1.3" ]] || \
+  fail "Cloudflare did not confirm a minimum TLS version of 1.2 or higher."
 
 printf '\nR2 storage endpoint provisioned:\n'
 printf '  bucket: %s\n' "$R2_BUCKET"
