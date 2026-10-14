@@ -195,3 +195,7 @@ jobs:
         uses: actions/checkout@v7.0.1
       - name: Test versioned Geofabrik source validation
         run: python3 -m unittest discover -s ops/offline -p 'test_validate_geofabrik_spain_url.py' -v
+      - name: Validate public PMTiles integrity verifier
+        run: |
+          bash -n ops/offline/verify-public-pmtiles-sha256.sh
+          python3 -m unittest discover -s ops/offline -p 'test_verify_public_pmtiles_sha256.py' -v
