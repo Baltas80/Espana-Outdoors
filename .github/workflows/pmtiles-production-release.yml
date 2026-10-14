@@ -15,6 +15,11 @@ on:
 permissions:
   contents: read
 
+# Serialize map releases: each run updates one shared, mutable catalog entry.
+concurrency:
+  group: espana-outdoor-pmtiles-production
+  cancel-in-progress: false
+
 jobs:
   build-publish:
     runs-on: ubuntu-24.04
@@ -188,6 +193,15 @@ jobs:
             --bucket "${R2_BUCKET}" \
             --key catalog/spain.json \
             --endpoint-url "${endpoint}" >/dev/null
+
+      - name: Verify published offline catalog
+        shell: bash
+        env:
+          MAPS_PUBLIC_BASE_URL: ${{ vars.MAPS_PUBLIC_BASE_URL }}
+        run: |
+          set -euo pipefail
+          export OFFLINE_CATALOG_URL="${MAPS_PUBLIC_BASE_URL%/}/catalog/spain.json"
+          bash ops/offline/verify-map-catalog.sh
 
       - name: Verify HTTPS and byte range
         shell: bash
