@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${MAP_PMTILES_URL:?set MAP_PMTILES_URL to the real production HTTPS object URL}"
+: "\${MAP_PMTILES_URL:?set MAP_PMTILES_URL to the real production HTTPS object URL}"
 
 case "$MAP_PMTILES_URL" in
   https://*) ;;
@@ -49,15 +49,39 @@ PY
 )" || exit 1
 echo "HEAD verified: HTTP 200, Content-Length=$head_size bytes"
 
-echo "Checking byte-range support (maximum 1 KiB body)..."
-if ! range_status="$(curl --silent --show-error --location \
-  --connect-timeout 5 --max-time 30 --max-filesize 2048 \
+echo "Checking byte-range support (strict 2 KiB response cap)..."
+# Pipe through head rather than writing curl's entire response to disk. If a
+# server ignores Range or returns an unbounded/chunked body, head closes the
+# pipe after 2 KiB and curl fails instead of downloading the whole map.
+set +e
+curl --silent --show-error --location \
+  --connect-timeout 5 --max-time 30 \
   --range 0-1023 --dump-header "$tmp_dir/range.headers" \
-  --output "$tmp_dir/range.body" --write-out '%{http_code}' \
-  "$MAP_PMTILES_URL")"; then
-  echo "ERROR: range request failed or the server attempted to return more than 2 KiB; refusing an unbounded map download." >&2
+  "$MAP_PMTILES_URL" | head -c 2049 > "$tmp_dir/range.body"
+pipeline_status=("\${PIPESTATUS[@]}")
+set -e
+curl_status="\${pipeline_status[0]:-1}"
+if [[ "$curl_status" != "0" ]]; then
+  echo "ERROR: range request failed or exceeded the 2 KiB response cap; refusing an unbounded map download." >&2
   exit 1
 fi
+
+range_status="$(python3 - "$tmp_dir/range.headers" <<'PY'
+import sys
+
+status = ""
+with open(sys.argv[1], encoding="iso-8859-1") as source:
+    for raw in source:
+        line = raw.rstrip("\r\n")
+        if line.startswith("HTTP/"):
+            parts = line.split()
+            status = parts[1] if len(parts) > 1 else ""
+if not status:
+    raise SystemExit("ERROR: range response did not include an HTTP status line.")
+print(status)
+PY
+)" || exit 1
+
 if [[ "$range_status" != "206" ]]; then
   echo "ERROR: server/CDN returned HTTP $range_status for Range bytes=0-1023; expected 206." >&2
   exit 1

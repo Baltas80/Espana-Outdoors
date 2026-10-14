@@ -10,7 +10,6 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).with_name("verify-pmtiles-http.sh")
 
-
 MOCK_CURL = r'''#!/usr/bin/env python3
 import os
 import sys
@@ -25,7 +24,6 @@ def value_after(flag):
         return None
 
 header_path = value_after("--dump-header")
-output_path = value_after("--output")
 is_head = "--head" in args
 mode = os.environ.get("MOCK_CURL_MODE", "valid")
 
@@ -37,8 +35,13 @@ if is_head:
     raise SystemExit(0)
 
 if mode == "ignore_range":
-    # curl --max-filesize must abort rather than download this full object.
-    raise SystemExit(63)
+    Path(header_path).write_bytes(
+        b"HTTP/1.1 200 OK\r\nContent-Length: 1000000\r\n\r\n"
+    )
+    # A correct script closes the stdout pipe after 2 KiB instead of writing
+    # this full response to a file or downloading the object indefinitely.
+    sys.stdout.buffer.write(b"x" * 1_000_000)
+    raise SystemExit(0)
 
 content_range = "bytes 0-1023/4096"
 body = b"x" * 1024
@@ -52,12 +55,11 @@ elif mode == "short_body":
 headers = (
     "HTTP/1.1 206 Partial Content\r\n"
     f"Content-Range: {content_range}\r\n"
-    "Content-Length: 1024\r\n"
+    f"Content-Length: {len(body)}\r\n"
     "\r\n"
 ).encode("ascii")
 Path(header_path).write_bytes(headers)
-Path(output_path).write_bytes(body)
-print("206", end="")
+sys.stdout.buffer.write(body)
 '''
 
 
