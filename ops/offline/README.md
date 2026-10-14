@@ -72,3 +72,16 @@ An entry missing any of these fields is rejected by the client.
 Publish a new immutable version first. Verify its checksum and manifest. Only then point the catalog to the new version. Keep the previous artifact until the new version has passed mobile smoke tests so rollback is immediate.
 
 Never overwrite an already-published versioned object.
+
+
+## Verify the live public PMTiles bytes
+
+The lightweight catalog/HTTP checks validate metadata and range support, but do not prove that the complete public object matches its declared SHA-256. Run this manual acceptance gate against the live catalog:
+
+```bash
+bash ops/offline/verify-public-pmtiles-sha256.sh https://maps.espanaoutdoor.es/catalog/spain.json
+```
+
+The verifier downloads the entire map (currently about 1.27 GB), compares the exact byte count, and calculates SHA-256. Ensure sufficient temporary disk space and a stable connection. A successful result prints `public_pmtiles_integrity=PASS`. This check does not replace Android online/offline installation and navigation smoke tests.
+
+Current operational note: when the existing R2 bucket and custom domain are already configured and serving the expected object, do not rerun provisioning merely as a verification step. Provisioning and production publication are separate operations.
