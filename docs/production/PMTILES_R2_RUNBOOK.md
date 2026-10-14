@@ -63,7 +63,7 @@ Run the existing repository gates against the final object and catalog:
 - ops/offline/verify-map-catalog.sh: catalog schema, metadata, SHA format, HTTPS URL and remote object size are valid.
 - Test a production Android build on-device: online map render, offline region download with checksum validation, then airplane-mode map rendering.
 
-For the HTTP check, use the final object URL, e.g. https://<maps-domain>/spain.pmtiles, only after the object has been uploaded. A domain with an empty bucket is provisioned infrastructure, not a published map.
+For the HTTP check, use the final versioned object URL, e.g. https://<maps-domain>/basemap/spain/<YYYY-MM-DD>/spain.pmtiles, only after the object has been uploaded. This is the immutable path used by the production publication workflow. The catalog itself is published at https://<maps-domain>/catalog/spain.json. A domain with an empty bucket is provisioned infrastructure, not a published map.
 
 ## Evidence required before marking production-ready
 
