@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:http/http.dart' as http;
 
+import '../offline/offline_catalog_parser.dart';
 import '../offline/offline_package_verifier.dart';
 import '../offline/offline_region.dart';
 import '../offline/offline_region_store.dart';
