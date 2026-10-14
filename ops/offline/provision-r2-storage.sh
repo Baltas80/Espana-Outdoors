@@ -144,7 +144,7 @@ done
 printf '\nR2 storage endpoint provisioned:\n'
 printf '  bucket: %s\n' "$R2_BUCKET"
 printf '  domain: https://%s\n' "$DOMAIN"
-printf '  object URL after PMTiles upload: https://%s/spain.pmtiles\n' "$DOMAIN"
+printf '  object URL pattern after publication: https://%s/basemap/spain/<VERSION>/spain.pmtiles\n' "$DOMAIN"
 printf '  TLS minimum: 1.2\n'
 printf '  r2.dev endpoint: not enabled by this script\n'
 printf '\nNext gate: upload the reviewed PMTiles artifact and verify HEAD 200 plus Range 206/Content-Range.\n'
