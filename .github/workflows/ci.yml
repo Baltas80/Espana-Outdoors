@@ -15,6 +15,27 @@ permissions:
   contents: read
 
 jobs:
+  r2-provisioning-validation:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Validate R2 provisioning script guard and shell syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n ops/offline/provision-r2-storage.sh
+          bash -n ops/offline/assert-r2-object-absent.sh
+          if env -i PATH="$PATH" bash ops/offline/provision-r2-storage.sh > "$RUNNER_TEMP/r2-provision.stderr" 2>&1; then
+            echo "Provisioning script unexpectedly accepted missing credentials."
+            exit 1
+          fi
+          grep -q 'CLOUDFLARE_API_TOKEN' "$RUNNER_TEMP/r2-provision.stderr"
+      - name: Test R2 provisioning public-bucket safety
+        run: python3 -m unittest discover -s ops/offline -p 'test_provision_r2_storage.py' -v
+      - name: Test immutable R2 object guard
+        run: python3 -m unittest discover -s ops/offline -p 'test_assert_r2_object_absent.py' -v
+
   source-gateway:
     runs-on: ubuntu-24.04
     steps:
