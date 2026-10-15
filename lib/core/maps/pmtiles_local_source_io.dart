@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path_provider/path_provider.dart';
 
 import '../offline/offline_package_verifier.dart';
@@ -67,10 +68,7 @@ Future<String?> findValidLocalPmTiles({
 
 /// Exposes a verified local archive only through a loopback HTTP endpoint.
 ///
-/// flutter_map_vector_tiles' PMTiles provider is URL/range based. A loopback
-/// server keeps the archive entirely on-device while preserving that mature
-/// provider implementation and its range-request semantics. The listener is
-/// bound exclusively to localhost and serves exactly one immutable file.
+/// The listener is bound exclusively to localhost and serves exactly one file.
 Future<String> serveLocalPmTiles(String path) async {
   final file = File(path);
   if (!await file.exists()) {
@@ -84,11 +82,7 @@ Future<String> serveLocalPmTiles(String path) async {
     return 'http://localhost:$_servedPort/archive.pmtiles';
   }
 
-  await _server?.close(force: true);
-  _server = null;
-  _servedPath = null;
-  _servedPort = null;
-
+  await closeLocalPmTilesServer();
   final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   _server = server;
   _servedPath = file.path;
@@ -96,6 +90,16 @@ Future<String> serveLocalPmTiles(String path) async {
 
   unawaited(_serve(server, file));
   return 'http://localhost:${server.port}/archive.pmtiles';
+}
+
+/// Test seam to ensure the loopback listener is closed after HTTP tests.
+@visibleForTesting
+Future<void> closeLocalPmTilesServer() async {
+  final server = _server;
+  _server = null;
+  _servedPath = null;
+  _servedPort = null;
+  await server?.close(force: true);
 }
 
 Future<void> _serve(HttpServer server, File file) async {
@@ -116,9 +120,19 @@ Future<void> _serve(HttpServer server, File file) async {
       );
       request.response.headers
         ..set(HttpHeaders.acceptRangesHeader, 'bytes')
-        ..set(HttpHeaders.contentTypeHeader, 'application/octet-stream');
+        ..set(HttpHeaders.contentTypeHeader, 'application/vnd.pmtiles');
 
-      if (range == null) {
+      if (range.kind == _RangeKind.unsatisfiable) {
+        request.response
+          ..statusCode = HttpStatus.requestedRangeNotSatisfiable
+          ..headers.set(HttpHeaders.contentRangeHeader, 'bytes */$length')
+          ..contentLength = 0;
+        await request.response.close();
+        continue;
+      }
+
+      final span = range.span;
+      if (span == null) {
         request.response
           ..statusCode = HttpStatus.ok
           ..contentLength = length;
@@ -130,50 +144,89 @@ Future<void> _serve(HttpServer server, File file) async {
         continue;
       }
 
-      final (start, end) = range;
       request.response
         ..statusCode = HttpStatus.partialContent
-        ..contentLength = end - start + 1
+        ..contentLength = span.end - span.start + 1
         ..headers.set(
           HttpHeaders.contentRangeHeader,
-          'bytes $start-$end/$length',
+          'bytes ${span.start}-${span.end}/$length',
         );
       if (request.method == 'HEAD') {
         await request.response.close();
       } else {
-        await request.response.addStream(file.openRead(start, end + 1));
+        await request.response.addStream(
+          file.openRead(span.start, span.end + 1),
+        );
       }
     } on Object {
-      if (!request.response.headers.chunkedTransferEncoding) {
-        request.response.statusCode = HttpStatus.internalServerError;
+      try {
+        request.response
+          ..statusCode = HttpStatus.internalServerError
+          ..contentLength = 0;
+        await request.response.close();
+      } on Object {
+        // The peer may have disconnected or the response may already be closed.
       }
-      await request.response.close();
     }
   }
 }
 
-(int, int)? _parseRange(String? header, int length) {
-  if (header == null || !header.startsWith('bytes=') || length <= 0) return null;
-  final value = header.substring('bytes='.length).split(',').first.trim();
-  final separator = value.indexOf('-');
-  if (separator < 0) return null;
+enum _RangeKind { full, partial, unsatisfiable }
 
-  final startText = value.substring(0, separator).trim();
-  final endText = value.substring(separator + 1).trim();
-  final start = int.tryParse(startText);
-  final requestedEnd = int.tryParse(endText);
+class _ByteSpan {
+  const _ByteSpan(this.start, this.end);
 
-  if (start == null) {
-    final suffixLength = requestedEnd;
-    if (suffixLength == null || suffixLength <= 0) return null;
-    final suffixStart = length - suffixLength;
-    return (suffixStart < 0 ? 0 : suffixStart, length - 1);
+  final int start;
+  final int end;
+}
+
+class _RangeOutcome {
+  const _RangeOutcome._(this.kind, this.span);
+
+  const _RangeOutcome.full() : this._(_RangeKind.full, null);
+  const _RangeOutcome.unsatisfiable()
+      : this._(_RangeKind.unsatisfiable, null);
+  const _RangeOutcome.partial(_ByteSpan span)
+      : this._(_RangeKind.partial, span);
+
+  final _RangeKind kind;
+  final _ByteSpan? span;
+}
+
+/// Invalid/unsupported Range fields are ignored (full response). A syntactically
+/// valid range whose first byte is outside the representation returns 416.
+_RangeOutcome _parseRange(String? header, int length) {
+  if (header == null || length <= 0) return const _RangeOutcome.full();
+
+  // This endpoint intentionally supports one byte range. Do not silently
+  // interpret a multi-range request as a different single-range request.
+  final match = RegExp(r'^bytes=(\d*)-(\d*)$', caseSensitive: false)
+      .firstMatch(header.trim());
+  if (match == null) return const _RangeOutcome.full();
+
+  final startText = match.group(1)!;
+  final endText = match.group(2)!;
+  if (startText.isEmpty && endText.isEmpty) {
+    return const _RangeOutcome.full();
   }
-  if (start < 0 || start >= length) return null;
 
-  final end = requestedEnd == null || requestedEnd >= length
-      ? length - 1
-      : requestedEnd;
-  if (end < start) return null;
-  return (start, end);
+  if (startText.isEmpty) {
+    final suffixLength = int.tryParse(endText);
+    if (suffixLength == null || suffixLength <= 0) {
+      return const _RangeOutcome.full();
+    }
+    final start = suffixLength >= length ? 0 : length - suffixLength;
+    return _RangeOutcome.partial(_ByteSpan(start, length - 1));
+  }
+
+  final start = int.tryParse(startText);
+  if (start == null) return const _RangeOutcome.full();
+  if (start >= length) return const _RangeOutcome.unsatisfiable();
+
+  final requestedEnd = endText.isEmpty ? length - 1 : int.tryParse(endText);
+  if (requestedEnd == null) return const _RangeOutcome.full();
+  if (requestedEnd < start) return const _RangeOutcome.full();
+
+  final end = requestedEnd >= length ? length - 1 : requestedEnd;
+  return _RangeOutcome.partial(_ByteSpan(start, end));
 }
