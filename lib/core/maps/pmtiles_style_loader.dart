@@ -99,15 +99,23 @@ Future<String?> _findStoredVerifiedPmTiles() async {
     return file.path;
   }
 
-  // Legacy records may not contain the file timestamp. They were already
-  // cryptographically verified when downloaded, so avoid hashing 1.2 GB again
-  // just to open the map. Record the current filesystem fingerprint so future
-  // opens remain O(1); a changed timestamp/size falls back to full verification.
+  // Legacy records have no persisted filesystem fingerprint. Do not trust
+  // their timestamp retroactively: verify the bytes once before recording the
+  // fingerprint. Subsequent opens may skip hashing while size and mtime match.
   if (recordedModified == null) {
-    await OfflineRegionStore().put(
-      record.copyWith(fileModifiedAt: stat.modified),
-    );
-    return file.path;
+    try {
+      await const OfflinePackageVerifier().verifyFile(
+        file,
+        expectedSha256: sha256,
+        expectedBytes: record.bytesDownloaded,
+      );
+      await OfflineRegionStore().put(
+        record.copyWith(fileModifiedAt: stat.modified),
+      );
+      return file.path;
+    } on Object {
+      return null;
+    }
   }
 
   try {
