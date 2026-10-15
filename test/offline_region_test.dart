@@ -19,15 +19,21 @@ Map<String, Object?> _validRegion() => {
     };
 
 class _FakeClient extends http.BaseClient {
-  _FakeClient(this.payload);
+  _FakeClient(
+    this.payload, {
+    this.statusCode = 200,
+    this.rawBody,
+  });
 
   final Object payload;
+  final int statusCode;
+  final String? rawBody;
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     return http.StreamedResponse(
-      Stream.value(utf8.encode(jsonEncode(payload))),
-      200,
+      Stream.value(utf8.encode(rawBody ?? jsonEncode(payload))),
+      statusCode,
       headers: const {'content-type': 'application/json'},
       request: request,
     );
@@ -95,6 +101,47 @@ void main() {
       () => OfflineRegionCatalog(endpoint: Uri.parse('http://maps.example.com/catalog')),
       throwsArgumentError,
     );
+  });
+
+  test('offline catalog rejects HTTP 500', () async {
+    final catalog = OfflineRegionCatalog(
+      endpoint: Uri.parse('https://maps.example.com/catalog/spain.json'),
+      client: _FakeClient(_validRegion(), statusCode: 500),
+    );
+
+    await expectLater(catalog.fetch(), throwsA(isA<StateError>()));
+  });
+
+  test('offline catalog rejects malformed JSON', () async {
+    final catalog = OfflineRegionCatalog(
+      endpoint: Uri.parse('https://maps.example.com/catalog/spain.json'),
+      client: _FakeClient(
+        <String, Object?>{},
+        rawBody: '{"id":',
+      ),
+    );
+
+    await expectLater(catalog.fetch(), throwsA(isA<FormatException>()));
+  });
+
+  test('offline catalog rejects entries with missing fields', () async {
+    final catalog = OfflineRegionCatalog(
+      endpoint: Uri.parse('https://maps.example.com/catalog/spain.json'),
+      client: _FakeClient({'id': 'spain'}),
+    );
+
+    await expectLater(catalog.fetch(), throwsA(isA<FormatException>()));
+  });
+
+  test('offline catalog rejects malformed download URLs', () async {
+    final invalid = _validRegion()
+      ..['downloadUrl'] = 'https://';
+    final catalog = OfflineRegionCatalog(
+      endpoint: Uri.parse('https://maps.example.com/catalog/spain.json'),
+      client: _FakeClient(invalid),
+    );
+
+    await expectLater(catalog.fetch(), throwsA(isA<FormatException>()));
   });
 
   test('offline catalog accepts the published single-region object', () async {
