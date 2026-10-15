@@ -1,84 +1,123 @@
-import 'package:espana_outdoors/core/domain/route_readiness.dart';
-import 'package:espana_outdoors/core/domain/route_readiness_engine.dart';
+import 'package:espana_outdoors/core/safety/route_readiness.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const engine = RouteReadinessEngine();
 
-  test('returns apto when no relevant risk is present', () {
-    final result = engine.evaluate(const RouteReadinessInput());
-
-    expect(result.decision, RouteReadinessDecision.apto);
-    expect(result.reasons, isEmpty);
-  });
-
-  test('official closure always overrides other factors', () {
+  test('complete clean evidence returns apto', () {
     final result = engine.evaluate(
-      const RouteReadinessInput(officialClosure: true),
+      const RouteReadinessInput(missingCriticalData: false),
     );
 
-    expect(result.decision, RouteReadinessDecision.noRecomendado);
-    expect(result.factors, contains(RouteReadinessFactor.officialClosure));
+    expect(result.status, RouteReadiness.apto);
+    expect(result.reasons, isNotEmpty);
+    expect(result.factors, isEmpty);
   });
 
-  test('official emergency alert always overrides lower risk inputs', () {
+  test('incomplete evidence defaults to precaucion', () {
+    final result = engine.evaluate(const RouteReadinessInput());
+
+    expect(result.status, RouteReadiness.precaucion);
+    expect(result.factors, contains(RouteReadinessFactor.missingCriticalData));
+  });
+
+  test('official closure overrides all other factors', () {
     final result = engine.evaluate(
       const RouteReadinessInput(
-        officialEmergencyAlert: true,
-        routeRiskLevel: 1,
-        weatherRiskLevel: 1,
-        hazardRiskLevel: 1,
+        routeClosed: true,
+        severeWeather: true,
+        highExposure: true,
+        missingCriticalData: true,
       ),
     );
 
-    expect(result.decision, RouteReadinessDecision.noRecomendado);
-    expect(
-      result.factors,
-      contains(RouteReadinessFactor.officialEmergencyAlert),
-    );
+    expect(result.status, RouteReadiness.noRecomendado);
+    expect(result.factors, contains(RouteReadinessFactor.officialClosure));
+    expect(result.factors, contains(RouteReadinessFactor.severeWeather));
+    expect(result.factors, contains(RouteReadinessFactor.highExposure));
   });
 
-  test('critical hazard yields no recomendado', () {
-    final result = engine.evaluate(
-      const RouteReadinessInput(hazardRiskLevel: 3),
-    );
-
-    expect(result.decision, RouteReadinessDecision.noRecomendado);
+  test('official evacuation and critical alert are hard blocks', () {
+    for (final input in [
+      const RouteReadinessInput(
+        officialEvacuation: true,
+        missingCriticalData: false,
+      ),
+      const RouteReadinessInput(
+        criticalOfficialAlert: true,
+        missingCriticalData: false,
+      ),
+    ]) {
+      expect(engine.evaluate(input).status, RouteReadiness.noRecomendado);
+    }
   });
 
-  test('combined severe weather and elevated route risk yields no recomendado', () {
+  test('critical risk scores are hard blocks', () {
+    for (final input in [
+      const RouteReadinessInput(routeRiskLevel: 3, missingCriticalData: false),
+      const RouteReadinessInput(weatherRiskLevel: 3, missingCriticalData: false),
+      const RouteReadinessInput(hazardRiskLevel: 3, missingCriticalData: false),
+    ]) {
+      expect(engine.evaluate(input).status, RouteReadiness.noRecomendado);
+    }
+  });
+
+  test('severe weather combined with elevated route or hazard risk blocks', () {
     final result = engine.evaluate(
       const RouteReadinessInput(
         severeWeather: true,
         routeRiskLevel: 2,
+        missingCriticalData: false,
       ),
     );
 
-    expect(result.decision, RouteReadinessDecision.noRecomendado);
+    expect(result.status, RouteReadiness.noRecomendado);
+    expect(result.factors, contains(RouteReadinessFactor.routeRisk));
   });
 
-  test('moderate weather risk yields precaucion with evidence', () {
+  test('moderate weather risk returns precaution with an explanation', () {
     final result = engine.evaluate(
-      const RouteReadinessInput(weatherRiskLevel: 1),
+      const RouteReadinessInput(
+        weatherRiskLevel: 1,
+        missingCriticalData: false,
+      ),
     );
 
-    expect(result.decision, RouteReadinessDecision.precaucion);
+    expect(result.status, RouteReadiness.precaucion);
     expect(result.factors, contains(RouteReadinessFactor.weatherRisk));
     expect(result.reasons, isNotEmpty);
   });
 
-  test('stale information never upgrades a route to apto', () {
+  test('stale information never returns apto', () {
     final result = engine.evaluate(
-      const RouteReadinessInput(informationStale: true),
+      const RouteReadinessInput(
+        staleData: true,
+        missingCriticalData: false,
+      ),
     );
 
-    expect(result.decision, RouteReadinessDecision.precaucion);
-    expect(result.factors, contains(RouteReadinessFactor.staleInformation));
+    expect(result.status, RouteReadiness.precaucion);
+    expect(result.factors, contains(RouteReadinessFactor.staleData));
+  });
+
+  test('pet heat risk is visible in factors and reasons', () {
+    final result = engine.evaluate(
+      const RouteReadinessInput(
+        petHeatRisk: true,
+        missingCriticalData: false,
+      ),
+    );
+
+    expect(result.status, RouteReadiness.precaucion);
+    expect(result.factors, contains(RouteReadinessFactor.petHeatRisk));
+    expect(result.reasons, isNotEmpty);
   });
 
   test('invalid risk scores are rejected', () {
     expect(
-      () => engine.evaluate(const RouteReadinessInput(routeRiskLevel: 4)),
+      () => engine.evaluate(
+        const RouteReadinessInput(routeRiskLevel: 4, missingCriticalData: false),
+      ),
       throwsArgumentError,
     );
   });
