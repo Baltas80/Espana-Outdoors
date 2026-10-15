@@ -4,8 +4,30 @@ enum RouteReadiness {
   noRecomendado,
 }
 
-/// Evidence used by the route-readiness decision. Null means that the source
-/// has not supplied a value; it must never be interpreted as "safe".
+/// Evidence categories surfaced to the UI so the decision is explainable.
+enum RouteReadinessFactor {
+  officialClosure,
+  officialEvacuation,
+  criticalOfficialAlert,
+  severeWeather,
+  weatherRisk,
+  activeHazard,
+  poorVisibility,
+  extremeHeatOrCold,
+  routeRisk,
+  highExposure,
+  highIsolation,
+  petRestriction,
+  petHeatRisk,
+  staleData,
+  missingCriticalData,
+}
+
+/// Evidence used by the route-readiness decision.
+///
+/// Unknown critical data defaults to an incomplete assessment. Callers must
+/// explicitly set [missingCriticalData] to false only when the required inputs
+/// have been checked. A missing source must never be interpreted as safe.
 class RouteReadinessInput {
   const RouteReadinessInput({
     this.routeClosed = false,
@@ -17,7 +39,12 @@ class RouteReadinessInput {
     this.petRestricted = false,
     this.petHeatRisk = false,
     this.staleData = false,
-    this.missingCriticalData = false,
+    this.missingCriticalData = true,
+    this.routeRiskLevel = 0,
+    this.weatherRiskLevel = 0,
+    this.hazardRiskLevel = 0,
+    this.poorVisibility = false,
+    this.extremeHeatOrCold = false,
   });
 
   final bool routeClosed;
@@ -30,77 +57,169 @@ class RouteReadinessInput {
   final bool petHeatRisk;
   final bool staleData;
   final bool missingCriticalData;
+
+  /// Normalised risk scores: 0 (none) through 3 (critical).
+  final int routeRiskLevel;
+  final int weatherRiskLevel;
+  final int hazardRiskLevel;
+  final bool poorVisibility;
+  final bool extremeHeatOrCold;
+
+  bool get isValid =>
+      _validScore(routeRiskLevel) &&
+      _validScore(weatherRiskLevel) &&
+      _validScore(hazardRiskLevel);
+
+  static bool _validScore(int value) => value >= 0 && value <= 3;
 }
 
 class RouteReadinessResult {
   const RouteReadinessResult({
     required this.status,
     required this.reasons,
+    this.factors = const [],
   });
 
   final RouteReadiness status;
   final List<String> reasons;
+  final List<RouteReadinessFactor> factors;
 }
 
 /// Deterministic product policy for "¿PUEDO HACER ESTA RUTA HOY?".
 ///
 /// This layer only evaluates supplied evidence. It does not fetch weather,
-/// alerts or closures and therefore cannot fabricate a safety assessment.
+/// alerts or closures and cannot fabricate a safety assessment.
 class RouteReadinessEngine {
   const RouteReadinessEngine();
 
   RouteReadinessResult evaluate(RouteReadinessInput input) {
+    if (!input.isValid) {
+      throw ArgumentError.value(
+        input,
+        'input',
+        'Los factores de riesgo deben estar entre 0 y 3.',
+      );
+    }
+
     final reasons = <String>[];
+    final factors = <RouteReadinessFactor>[];
+
+    void add(RouteReadinessFactor factor, String reason) {
+      factors.add(factor);
+      reasons.add(reason);
+    }
 
     if (input.routeClosed) {
-      reasons.add('La ruta figura como cerrada.');
+      add(RouteReadinessFactor.officialClosure, 'La ruta figura como cerrada.');
     }
     if (input.officialEvacuation) {
-      reasons.add('Existe una evacuación oficial activa.');
+      add(
+        RouteReadinessFactor.officialEvacuation,
+        'Existe una evacuación oficial activa.',
+      );
     }
     if (input.criticalOfficialAlert) {
-      reasons.add('Existe una alerta oficial crítica aplicable a la zona.');
-    }
-
-    if (reasons.isNotEmpty) {
-      return RouteReadinessResult(
-        status: RouteReadiness.noRecomendado,
-        reasons: List.unmodifiable(reasons),
+      add(
+        RouteReadinessFactor.criticalOfficialAlert,
+        'Existe una alerta oficial crítica aplicable a la zona.',
       );
     }
-
+    if (input.weatherRiskLevel >= 1) {
+      add(
+        RouteReadinessFactor.weatherRisk,
+        'La información meteorológica indica un nivel de riesgo relevante.',
+      );
+    }
     if (input.severeWeather) {
-      reasons.add('Las condiciones meteorológicas requieren precaución.');
+      add(
+        RouteReadinessFactor.severeWeather,
+        'Se han identificado condiciones meteorológicas adversas.',
+      );
+    }
+    if (input.hazardRiskLevel >= 1) {
+      add(
+        RouteReadinessFactor.activeHazard,
+        'Hay información de peligros que requiere precaución.',
+      );
+    }
+    if (input.poorVisibility) {
+      add(
+        RouteReadinessFactor.poorVisibility,
+        'La visibilidad disponible es desfavorable.',
+      );
+    }
+    if (input.extremeHeatOrCold) {
+      add(
+        RouteReadinessFactor.extremeHeatOrCold,
+        'Se han detectado temperaturas extremas o condiciones térmicas relevantes.',
+      );
+    }
+    if (input.routeRiskLevel >= 1) {
+      add(
+        RouteReadinessFactor.routeRisk,
+        'La propia ruta presenta factores de dificultad o riesgo que requieren atención.',
+      );
     }
     if (input.highExposure) {
-      reasons.add('La ruta presenta exposición elevada.');
+      add(
+        RouteReadinessFactor.highExposure,
+        'La ruta presenta exposición elevada.',
+      );
     }
     if (input.highIsolation) {
-      reasons.add('La ruta presenta aislamiento elevado.');
+      add(
+        RouteReadinessFactor.highIsolation,
+        'La ruta presenta aislamiento elevado.',
+      );
     }
     if (input.petRestricted) {
-      reasons.add('Existen restricciones aplicables a mascotas.');
+      add(
+        RouteReadinessFactor.petRestriction,
+        'Existen restricciones aplicables a mascotas.',
+      );
     }
     if (input.petHeatRisk) {
-      reasons.add('Las condiciones térmicas elevan el riesgo para mascotas.');
+      add(
+        RouteReadinessFactor.petHeatRisk,
+        'Las condiciones térmicas elevan el riesgo para mascotas.',
+      );
     }
     if (input.staleData) {
-      reasons.add('Parte de la información disponible está desactualizada.');
+      add(
+        RouteReadinessFactor.staleData,
+        'Parte de la información disponible está desactualizada; comprueba las fuentes antes de salir.',
+      );
     }
     if (input.missingCriticalData) {
-      reasons.add('Faltan datos críticos para una evaluación completa.');
-    }
-
-    if (reasons.isNotEmpty) {
-      return RouteReadinessResult(
-        status: RouteReadiness.precaucion,
-        reasons: List.unmodifiable(reasons),
+      add(
+        RouteReadinessFactor.missingCriticalData,
+        'Faltan datos críticos para una evaluación completa.',
       );
     }
 
-    return const RouteReadinessResult(
-      status: RouteReadiness.apto,
-      reasons: ['No se han detectado impedimentos con los datos disponibles.'],
+    final hardBlock = input.routeClosed ||
+        input.officialEvacuation ||
+        input.criticalOfficialAlert;
+    final criticalRisk = input.routeRiskLevel >= 3 ||
+        input.weatherRiskLevel >= 3 ||
+        input.hazardRiskLevel >= 3;
+    final combinedSevereRisk = input.severeWeather &&
+        (input.routeRiskLevel >= 2 || input.hazardRiskLevel >= 2);
+
+    final status = hardBlock || criticalRisk || combinedSevereRisk
+        ? RouteReadiness.noRecomendado
+        : reasons.isNotEmpty
+            ? RouteReadiness.precaucion
+            : RouteReadiness.apto;
+
+    if (reasons.isEmpty) {
+      reasons.add('No se han detectado impedimentos con los datos disponibles.');
+    }
+
+    return RouteReadinessResult(
+      status: status,
+      reasons: List.unmodifiable(reasons),
+      factors: List.unmodifiable(factors),
     );
   }
 }
