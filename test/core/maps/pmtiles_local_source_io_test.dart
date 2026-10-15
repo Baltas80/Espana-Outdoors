@@ -12,7 +12,9 @@ void main() {
   setUp(() async {
     tempDirectory = await Directory.systemTemp.createTemp('pmtiles-range-');
     archive = File('${tempDirectory.path}/sample.pmtiles');
-    await archive.writeAsBytes(Uint8List.fromList(List<int>.generate(10, (i) => i)));
+    await archive.writeAsBytes(
+      Uint8List.fromList(List<int>.generate(10, (i) => i)),
+    );
     localUrl = await serveLocalPmTiles(archive.path);
   });
 
@@ -23,73 +25,91 @@ void main() {
     }
   });
 
-  Future<HttpClientResponse> getResponse({String? range, String method = 'GET'}) async {
+  Future<_ResponseData> request({String? range, String method = 'GET'}) async {
     final client = HttpClient();
-    final request = await (method == 'HEAD'
-        ? client.headUrl(Uri.parse(localUrl))
-        : client.getUrl(Uri.parse(localUrl)));
-    if (range != null) request.headers.set(HttpHeaders.rangeHeader, range);
-    final response = await request.close();
-    // Consume the body before closing the client; the tests need the response
-    // stream, so the caller owns disposal by reading it.
-    return _ClientOwnedResponse(response, client).response;
+    try {
+      final uri = Uri.parse(localUrl);
+      final req = await (method == 'HEAD'
+          ? client.headUrl(uri)
+          : client.getUrl(uri));
+      if (range != null) req.headers.set(HttpHeaders.rangeHeader, range);
+      final response = await req.close();
+      final body = await response.fold<List<int>>(
+        <int>[],
+        (bytes, chunk) => bytes..addAll(chunk),
+      );
+      return _ResponseData(
+        statusCode: response.statusCode,
+        contentRange: response.headers.value(HttpHeaders.contentRangeHeader),
+        contentLength: response.contentLength,
+        body: body,
+      );
+    } finally {
+      client.close(force: true);
+    }
   }
 
   test('returns 206 and exact bytes for a valid range', () async {
-    final response = await getResponse(range: 'bytes=2-5');
+    final response = await request(range: 'bytes=2-5');
     expect(response.statusCode, HttpStatus.partialContent);
-    expect(response.headers.value(HttpHeaders.contentRangeHeader), 'bytes 2-5/10');
+    expect(response.contentRange, 'bytes 2-5/10');
     expect(response.contentLength, 4);
-    expect(await response.fold<List<int>>(<int>[], (a, b) => a..addAll(b)), [2, 3, 4, 5]);
+    expect(response.body, [2, 3, 4, 5]);
   });
 
   test('returns 416 with unsatisfied Content-Range beyond EOF', () async {
-    final response = await getResponse(range: 'bytes=10-10');
+    final response = await request(range: 'bytes=10-10');
     expect(response.statusCode, HttpStatus.requestedRangeNotSatisfiable);
-    expect(response.headers.value(HttpHeaders.contentRangeHeader), 'bytes */10');
+    expect(response.contentRange, 'bytes */10');
     expect(response.contentLength, 0);
-    await response.drain<void>();
+    expect(response.body, isEmpty);
   });
 
-  test('ignores malformed range rather than mislabelling a full body as partial', () async {
-    final response = await getResponse(range: 'bytes=abc');
+  test('ignores malformed range instead of mislabelling a full body as partial', () async {
+    final response = await request(range: 'bytes=abc');
     expect(response.statusCode, HttpStatus.ok);
-    expect(response.headers.value(HttpHeaders.contentRangeHeader), isNull);
-    expect(await response.fold<List<int>>(<int>[], (a, b) => a..addAll(b)), List<int>.generate(10, (i) => i));
+    expect(response.contentRange, isNull);
+    expect(response.body, List<int>.generate(10, (i) => i));
   });
 
   test('ignores unsupported multi-range instead of silently serving first range', () async {
-    final response = await getResponse(range: 'bytes=0-1,4-5');
+    final response = await request(range: 'bytes=0-1,4-5');
     expect(response.statusCode, HttpStatus.ok);
-    expect(response.headers.value(HttpHeaders.contentRangeHeader), isNull);
-    expect(await response.fold<List<int>>(<int>[], (a, b) => a..addAll(b)), List<int>.generate(10, (i) => i));
+    expect(response.contentRange, isNull);
+    expect(response.body, List<int>.generate(10, (i) => i));
   });
 
   test('supports suffix range and clamps suffix larger than the file', () async {
-    final response = await getResponse(range: 'bytes=-3');
+    final response = await request(range: 'bytes=-3');
     expect(response.statusCode, HttpStatus.partialContent);
-    expect(response.headers.value(HttpHeaders.contentRangeHeader), 'bytes 7-9/10');
-    expect(await response.fold<List<int>>(<int>[], (a, b) => a..addAll(b)), [7, 8, 9]);
+    expect(response.contentRange, 'bytes 7-9/10');
+    expect(response.body, [7, 8, 9]);
 
-    final all = await getResponse(range: 'bytes=-30');
+    final all = await request(range: 'bytes=-30');
     expect(all.statusCode, HttpStatus.partialContent);
-    expect(all.headers.value(HttpHeaders.contentRangeHeader), 'bytes 0-9/10');
-    expect(await all.fold<List<int>>(<int>[], (a, b) => a..addAll(b)), List<int>.generate(10, (i) => i));
+    expect(all.contentRange, 'bytes 0-9/10');
+    expect(all.body, List<int>.generate(10, (i) => i));
   });
 
   test('HEAD with range returns headers without a response body', () async {
-    final response = await getResponse(range: 'bytes=0-2', method: 'HEAD');
+    final response = await request(range: 'bytes=0-2', method: 'HEAD');
     expect(response.statusCode, HttpStatus.partialContent);
-    expect(response.headers.value(HttpHeaders.contentRangeHeader), 'bytes 0-2/10');
+    expect(response.contentRange, 'bytes 0-2/10');
     expect(response.contentLength, 3);
-    expect(await response.drain<void>(), isNull);
+    expect(response.body, isEmpty);
   });
 }
 
-// Keep each HttpClient alive until the response body is consumed. HttpClient is
-// process-local test infrastructure and is closed when the wrapper is disposed.
-class _ClientOwnedResponse {
-  _ClientOwnedResponse(this.response, this.client);
-  final HttpClientResponse response;
-  final HttpClient client;
+class _ResponseData {
+  const _ResponseData({
+    required this.statusCode,
+    required this.contentRange,
+    required this.contentLength,
+    required this.body,
+  });
+
+  final int statusCode;
+  final String? contentRange;
+  final int contentLength;
+  final List<int> body;
 }
