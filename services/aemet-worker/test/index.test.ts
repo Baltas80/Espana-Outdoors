@@ -68,11 +68,17 @@ describe("authentication fail-closed behavior", () => {
     await expect(authenticate(request, env)).resolves.toBeNull();
   });
 
+  let signingPair: CryptoKeyPair | undefined;
+  let signingJwk: JsonWebKey | undefined;
   async function signedRequest(claimOverrides: Record<string, unknown> = {}) {
-    const pair = await crypto.subtle.generateKey({
-      name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256",
-    }, true, ["sign", "verify"]);
-    const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
+    if (!signingPair) {
+      signingPair = await crypto.subtle.generateKey({
+        name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256",
+      }, true, ["sign", "verify"]);
+      signingJwk = await crypto.subtle.exportKey("jwk", signingPair.publicKey);
+    }
+    const pair = signingPair;
+    const jwk = signingJwk!;
     const enc = (obj: unknown) => btoa(JSON.stringify(obj)).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
     const header = enc({ alg: "RS256", kid: "test-key", typ: "JWT" });
     const now = Math.floor(Date.now() / 1000);
