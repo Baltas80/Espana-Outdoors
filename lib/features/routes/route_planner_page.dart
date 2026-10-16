@@ -6,8 +6,10 @@ import 'package:latlong2/latlong.dart';
 import '../../core/contracts/routing_service.dart';
 import '../../core/location/location_controller.dart';
 import '../../core/routing/routing_config.dart';
+import '../../core/safety/route_risk_assessment_service.dart';
 import '../../infrastructure/routing/valhalla_routing_service.dart';
 import '../map/map_page.dart';
+import 'route_risk_summary_card.dart';
 
 class RoutePlannerPage extends ConsumerStatefulWidget {
   const RoutePlannerPage({super.key});
@@ -120,6 +122,9 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(locationControllerProvider).position;
+    final riskAssessment = _route == null
+        ? null
+        : const RouteRiskAssessmentService().assess(_route!);
     final destination = _destination;
     final center = destination ??
         (location == null
@@ -175,6 +180,13 @@ class _RoutePlannerPageState extends ConsumerState<RoutePlannerPage> {
                       const SizedBox(height: 6),
                       Text(
                         '${((_route!.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · ${((_route!.durationSeconds ?? 0) / 60).round()} min',
+                      ),
+                    ],
+                    if (riskAssessment != null) ...[
+                      const SizedBox(height: 8),
+                      RouteRiskSummaryCard(
+                        assessment: riskAssessment,
+                        compact: true,
                       ),
                     ],
                   ],
