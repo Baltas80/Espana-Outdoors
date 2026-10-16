@@ -41,6 +41,7 @@ export function validForecastDate(value: unknown): string | null {
   if (m) {
     const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
     if (d.toISOString().slice(0, 10) === value) return value;
+    return null;
   }
   const t = Date.parse(value);
   if (!Number.isFinite(t)) return null;
@@ -141,6 +142,12 @@ function firstNumber(value: unknown): number | null {
   return null;
 }
 
+function windDirection(value: unknown): string | null {
+  if (!Array.isArray(value) || !value.length || !value[0] || typeof value[0] !== "object") return null;
+  const direction = (value[0] as Record<string, unknown>).direccion;
+  return typeof direction === "string" && direction.trim() ? direction : null;
+}
+
 function condition(value: unknown): string {
   const first = Array.isArray(value) ? value[0] : null;
   const text = first && typeof first === "object" ? String((first as Record<string, unknown>).descripcion ?? "").toLowerCase() : "";
@@ -171,7 +178,8 @@ export function normalizeForecast(payload: unknown): JsonObject[] {
       min: number(day.temperatura, "minima"), max: number(day.temperatura, "maxima"),
       precipitationProbability: firstNumber(day.probPrecipitacion),
       precipitationMm: firstNumber(day.precipitacion),
-      windSpeed: firstNumber(day.viento), windDirection: null,
+      windSpeed: Array.isArray(day.viento) && day.viento[0] && typeof day.viento[0] === "object" ? firstNumber((day.viento[0] as JsonObject).velocidad) : null,
+      windDirection: windDirection(day.viento),
     });
   }
   if (!out.length) throw new Error("AEMET returned no usable forecast days");
