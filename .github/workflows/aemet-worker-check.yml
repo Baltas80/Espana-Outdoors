@@ -1,0 +1,33 @@
+name: AEMET Worker checks
+
+on:
+  pull_request:
+    paths:
+      - 'services/aemet-worker/**'
+      - '.github/workflows/aemet-worker-check.yml'
+  push:
+    branches:
+      - 'feat/cloudflare-aemet-worker'
+    paths:
+      - 'services/aemet-worker/**'
+      - '.github/workflows/aemet-worker-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: services/aemet-worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/aemet-worker/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npx wrangler deploy --dry-run
