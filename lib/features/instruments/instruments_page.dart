@@ -33,6 +33,8 @@ class InstrumentsPage extends ConsumerWidget {
           const SizedBox(height: 12),
           _ToolCard(icon: Icons.nightlight_round, title: 'Astronomía de campo', subtitle: 'Sol, amanecer, puesta, posición solar y fase lunar sin conexión.', onTap: () => context.push('/astronomy')),
           const SizedBox(height: 10),
+          _ToolCard(icon: Icons.cloud_outlined, title: 'Previsión meteorológica', subtitle: 'Abre la previsión online de meteoblue; requiere conexión.', onTap: () => context.push('/weather')),
+          const SizedBox(height: 10),
           _ToolCard(icon: Icons.thunderstorm_outlined, title: 'Distancia de tormenta', subtitle: 'Estima la distancia de un rayo con el intervalo entre destello y trueno.', onTap: () => context.push('/weather/lightning')),
           if (sensor.error != null) ...[
             const SizedBox(height: 12),
