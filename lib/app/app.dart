@@ -27,6 +27,7 @@ import '../features/safety/trusted_contacts_page.dart';
 import '../features/shop/shop_page.dart';
 import '../features/splash/splash_page.dart';
 import '../features/weather/lightning_page.dart';
+import '../features/weather/weather_forecast_page.dart';
 import '../features/wildlife/wildlife_page.dart';
 import 'app_shell.dart';
 import 'theme.dart';
@@ -149,6 +150,7 @@ class EspanaOutdoorApp extends StatelessWidget {
       ),
       GoRoute(path: '/instruments', builder: (_, __) => _withBackNavigation(const InstrumentsPage())),
       GoRoute(path: '/astronomy', builder: (_, __) => _withBackNavigation(const AstronomyPage(), fallback: '/instruments')),
+      GoRoute(path: '/weather', builder: (_, __) => _withBackNavigation(const WeatherForecastPage(), fallback: '/instruments')),
       GoRoute(path: '/weather/lightning', builder: (_, __) => _withBackNavigation(const LightningPage(), fallback: '/instruments')),
       GoRoute(path: '/pets', builder: (_, __) => _withBackNavigation(const PetsPage())),
       GoRoute(path: '/wildlife', builder: (_, __) => _withBackNavigation(const WildlifePage())),
