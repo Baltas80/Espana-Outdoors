@@ -25,17 +25,17 @@ function json(body: unknown, status = 200, extra: HeadersInit = {}): Response {
   });
 }
 
-function validExpiry(value: string | undefined, now = Date.now()): number | null {
+export function validExpiry(value: string | undefined, now = Date.now()): number | null {
   if (!value || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return null;
   const time = Date.parse(value);
   return Number.isFinite(time) && time > now ? time : null;
 }
 
-function validMunicipalityCode(value: string | null): value is string {
+export function validMunicipalityCode(value: string | null): value is string {
   return value !== null && /^\d{5}$/.test(value);
 }
 
-function validForecastDate(value: unknown): string | null {
+export function validForecastDate(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (m) {
@@ -154,7 +154,7 @@ function condition(value: unknown): string {
   return "unknown";
 }
 
-function normalizeForecast(payload: unknown): JsonObject[] {
+export function normalizeForecast(payload: unknown): JsonObject[] {
   if (!payload || typeof payload !== "object") throw new Error("invalid AEMET forecast");
   const pred = (payload as JsonObject).prediccion;
   if (!pred || typeof pred !== "object") throw new Error("forecast missing prediccion");
