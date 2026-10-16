@@ -124,12 +124,18 @@ async function upstreamJSON(url: string, apiKey?: string): Promise<unknown> {
 
 function number(parent: unknown, key: string): number | null {
   if (!parent || typeof parent !== "object") return null;
-  const value = Number((parent as Record<string, unknown>)[key]);
+  const raw = (parent as Record<string, unknown>)[key];
+  if (typeof raw !== "number" && typeof raw !== "string") return null;
+  const value = typeof raw === "string" ? Number(raw.trim().replace(",", ".")) : raw;
   return Number.isFinite(value) ? value : null;
 }
 
 function firstNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value.trim().replace(",", "."));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
   if (Array.isArray(value) && value.length) {
     const item = value[0];
     if (item && typeof item === "object") {
