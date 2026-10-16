@@ -15,6 +15,7 @@ class RiskSignal {
 
   final String id;
   final String label;
+
   /// 0 = no material risk, 1 = caution, 2 = severe.
   final int severity;
   final RiskSourceKind sourceKind;
@@ -22,8 +23,14 @@ class RiskSignal {
   final String? explanation;
   final DateTime? expiresAt;
 
-  bool get isActive =>
-      expiresAt == null || expiresAt!.isAfter(DateTime.now().toUtc());
+  /// Returns whether this signal is active at a supplied instant.
+  /// A signal is expired at the exact instant represented by [expiresAt].
+  bool isActiveAt(DateTime referenceTime) =>
+      expiresAt == null || expiresAt!.isAfter(referenceTime.toUtc());
+
+  /// Convenience accessor for non-deterministic UI uses. The engine itself
+  /// uses [isActiveAt] with a single captured reference instant.
+  bool get isActive => isActiveAt(DateTime.now().toUtc());
 }
 
 class RouteRiskInput {
@@ -44,7 +51,8 @@ class RouteRiskInput {
 
   final double distanceKm;
   final double elevationGainM;
-  /// Normalized 0..3. This is a product classification, not a medical/safety guarantee.
+
+  /// Normalized 0..3. This is a product classification, not a safety guarantee.
   final int difficultyScore;
   final int exposureScore;
   final int isolationScore;
@@ -55,10 +63,63 @@ class RouteRiskInput {
   final int petRiskSeverity;
   final List<RiskSignal> signals;
 
-  /// Completeness of the verified inputs available for this assessment.
-  /// 0 means unknown/incomplete; 1 means all required inputs were evaluated.
-  /// This is deliberately separate from the risk score.
+  /// 0 = unknown/incomplete; 1 = all required inputs were evaluated.
+  /// Completeness is separate from the risk score.
   final double dataCompleteness;
+
+  /// Reject malformed inputs instead of silently clamping them.
+  void validate() {
+    if (!distanceKm.isFinite || distanceKm < 0) {
+      throw ArgumentError.value(
+        distanceKm,
+        'distanceKm',
+        'must be finite and non-negative',
+      );
+    }
+    if (!elevationGainM.isFinite || elevationGainM < 0) {
+      throw ArgumentError.value(
+        elevationGainM,
+        'elevationGainM',
+        'must be finite and non-negative',
+      );
+    }
+
+    _validateNormalizedScore(difficultyScore, 'difficultyScore');
+    _validateNormalizedScore(exposureScore, 'exposureScore');
+    _validateNormalizedScore(isolationScore, 'isolationScore');
+
+    _validateSeverity(weatherSeverity, 'weatherSeverity');
+    _validateSeverity(officialAlertSeverity, 'officialAlertSeverity');
+    _validateSeverity(closureSeverity, 'closureSeverity');
+    _validateSeverity(fireSeverity, 'fireSeverity');
+    _validateSeverity(petRiskSeverity, 'petRiskSeverity');
+
+    if (!dataCompleteness.isFinite ||
+        dataCompleteness < 0 ||
+        dataCompleteness > 1) {
+      throw ArgumentError.value(
+        dataCompleteness,
+        'dataCompleteness',
+        'must be in 0..1',
+      );
+    }
+
+    for (final signal in signals) {
+      _validateSeverity(signal.severity, 'signals.severity');
+    }
+  }
+
+  static void _validateNormalizedScore(int value, String name) {
+    if (value < 0 || value > 3) {
+      throw ArgumentError.value(value, name, 'must be in 0..3');
+    }
+  }
+
+  static void _validateSeverity(int value, String name) {
+    if (value < 0 || value > 2) {
+      throw ArgumentError.value(value, name, 'must be in 0..2');
+    }
+  }
 }
 
 class RouteRiskAssessment {
@@ -74,6 +135,7 @@ class RouteRiskAssessment {
   final int score;
   final List<String> reasons;
   final List<RiskSignal> activeSignals;
+
   /// 0..1. Confidence describes data completeness/quality, not safety.
   final double confidence;
 
@@ -89,23 +151,40 @@ class RouteRiskAssessment {
   }
 }
 
-/// Deterministic, auditable decision layer for "¿PUEDO HACER ESTA RUTA HOY?".
+/// Deterministic, auditable decision layer for route risk.
 /// It never fabricates missing data and never claims that a route is safe.
-class RouteRiskEngine {
+final class RouteRiskEngine {
   const RouteRiskEngine();
 
-  RouteRiskAssessment assess(RouteRiskInput input) {
-    final active = input.signals.where((signal) => signal.isActive).toList(growable: false);
+  RouteRiskAssessment assess(RouteRiskInput input, {DateTime? now}) {
+    input.validate();
+    final evaluatedAt = (now ?? DateTime.now()).toUtc();
+    final active = input.signals
+        .where((signal) => signal.isActiveAt(evaluatedAt))
+        .toList(growable: false);
+
     var score = 0;
     final reasons = <String>[];
 
-    score += _weighted(input.weatherSeverity, 4, reasons, 'Meteorología desfavorable');
-    score += _weighted(input.officialAlertSeverity, 6, reasons, 'Aviso oficial activo');
-    score += _weighted(input.closureSeverity, 10, reasons, 'Cierre o restricción de acceso');
+    score += _weighted(
+      input.weatherSeverity, 4, reasons, 'Meteorología desfavorable',
+    );
+    score += _weighted(
+      input.officialAlertSeverity, 6, reasons, 'Aviso oficial activo',
+    );
+    score += _weighted(
+      input.closureSeverity, 10, reasons, 'Cierre o restricción de acceso',
+    );
     score += _weighted(input.fireSeverity, 8, reasons, 'Riesgo de incendio');
-    score += _weighted(input.exposureScore, 2, reasons, 'Exposición de la ruta');
-    score += _weighted(input.isolationScore, 2, reasons, 'Aislamiento o acceso limitado');
-    score += _weighted(input.petRiskSeverity, 2, reasons, 'Riesgo adicional para mascota');
+    score += _weighted(
+      input.exposureScore, 2, reasons, 'Exposición de la ruta',
+    );
+    score += _weighted(
+      input.isolationScore, 2, reasons, 'Aislamiento o acceso limitado',
+    );
+    score += _weighted(
+      input.petRiskSeverity, 2, reasons, 'Riesgo adicional para mascota',
+    );
 
     if (input.difficultyScore >= 3) {
       score += 3;
@@ -116,43 +195,55 @@ class RouteRiskEngine {
     }
 
     for (final signal in active) {
-      score += signal.severity.clamp(0, 2);
-      if (signal.explanation?.isNotEmpty == true) {
-        reasons.add(signal.explanation!);
-      } else {
-        reasons.add(signal.label);
-      }
+      score += signal.severity;
+      reasons.add(
+        signal.explanation?.isNotEmpty == true
+            ? signal.explanation!
+            : signal.label,
+      );
     }
 
-    if (input.dataCompleteness < 1) {
+    final incompleteData = input.dataCompleteness < 1;
+    if (incompleteData) {
       reasons.add('Información incompleta: revisa las fuentes antes de salir');
     }
 
-    // A confirmed closure or severe official/fire signal always wins.
+    // Confirmed severe conditions remain hard stops.
     final hardStop = input.closureSeverity >= 2 ||
         input.officialAlertSeverity >= 2 ||
         input.fireSeverity >= 2 ||
-        active.any((signal) =>
-            signal.severity >= 2 && signal.sourceKind == RiskSourceKind.official);
+        active.any(
+          (signal) =>
+              signal.severity >= 2 &&
+              signal.sourceKind == RiskSourceKind.official,
+        );
 
-    final readiness = hardStop || score >= 12
-        ? RouteReadiness.noRecomendado
-        : score >= 5
-            ? RouteReadiness.precaucion
-            : RouteReadiness.apto;
+    final RouteReadiness readiness;
+    if (hardStop || score >= 12) {
+      readiness = RouteReadiness.noRecomendado;
+    } else if (score >= 5 || incompleteData) {
+      // Missing evidence is uncertainty, never evidence that a route is safe.
+      readiness = RouteReadiness.precaucion;
+    } else {
+      readiness = RouteReadiness.apto;
+    }
 
     return RouteRiskAssessment(
       readiness: readiness,
       score: score,
       reasons: List.unmodifiable(reasons),
       activeSignals: active,
-      confidence: input.dataCompleteness.clamp(0.0, 1.0),
+      confidence: input.dataCompleteness,
     );
   }
 
-  int _weighted(int severity, int weight, List<String> reasons, String label) {
-    final normalized = severity.clamp(0, 3);
-    if (normalized > 0) reasons.add(label);
-    return normalized * weight;
+  int _weighted(
+    int severity,
+    int weight,
+    List<String> reasons,
+    String label,
+  ) {
+    if (severity > 0) reasons.add(label);
+    return severity * weight;
   }
 }

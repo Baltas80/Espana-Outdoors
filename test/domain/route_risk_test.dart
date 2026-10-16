@@ -4,15 +4,32 @@ import 'package:espana_outdoors/domain/risk/route_risk.dart';
 void main() {
   const engine = RouteRiskEngine();
 
-  test('returns apto when no active risk is reported', () {
+  test('returns apto only when no active risk is reported and inputs are complete', () {
     final result = engine.assess(const RouteRiskInput(
       distanceKm: 8,
       elevationGainM: 300,
       difficultyScore: 1,
+      dataCompleteness: 1,
     ));
 
     expect(result.readiness, RouteReadiness.apto);
     expect(result.score, 0);
+  });
+
+  test('incomplete data never produces apto', () {
+    final result = engine.assess(const RouteRiskInput(
+      distanceKm: 8,
+      elevationGainM: 300,
+      difficultyScore: 1,
+      dataCompleteness: 0,
+    ));
+
+    expect(result.readiness, RouteReadiness.precaucion);
+    expect(result.confidence, 0);
+    expect(
+      result.reasons,
+      contains('Información incompleta: revisa las fuentes antes de salir'),
+    );
   });
 
   test('returns precaucion for moderate live risk', () {
@@ -22,6 +39,7 @@ void main() {
       difficultyScore: 2,
       weatherSeverity: 1,
       exposureScore: 1,
+      dataCompleteness: 1,
     ));
 
     expect(result.readiness, RouteReadiness.precaucion);
@@ -65,6 +83,7 @@ void main() {
       distanceKm: 3,
       elevationGainM: 100,
       difficultyScore: 1,
+      dataCompleteness: 1,
       signals: [
         RiskSignal(
           id: 'expired',
@@ -78,5 +97,47 @@ void main() {
 
     expect(result.activeSignals, isEmpty);
     expect(result.readiness, RouteReadiness.apto);
+  });
+  test('assessment is deterministic for a fixed reference time', () {
+    final reference = DateTime.utc(2026, 10, 16, 12);
+    final input = RouteRiskInput(
+      distanceKm: 5,
+      elevationGainM: 200,
+      difficultyScore: 1,
+      dataCompleteness: 1,
+      signals: [
+        RiskSignal(
+          id: 'expires',
+          label: 'Aviso vigente',
+          severity: 1,
+          sourceKind: RiskSourceKind.espanaOutdoor,
+          expiresAt: reference.add(const Duration(minutes: 30)),
+        ),
+      ],
+    );
+
+    final first = engine.assess(input, now: reference);
+    final second = engine.assess(input, now: reference);
+
+    expect(first.readiness, second.readiness);
+    expect(first.score, second.score);
+    expect(first.reasons, second.reasons);
+    expect(first.activeSignals, hasLength(1));
+    expect(
+      engine.assess(input, now: reference.add(const Duration(hours: 1))).activeSignals,
+      isEmpty,
+    );
+  });
+
+  test('rejects invalid risk severity', () {
+    expect(
+      () => engine.assess(const RouteRiskInput(
+        distanceKm: 5,
+        elevationGainM: 200,
+        difficultyScore: 1,
+        closureSeverity: 3,
+      )),
+      throwsArgumentError,
+    );
   });
 }

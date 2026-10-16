@@ -10,6 +10,8 @@ import '../../core/domain/outdoor_models.dart';
 import '../../core/location/location_controller.dart';
 import '../../core/navigation/navigation_guidance.dart';
 import '../../core/location/route_recorder.dart';
+import '../../core/safety/route_risk_assessment_service.dart';
+import '../routes/route_risk_summary_card.dart';
 
 /// Live navigation surface built around the same location/recording pipeline
 /// used by the map. It deliberately does not invent turn instructions: those
@@ -46,6 +48,9 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
     final location = ref.watch(locationControllerProvider);
     final recording = ref.watch(routeRecorderProvider);
     final position = location.position;
+    final riskAssessment = widget.route == null
+        ? null
+        : const RouteRiskAssessmentService().assess(widget.route!);
     final accuracy = position?.accuracy;
     final guidance = widget.route == null || position == null
         ? null
@@ -110,6 +115,10 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
             ),
             const SizedBox(height: 12),
             _StatGrid(distanceKm: recording.distanceMeters / 1000, elapsed: elapsed, altitude: position?.altitude, speedKmh: position == null ? null : position.speed * 3.6),
+            if (riskAssessment != null) ...[
+              const SizedBox(height: 12),
+              RouteRiskSummaryCard(assessment: riskAssessment),
+            ],
             const SizedBox(height: 12),
             Card(
               child: Padding(
