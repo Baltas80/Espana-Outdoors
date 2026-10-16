@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { authenticate, normalizeForecast, validExpiry, validForecastDate, validMunicipalityCode } from "../src/index";
 
 const env = {
@@ -54,6 +54,8 @@ describe("configuration and date validation", () => {
 });
 
 describe("authentication fail-closed behavior", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   it("rejects missing bearer tokens", async () => {
     const request = new Request("https://worker.test/v1/sources/aemet-weather");
     await expect(authenticate(request, env)).resolves.toBeNull();
@@ -64,5 +66,42 @@ describe("authentication fail-closed behavior", () => {
       headers: { authorization: "Bearer not.a.valid.jwt" },
     });
     await expect(authenticate(request, env)).resolves.toBeNull();
+  });
+
+  async function signedRequest(claimOverrides: Record<string, unknown> = {}) {
+    const pair = await crypto.subtle.generateKey({
+      name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256",
+    }, true, ["sign", "verify"]);
+    const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
+    const enc = (obj: unknown) => btoa(JSON.stringify(obj)).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+    const header = enc({ alg: "RS256", kid: "test-key", typ: "JWT" });
+    const now = Math.floor(Date.now() / 1000);
+    const claims = enc({
+      iss: env.OIDC_ISSUER, aud: env.OIDC_AUDIENCE, sub: "test-user", exp: now + 300,
+      resource_access: { [env.OIDC_AUDIENCE]: { roles: [env.OIDC_REQUIRED_ROLE] } },
+      ...claimOverrides,
+    });
+    const data = new TextEncoder().encode(header + "." + claims);
+    const signature = new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", pair.privateKey, data));
+    const sig = btoa(String.fromCharCode(...signature)).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ keys: [{ ...jwk, kid: "test-key", alg: "RS256", use: "sig" }] }), { status: 200 })));
+    return new Request("https://worker.test/v1/sources/aemet-weather", {
+      headers: { authorization: "Bearer " + header + "." + claims + "." + sig },
+    });
+  }
+
+  it("accepts a correctly signed token with the required client-scoped role", async () => {
+    const request = await signedRequest();
+    await expect(authenticate(request, env)).resolves.toMatchObject({ sub: "test-user" });
+  });
+
+  it("rejects expired tokens and tokens missing the exact client role", async () => {
+    const now = Math.floor(Date.now() / 1000);
+    expect(await authenticate(await signedRequest({ exp: now - 1 }), env)).toBeNull();
+    expect(await authenticate(await signedRequest({ resource_access: { other: { roles: [env.OIDC_REQUIRED_ROLE] } } }), env)).toBeNull();
+  });
+
+  it("rejects a token with the wrong issuer", async () => {
+    expect(await authenticate(await signedRequest({ iss: "https://attacker.invalid" }), env)).toBeNull();
   });
 });
