@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Online forecast entry point for the Ulule demo.
@@ -90,7 +91,7 @@ class WeatherForecastPage extends StatelessWidget {
                 'Herramienta local para estimar la distancia de un rayo.',
               ),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(context).pushNamed('/weather/lightning'),
+              onTap: () => context.push('/weather/lightning'),
             ),
           ),
           const SizedBox(height: 12),
